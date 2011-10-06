@@ -23,6 +23,8 @@ public class AffineMap extends AbstractMap
 	private Matrix translation = null;
 	
 	private AffineMap inverse = null;
+	
+	private List<Double> parameters = null;
 
 	private AffineMap()
 	{
@@ -106,39 +108,33 @@ public class AffineMap extends AbstractMap
 	}
 	
 	/**
-	 * Returns a list of parameters in the given mode
-	 * 
-	 * <ul>
-	 * 	<li/> If the map was created with TSR parameters, and is asked to output
-	 * SIMILITUDE parameters, it will average the scale vector to get the 
-	 * similitude scaling factor. 
-	 * 	<li/>
-	 * 	<li/>
-	 * 	<li/>
-	 * 	<li/>
-	 * </ul>
+	 * Returns a flat list of double values that can be used to represent this
+	 * map 
 	 * 
 	 * @param mode
 	 * @return
 	 */
 	public List<Double> parameters()
 	{
-		List<Double> result = null;
+		if(parameters != null)
+			return parameters;
+		
 		int size;
 
 		size = dim * dim + dim;
-		result = new ArrayList<Double>(size);
+		parameters = new ArrayList<Double>(size);
 		
 		for(int i = 0; i < dim; i++)
 			for(int j = 0; j < dim; j++)
-				result.add(transformation.getAsDouble(i,j));
+				parameters.add(transformation.getAsDouble(i,j));
 		
 		for(int i = 0; i < dim; i++)
-			result.add(translation.getAsDouble(i, 0));
+			parameters.add(translation.getAsDouble(i, 0));
 		
-		return result;
+		parameters = Collections.unmodifiableList(parameters); 
+		
+		return parameters; 
 	}
-	
 	
 	/**
 	 * Creates a new map, which is a composition of this map and the argument,
@@ -184,8 +180,7 @@ public class AffineMap extends AbstractMap
 	 */
 	public static int dimension(int numParameters)
 	{
-		double ddim = Math.floor(-1.0 + Math.sqrt(4.0 * numParameters + 1.0)
-			)/2.0; 
+		double ddim = Math.floor(-1.0 + Math.sqrt(4.0 * numParameters + 1.0))/2.0; 
 		return (int) ddim; 
 	}
 
@@ -198,6 +193,4 @@ public class AffineMap extends AbstractMap
 		
 		return new Point(out);
 	}	
-	
-	
 }

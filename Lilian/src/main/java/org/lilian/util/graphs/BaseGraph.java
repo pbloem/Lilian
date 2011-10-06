@@ -8,6 +8,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+/**
+ * A basic implementation of the {@link Graph} interface
+ * @author peter
+ *
+ * @param <L>
+ */
 public class BaseGraph<L> extends AbstractList<BaseGraph<L>.BaseNode> 
 	implements Graph<L, BaseGraph<L>.BaseNode>
 {

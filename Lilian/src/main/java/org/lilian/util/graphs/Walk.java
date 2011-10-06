@@ -1,7 +1,7 @@
 package org.lilian.util.graphs;
 
 /**
- * A walk represenst a series of nodes. 
+ * A walk represents a series of nodes. 
  * 
  * The nodes in a walk represent a continuous path in the graph from which the 
  * nodes originate. In other words, there must be a link between any two 
@@ -12,8 +12,6 @@ package org.lilian.util.graphs;
  * For collections of nodes that do not necessarily form a path in the graph, 
  * Graphs provides lightweight methods to switch between collections of
  * nodes and collections of labels 
- * 
- * 
  * 
  * @author peter
  *
