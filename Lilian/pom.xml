@@ -5,4 +5,46 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Lilian</name>
   <description>Machine Learning Toolkit</description>
+  <dependencies>
+  	<dependency>
+  		<groupId>uk.org.jsci</groupId>
+  		<artifactId>jsci-core</artifactId>
+  		<version>1.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.ujmp</groupId>
+  		<artifactId>ujmp</artifactId>
+  		<version>1.0</version>
+  	</dependency>
+  </dependencies>
+  <build>
+  <pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+    		<source>1.6</source>
+    		<target>1.6</target>
+ 		</configuration>
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </pluginManagement>
+  </build>
 </project>
