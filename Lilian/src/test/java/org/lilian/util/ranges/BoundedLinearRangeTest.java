@@ -34,7 +34,7 @@ public class BoundedLinearRangeTest
 		assertEquals(new Range(-1.5, -1.0), set.first(-1.5));
 	}
 	
-	@Test
+	
 	public void testRanges()
 	{
 		RangeSet ranges = new BoundedLinearRangeSet(-1.0, 0.3, 1.0, true);
@@ -48,7 +48,7 @@ public class BoundedLinearRangeTest
 		}
 	}
 	
-	@Test 
+	 
 	public void quick() 
 	{
 		assertEquals(-1.0 + (2.0 + 1.0) * 0.3, -1.0 + 0.3 + 0.3 + 0.3, 0.0);

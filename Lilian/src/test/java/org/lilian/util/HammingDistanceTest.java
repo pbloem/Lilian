@@ -16,11 +16,22 @@ public class HammingDistanceTest
 	public void testDistance()
 	{
 		List<Integer> a = Arrays.asList(0, 1, 0, 0, 1),
-                      b = Arrays.asList(1, 1, 1, 0, 0, 0, 1,0);
+                      b = Arrays.asList(1, 1, 1, 0, 0, 0, 1, 0);
 
 		Distance<List<Integer>> distance = new HammingDistance<Integer>();
 
 		assertEquals(6.0, distance.distance(a, b), 0.0);
 	}
+	
+	@Test
+	public void testDistance2()
+	{
+		List<String> a = Arrays.asList("0", "1", "0", "0", "1"),
+                     b = Arrays.asList("1", "0", "1", "1", "0");
+
+		Distance<List<String>> distance = new HammingDistance<String>();
+
+		assertEquals(5.0, distance.distance(a, b), 0.0);
+	}	
 
 }

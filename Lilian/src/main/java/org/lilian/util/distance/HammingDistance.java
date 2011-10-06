@@ -18,7 +18,7 @@ public class HammingDistance<T> implements Distance<List<T>>
 		
 		int diffs = 0;
 		for(int i = 0; i < min; i++)
-			if(Functions.equals(a.get(i), b.get(i)))
+			if(! Functions.equals(a.get(i), b.get(i)))
 				diffs ++;
 		
 		return diffs + penalty;
