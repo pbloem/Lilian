@@ -114,10 +114,16 @@ public class MatrixToolsTest
 			}
 	}
 
+	@Test
 	public void testIsInvertible()
 	{
 		RealMatrix mat = MatrixTools.identity(3);
 		
 		assertTrue(MatrixTools.isInvertible(mat));
+		
+		mat = MatrixTools.toMatrix("0, 0, 1; 0, 1, 0; 0, 0, 0");
+		
+		assertFalse(MatrixTools.isInvertible(mat));
+	
 	}
 }

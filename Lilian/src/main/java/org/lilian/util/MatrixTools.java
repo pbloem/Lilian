@@ -182,7 +182,7 @@ public class MatrixTools
 	
 	public static boolean isInvertible(RealMatrix in)
 	{
-		return ! new LUDecompositionImpl(in).getSolver().isNonSingular();
+		return new LUDecompositionImpl(in).getSolver().isNonSingular();
 	}
 	
 }
