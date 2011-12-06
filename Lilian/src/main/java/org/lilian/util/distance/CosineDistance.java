@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lilian.models.BasicFrequencyModel;
-import org.ujmp.core.Matrix;
-import org.ujmp.core.MatrixFactory;
-
 
 /**
  * Determines the distance between two lists of doubles by the cosine of the 
@@ -79,33 +76,33 @@ public class CosineDistance implements Distance<List<Double>>
 		return 1.0 - cos;
 	}
 	
-	public static double distance(Matrix a, Matrix b)
-	{
-		long n = a.getSize(0);
-		long i = 0;
-		
-		// The dot product between the two vectors
-		double dotProduct = 0.0;
-		for(; i < n ; i++)
-			dotProduct += a.getAsDouble(i) * b.getAsDouble(i);
-		
-		// The sq magnitude of vector a
-		double aMag = 0.0;
-		for(i = 0; i < n; i++)
-			aMag += a.getAsDouble(i) * a.getAsDouble(i);
-		
-		// The sq magnitude of vector b
-		double bMag = 0.0;
-		for(i = 0; i < n; i++)
-			bMag += b.getAsDouble(i) * b.getAsDouble(i);;
-			
-		// The cosine
-		if(aMag == 0.0 || bMag == 0.0)
-			return 1.0;
-		
-		double cos = Math.sqrt( (dotProduct * dotProduct) / (aMag * bMag) );
-		return 1.0 - cos;	
-	}	
+//	public static double distance(Matrix a, Matrix b)
+//	{
+//		long n = a.getSize(0);
+//		long i = 0;
+//		
+//		// The dot product between the two vectors
+//		double dotProduct = 0.0;
+//		for(; i < n ; i++)
+//			dotProduct += a.getAsDouble(i) * b.getAsDouble(i);
+//		
+//		// The sq magnitude of vector a
+//		double aMag = 0.0;
+//		for(i = 0; i < n; i++)
+//			aMag += a.getAsDouble(i) * a.getAsDouble(i);
+//		
+//		// The sq magnitude of vector b
+//		double bMag = 0.0;
+//		for(i = 0; i < n; i++)
+//			bMag += b.getAsDouble(i) * b.getAsDouble(i);;
+//			
+//		// The cosine
+//		if(aMag == 0.0 || bMag == 0.0)
+//			return 1.0;
+//		
+//		double cos = Math.sqrt( (dotProduct * dotProduct) / (aMag * bMag) );
+//		return 1.0 - cos;	
+//	}	
 
 }
 

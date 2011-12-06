@@ -8,11 +8,9 @@ package org.lilian.data.real;
 import java.io.Serializable;
 import java.util.*;
 
+import org.apache.commons.math.linear.ArrayRealVector;
+import org.apache.commons.math.linear.RealVector;
 import org.lilian.util.Metrizable;
-import org.ujmp.core.Matrix;
-import org.ujmp.core.doublematrix.DenseDoubleMatrix2D;
-import org.ujmp.core.doublematrix.DoubleMatrix;
-import org.ujmp.core.doublematrix.impl.ArrayDenseDoubleMatrix2D;
 
 public class Point 
 	extends AbstractList<Double>
@@ -20,58 +18,58 @@ public class Point
 {
 	private static final long serialVersionUID = 3199154235479870697L;
 	
-	private Matrix values; 
+	private double[] values; 
 
 	/**
-	 * Creates a Point of the given dimensionality, with zero values. 
+	 * Creates a Point of the given dimensionality, with all zero values. 
 	 * 
 	 * @param dimensionality
 	 */
 	public Point(int dimensionality)
 	{
-		this.values = DenseDoubleMatrix2D.factory.zeros(dimensionality, 1);
+		this.values = new double[dimensionality];
 	}
 	
 	/**
 	 * Creates a point directly from values specified in the parameters.
 	 * 
-	 * The point will be backed by the input array. Unless performance is a 
-	 * concern, the use of {@link Point.from(double[])} is recommended
+	 * The point will be not be backed by the input array. 
 	 * 
 	 * @throws IllegalArgumentException If zero arguments are specified 
 	 */
 	public Point(double... values) 
 	{
-		this.values = new ArrayDenseDoubleMatrix2D(values);
+		this.values = Arrays.copyOf(values, values.length);
 	}
 	
-	public Point(Matrix values)
+	/**
+	 * @param values
+	 */
+	public Point(RealVector values)
 	{
-		this.values = values;
-		
+		this.values = values.toArray();
 	}
 
 	public int dimensionality()
 	{
-		return (int)values.getSize(0);
+		return values.length;
 	}
 	
 	public void set(int index, double value)
 	{
-		values.setAsDouble(value, index, 1);
+		values[index] = value;
 	}
 	
 	@Override
 	public int size()
 	{
-		return (int)values.getSize(0);
+		return values.length;
 	}
 
 	@Override
 	public Double get(int index)
 	{
-		return values.getAsDouble(index, 0);
-
+		return values[index];
 	}
 
 	@Override
@@ -82,11 +80,10 @@ public class Point
 	
 	/**
 	 * Returns this Point represented as a one dimensional matrix.
-	 * 
 	 */
-	public Matrix getVector()
+	public RealVector getVector()
 	{
-		return new ArrayDenseDoubleMatrix2D(values);
+		return new ArrayRealVector(values);
 	}
 	
 	public String toString()
@@ -100,7 +97,7 @@ public class Point
 			if(first) first = false;
 			else sb.append(", ");
 			
-			sb.append(values.getAsDouble(i, 0));
+			sb.append(get(i));
 		}
 		sb.append("]");		
 		
@@ -115,11 +112,29 @@ public class Point
 	 */
 	public static double distance(Point a, Point b)
 	{
+		Point mi, ma;
+		if(a.values.length < b.values.length)
+		{
+			mi = a;
+			ma = b;
+		} else
+		{
+			mi = b;
+			ma = a;
+		}
+					
 		double distSq = 0.0, d;
 		
-		for(int i = 0; i < a.size(); i++)
+		int i;
+		for(i = 0; i < mi.size(); i++)
 		{
-			d = a.values.getAsDouble(i, 0) - b.values.getAsDouble(i, 0);
+			d = mi.values[i] - ma.values[i];
+			distSq += d * d;
+		}
+		
+		for(; i < ma.size(); i++)
+		{
+			d = ma.values[i];
 			distSq += d * d;
 		}
 		

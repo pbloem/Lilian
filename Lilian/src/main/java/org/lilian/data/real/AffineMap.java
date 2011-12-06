@@ -3,24 +3,22 @@ package org.lilian.data.real;
 import java.io.IOException;
 import java.util.*;
 
-import org.ujmp.core.Matrix;
-import org.ujmp.core.calculation.Calculation.Ret;
-import org.ujmp.core.doublematrix.DenseDoubleMatrix2D;
-import org.ujmp.core.doublematrix.impl.DefaultDenseDoubleMatrix2D;
+import org.apache.commons.math.linear.*;
+import org.lilian.util.MatrixTools;
 
 
 /**
  * Represents an affine transformation 
- *
  */
 public class AffineMap extends AbstractMap
 {
-
+	private static final long serialVersionUID = 7470030390150319468L;
+	
 	private int dim = -1;
 	private boolean invertible = false;
 	
-	private Matrix transformation = null;
-	private Matrix translation = null;
+	private RealMatrix transformation = null;
+	private RealVector translation = null;
 	
 	private AffineMap inverse = null;
 	
@@ -30,17 +28,17 @@ public class AffineMap extends AbstractMap
 	{
 	}
 	
-	public AffineMap(Matrix transformation, Matrix translation)
+	public AffineMap(RealMatrix transformation, RealVector translation)
 	{
 		assert(	transformation.isSquare() && 
-				transformation.getSize(0) == translation.getSize(0));
+				transformation.getColumnDimension() == translation.getDimension());
 		
-		this.transformation = transformation.clone();
-		this.translation = translation.clone();
+		this.transformation = transformation.copy();
+		this.translation = translation.copy();
 		
-		this.invertible = ! transformation.isSingular();
+		this.invertible = MatrixTools.isInvertible(transformation);
 		
-		this.dim = (int)translation.getSize(0);
+		this.dim = (int)translation.getDimension();
 	}	
 	
 	public AffineMap(List<Double> parameters)
@@ -51,16 +49,16 @@ public class AffineMap extends AbstractMap
 		if(dim * dim + dim != s)
 			throw new IllegalArgumentException("Number of parameters ("+s+") should satisfy d^2 + d (d="+dim+")");
 		
-		transformation = DenseDoubleMatrix2D.factory.zeros(dim, dim);
+		transformation = new Array2DRowRealMatrix(dim, dim);
 		for(int i = 0; i < dim; i++)
 			for(int j = 0; j < dim; j++)
-				transformation.setAsDouble(parameters.get(i * dim + j), i, j);
+				transformation.setEntry(i, j, parameters.get(i * dim + j));
 		
-		translation = DenseDoubleMatrix2D.factory.zeros(dim, 1);
+		translation = new ArrayRealVector(dim);
 		for(int i = 0; i < dim; i++)
-			translation.setAsDouble(parameters.get(dim*dim+i), i, 0);
+			translation.setEntry(i, parameters.get(dim*dim+i));
 		
-		this.invertible = ! transformation.isSingular();
+		this.invertible = MatrixTools.isInvertible(transformation);
 	}
 	
 	public boolean invertible()
@@ -78,16 +76,17 @@ public class AffineMap extends AbstractMap
 	{
 		if(inverse == null)
 		{
-			Matrix invTransform = transformation.inv();
+			RealMatrix invTransform = transformation.inverse();
 			
-			Matrix invTranslate = invTransform.mtimes(Ret.NEW, true, translation);
-			invTranslate.mtimes(-1.0);
+			RealVector invTranslate = invTransform.operate(translation);
+					//invTransform.multiply(translation);
+			invTranslate.mapMultiply(-1.0);
 			
 			inverse = new AffineMap();
 			inverse.transformation = invTransform;
 			inverse.translation    = invTranslate;
 			inverse.invertible = true;
-			inverse.dim = this.dim;
+			inverse.dim = this.dim;		
 			inverse.inverse = this;
 		}
 		
@@ -99,12 +98,12 @@ public class AffineMap extends AbstractMap
 		return dim;
 	}
 	
-	public Matrix getTransformation() {
-		return transformation.clone();
+	public RealMatrix getTransformation() {
+		return transformation.copy();
 	}
 
-	public Matrix getTranslation() {
-		return translation.clone();
+	public RealVector getTranslation() {
+		return translation.copy();
 	}
 	
 	/**
@@ -126,10 +125,10 @@ public class AffineMap extends AbstractMap
 		
 		for(int i = 0; i < dim; i++)
 			for(int j = 0; j < dim; j++)
-				parameters.add(transformation.getAsDouble(i,j));
+				parameters.add(transformation.getEntry(i,j));
 		
 		for(int i = 0; i < dim; i++)
-			parameters.add(translation.getAsDouble(i, 0));
+			parameters.add(translation.getEntry(i));
 		
 		parameters = Collections.unmodifiableList(parameters); 
 		
@@ -146,10 +145,10 @@ public class AffineMap extends AbstractMap
 	 */	
 	public AffineMap compose(AffineMap m)
 	{
-		Matrix newRot = transformation.mtimes(m.transformation);
+		RealMatrix newRot = transformation.multiply(m.transformation);
 		
-		Matrix newTrans = transformation.mtimes(m.translation);
-		newTrans.plus(translation);
+		RealVector newTrans = transformation.operate(m.translation);
+		newTrans.add(translation);
 		
 		return new AffineMap(newRot, newTrans); 
 	}
@@ -163,8 +162,8 @@ public class AffineMap extends AbstractMap
 	public static AffineMap identity(int dim)
 	{
 		return new AffineMap(
-				DenseDoubleMatrix2D.factory.eye(dim, dim), 
-				DenseDoubleMatrix2D.factory.zeros(dim, 1));
+				MatrixTools.identity(dim), 
+				new ArrayRealVector(dim));
 	}
 	
 	/**
@@ -187,10 +186,10 @@ public class AffineMap extends AbstractMap
 	@Override
 	public Point map(Point in)
 	{
-		Matrix vector = in.getVector();
-		Matrix out = transformation.mtimes(Ret.NEW, true, vector);
-		out.plus(Ret.ORIG, true, translation);
+		RealVector vector = in.getVector(); //optimize here
+		RealVector out = transformation.operate(vector);
+		out = out.add(translation); // here
 		
-		return new Point(out);
+		return new Point(out.getData()); // and here
 	}	
 }

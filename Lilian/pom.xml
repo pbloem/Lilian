@@ -7,13 +7,8 @@
   <description>Machine Learning Toolkit</description>
   <dependencies>
   	<dependency>
-  		<groupId>uk.org.jsci</groupId>
-  		<artifactId>jsci-core</artifactId>
-  		<version>1.0</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.ujmp</groupId>
-  		<artifactId>ujmp</artifactId>
+  		<groupId>jsci</groupId>
+  		<artifactId>jsci</artifactId>
   		<version>1.0</version>
   	</dependency>
   	<dependency>
@@ -21,7 +16,30 @@
   		<artifactId>junit</artifactId>
   		<version>4.10</version>
   	</dependency>
+  	<dependency>
+  		<groupId>org.apache.commons</groupId>
+  		<artifactId>commons-math</artifactId>
+  		<version>2.2</version>
+  	</dependency>
   </dependencies>
+   <repositories>
+    <repository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <name>Maven Repository Switchboard</name>
+      <url>http://repo1.maven.org/maven2</url>
+    </repository>
+    <repository>
+      <id>nexml-jsci</id>
+      <url>http://nexml-dev.nescent.org/.m2/repository/</url>
+    </repository>
+    <repository>
+      <id>peterbloem.nl</id>
+      <url>http://peterbloem.nl/maven2/</url>
+    </repository>    
+  </repositories>
   <build>
   <pluginManagement>
     <plugins>

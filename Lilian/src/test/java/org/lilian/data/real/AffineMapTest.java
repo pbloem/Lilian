@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.ujmp.core.doublematrix.DenseDoubleMatrix2D;
 
 public class AffineMapTest 
 {
@@ -72,7 +71,7 @@ public class AffineMapTest
 	@Test
 	public void testMapPoint() 
 	{
-		// arbitrary non-invertible map
+		// arbitrary map
 		Map map = new AffineMap(Arrays.asList(4.0, 3.0, 2.0, 1.0, 3.0, 3.0));
 
 		assertEquals(new Point(58, 26), map.map(new Point(7, 9)));		
