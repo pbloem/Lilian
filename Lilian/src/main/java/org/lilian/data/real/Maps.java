@@ -1,7 +1,7 @@
-//package org.lilian.data.real;
-//
-//public class Maps
-//{
+package org.lilian.data.real;
+
+public class Maps
+{
 //
 //	/**
 //	 * Finds the best fitting affine transformation from the points in xSet to 
@@ -130,7 +130,4 @@
 //		//* Create the map
 //		return new AffineMap(r, t);
 //	}
-//
-//	
-//	
-//}
+}

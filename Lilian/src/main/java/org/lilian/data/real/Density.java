@@ -1,7 +1,7 @@
 package org.lilian.data.real;
 
 /**
- * Represents a probability distribution over real-valued verctors
+ * Represents a probability distribution over real-valued vectors
  * 
  * @author peter
  *

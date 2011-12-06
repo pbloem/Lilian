@@ -3,6 +3,12 @@ package org.lilian.data.real;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * Represents a function from a Euclidean space onto itself.
+ * 
+ * @author Peter
+ *
+ */
 public interface Map extends Serializable {
 	
 	public Point map(Point in);

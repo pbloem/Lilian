@@ -185,4 +185,13 @@ public class MatrixTools
 		return new LUDecompositionImpl(in).getSolver().isNonSingular();
 	}
 	
+	public static double getDeterminant(RealMatrix in)
+	{
+		return new LUDecompositionImpl(in).getDeterminant();
+	}
+
+	public static RealMatrix inverse(RealMatrix in) 
+	{
+		return new LUDecompositionImpl(in).getSolver().getInverse();
+	}
 }
