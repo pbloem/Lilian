@@ -488,4 +488,50 @@ public class Functions
 	
 	}
 	
+	
+	/**
+	 * Draws an integer according to specified probabilities.
+	 * 
+	 * Draws a random integer i such that i's probability of being drawn is
+	 * equal to the i'th double returned by the collection's iterator.
+	 * 
+	 * @param probabilities A collection of doubles, summing to 1.0, whose n'th 
+	 * 			element defines the probability of n being drawn (first 
+	 * 			element is 0)
+	 * @param sum The sum of the values in probabilities. This valeu is not 
+	 * 				calculated from the collection for reasons of efficiency.  
+	 */
+	public static int draw(Collection<Double> probabilities, double sum)
+	{
+		return draw(probabilities, sum, Global.random);
+	}
+	
+	public static int draw(Collection<Double> probabilities, double sum, Random rand)
+	{
+		// * select random element
+		double draw = rand.nextDouble();
+		double total = 0.0;
+		int elem = 0;
+		for(double probability : probabilities)
+		{
+			total += probability/sum;
+			if(total > draw)
+				break;
+			
+			elem++;
+		}
+		
+		// account for floating point problems
+		if(elem >= probabilities.size())
+		{
+			elem = probabilities.size()-1;
+//			Global.logger.info("Index larger than probabilities.size(): draw = "+draw+", total = "+total+", sum = "+sum+". ");
+		}
+
+		return elem;
+	}
+	
+	
+	
+	
 }

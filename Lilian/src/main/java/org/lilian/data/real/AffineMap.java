@@ -1,16 +1,18 @@
 package org.lilian.data.real;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
 import org.apache.commons.math.linear.*;
+import org.lilian.search.Builder;
+import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
 
 
 /**
  * Represents an affine transformation 
  */
-public class AffineMap extends AbstractMap
+public class AffineMap extends AbstractMap implements Parametrizable, Serializable
 {
 	private static final long serialVersionUID = 7470030390150319468L;
 	
@@ -71,7 +73,53 @@ public class AffineMap extends AbstractMap
 		return 	  "[t:"  + translation + ", R:" + transformation
 				+ ", inv:" + invertible + "]";		
 	}
-	
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + dim;
+		result = prime * result + (invertible ? 1231 : 1237);
+		result = prime * result
+				+ ((transformation == null) ? 0 : transformation.hashCode());
+		result = prime * result
+				+ ((translation == null) ? 0 : translation.hashCode());
+		return result;
+	}
+
+	/**
+	 * Two AffineMaps are equal if their dimensions are equal and the double 
+	 * values making up their transformations are equal.
+	 * 
+	 * Note that this means testing double values using equality.
+	 * 
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		AffineMap other = (AffineMap) obj;
+		if (dim != other.dim)
+			return false;
+		if (invertible != other.invertible)
+			return false;
+		if (transformation == null) {
+			if (other.transformation != null)
+				return false;
+		} else if (!transformation.equals(other.transformation))
+			return false;
+		if (translation == null) {
+			if (other.translation != null)
+				return false;
+		} else if (!translation.equals(other.translation))
+			return false;
+		return true;
+	}
+
 	public AffineMap inverse()
 	{
 		if(inverse == null)
@@ -183,6 +231,33 @@ public class AffineMap extends AbstractMap
 		return (int) ddim; 
 	}
 
+	public static Builder<AffineMap> builder(int dimension)
+	{
+		return new AMBuilder(dimension);
+	}
+	
+	private static class AMBuilder implements Builder<AffineMap>
+	{
+		private int dimension;
+
+		public AMBuilder(int dimension) 
+		{
+			this.dimension = dimension;
+		}
+
+		@Override
+		public AffineMap build(List<Double> parameters) 
+		{
+			return new AffineMap(parameters);
+		}
+
+		@Override
+		public int numParameters() 
+		{
+			return AffineMap.numParameters(dimension);
+		}
+	}
+	
 	@Override
 	public Point map(Point in)
 	{

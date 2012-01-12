@@ -3,8 +3,10 @@ package org.lilian.data.real;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
+import org.lilian.search.Builder;
 
 public class AffineMapTest 
 {
@@ -74,7 +76,24 @@ public class AffineMapTest
 		// arbitrary map
 		Map map = new AffineMap(Arrays.asList(4.0, 3.0, 2.0, 1.0, 3.0, 3.0));
 
-		assertEquals(new Point(58, 26), map.map(new Point(7, 9)));		
+		assertEquals(new Point(58, 26), map.map(new Point(7, 9)));	
+	}
+	
+	@Test
+	public void testBuilder()
+	{
+		Builder<AffineMap> builder = AffineMap.builder(3);
 		
+		assertEquals(12, builder.numParameters());
+		
+		List<Double> params = Arrays.asList(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0, 0.0,0.0,0.0);
+		
+		AffineMap result = builder.build(params);
+		
+		assertEquals(AffineMap.identity(3), result);
+		
+		AffineMap result2 = builder.build(result.parameters());
+		
+		assertEquals(result, result2);		
 	}
 }

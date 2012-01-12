@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.pow;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -20,9 +21,13 @@ import org.lilian.util.MatrixTools;
  *
  * TODO: 
  * <ul>
- *   <li>Replace implementations with references to standard Commons Math 
- * functions</li>
- *   <li>Write unit tests</li>
+ *   <li>
+ *   Thoroughly test this implementation, in particular the correspondence 
+ *   between the density and generate method.
+ *   </li>
+ *   <li>
+ *   Use cholesky decomp method for faster generation. (not that important now).
+ *   </li>
  * </ul>
  */
 public class MVN implements Density, Generator
@@ -74,31 +79,35 @@ public class MVN implements Density, Generator
 		this.transform = transform;
 	}	
 
+	/**
+	 * Draw a random vector with all elements ~ N(0, 1)
+	 * 
+	 * @return
+	 */
+	private Point drawBase()
+	{	
+		Point base = new Point(dimension());
+		for(int i = 0; i < dimension(); i++)
+			base.set(i, Global.random.nextGaussian());
+		
+		return base;
+	}	
 	
 	@Override
 	public Point generate()
 	{
-		return generate(Global.random);
+		Point p = drawBase();
+		return transform.map(p);
 	}
 
 	@Override
-	public Point generate(Random random)
-	{	
-		return null;
-	}
-
-	@Override
-	public Point generate(int n)
+	public List<Point> generate(int n)
 	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Point generate(int n, Random random)
-	{
-		// TODO Auto-generated method stub
-		return null;
+		List<Point> points = new ArrayList<Point>(n);
+		for(int i = 0; i < n; i++)
+			points.add(generate());
+		
+		return points;		
 	}
 
 	@Override
@@ -113,7 +122,6 @@ public class MVN implements Density, Generator
 		double exponent = -0.5 * diff.dotProduct( covInv.operate(diff) ); 
 
 		return scalar * exp(exponent);	
-		
 	}
 	
 	public RealMatrix covariance()
@@ -142,7 +150,7 @@ public class MVN implements Density, Generator
 		return mean;
 	}
 	
-	public double dimension()
+	public int dimension()
 	{
 		return transform.dimension();
 	}
