@@ -10,7 +10,7 @@ import java.util.*;
 
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
-import org.lilian.util.Metrizable;
+import org.lilian.util.distance.Metrizable;
 
 public class Point 
 	extends AbstractList<Double>
@@ -34,13 +34,23 @@ public class Point
 	 * Creates a point directly from values specified in the parameters.
 	 * 
 	 * The point will be not be backed by the input array. 
-	 * 
-	 * @throws IllegalArgumentException If zero arguments are specified 
 	 */
 	public Point(double... values) 
 	{
 		this.values = Arrays.copyOf(values, values.length);
 	}
+	
+	/**
+	 * Creates a point directly from values specified in the parameters.
+	 * 
+	 * The point will be not be backed by the input list. 
+	 */
+	public Point(List<Double> params) 
+	{
+		this.values = new double[params.size()];
+		for(int i = 0; i < values.length; i++)
+			this.values[i] = params.get(i);
+	}	
 	
 	/**
 	 * @param values
@@ -85,6 +95,17 @@ public class Point
 	{
 		return new ArrayRealVector(values);
 	}
+	
+	/**
+	 * Returns this Point represented as an array of double values.
+	 * 
+	 * The point is backed by this array, so this method should be user with 
+	 * extreme care, only in situation where optimization is important  
+	 */
+	public double[] getBackingData()
+	{
+		return values;
+	}	
 	
 	public String toString()
 	{

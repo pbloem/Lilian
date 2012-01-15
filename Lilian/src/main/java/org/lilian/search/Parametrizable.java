@@ -21,5 +21,4 @@ public interface Parametrizable
 	 * @return
 	 */
 	public List<Double> parameters();
-
 }

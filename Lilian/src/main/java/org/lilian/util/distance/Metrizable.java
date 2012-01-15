@@ -1,4 +1,4 @@
-package org.lilian.util;
+package org.lilian.util.distance;
 
 /**
  * A class is metrizable, when there is a natural distance function over pairs

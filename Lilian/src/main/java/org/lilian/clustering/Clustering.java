@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.lilian.util.Metrizable;
 import org.lilian.util.distance.CosineDistance;
 import org.lilian.util.distance.DistanceComparator;
+import org.lilian.util.distance.Metrizable;
 
 /**
  * A collection of static methods to help with clustering

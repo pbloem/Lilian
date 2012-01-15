@@ -12,6 +12,13 @@ import org.apache.commons.math.linear.RealVector;
 
 import static java.lang.Math.*;
 
+/**
+ * Some basic static matrix functions to provide functionality that Apache
+ * Commons Math lacks.
+ * 
+ * @author peter
+ *
+ */
 public class MatrixTools
 {
 	/**

@@ -6,7 +6,9 @@ import java.util.List;
 
 import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
+import org.lilian.data.real.Map;
 import org.lilian.search.Builder;
+import org.lilian.search.Parametrizable;
 
 
 /**
@@ -109,7 +111,43 @@ public class IFSs
 		Builder<IFS<AffineMap>> builder = IFS.builder(k, AffineMap.builder(d));
 		return builder.build(params);		
 	}
-//	
+	
+	/**
+	 * Returns a slightly perturbed version of an IFS model.
+	 * 
+	 * @param in
+	 * @param variance The variance of the random values added to each parameter
+	 * @return
+	 */
+	public static <M extends Map & Parametrizable> IFS<M> perturb(
+			IFS<M> in, Builder<IFS<M>> builder, double variance)
+	{
+		List<Double> params = new ArrayList<Double>(in.parameters());
+		
+		for(int i = 0; i < params.size(); i++)
+			params.set(i,  params.get(i) + Global.random.nextGaussian() * variance);
+		
+		return builder.build(params);
+	}
+	
+	/**
+	 * Returns a slightly perturbed version of an IFS model.
+	 * 
+	 * @param in
+	 * @param variance The variance of the random values added to each parameter
+	 * @return
+	 */
+	public static <M extends Map & Parametrizable> IFS<M> perturb(
+			IFS<M> in, Builder<IFS<M>> builder, List<Double> change)
+	{
+		List<Double> params = new ArrayList<Double>(in.parameters());
+		
+		for(int i = 0; i < params.size(); i++)
+			params.set(i,  params.get(i) + change.get(i));
+		
+		return builder.build(params);
+	}	
+
 //	public static IFSDensityModel randomTSR(int comp, double stdDev)
 //	{
 //		List<Double> parameters = new ArrayList<Double>();

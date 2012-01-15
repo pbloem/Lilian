@@ -122,7 +122,7 @@ public class Draw
 			Generator generator, int samples, int res, boolean log)
 	{
 		double[] range = new double[]{-1.0, 1.0};
-		return draw(generator, samples, range, range, res, log);
+		return draw(generator, samples, range, range, res, res, log);
 	}
 	
 	/**
@@ -136,30 +136,29 @@ public class Draw
 											int samples,
 											double[] xrange, 
 											double[] yrange, 
-											int res,
+											int xRes,
+											int yRes,											
 											boolean log)
 	{
+		// * size of the image in coordinates
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
 		
-		double maxDelta = Math.max(xDelta, yDelta); 		
-		double minDelta = Math.min(xDelta, yDelta);
+		// * coordinate distance per pixel
+		double xStep = xDelta/(double) xRes;
+		double yStep = yDelta/(double) yRes;		
 		
-		double step = minDelta/(double) res;
-		
-		int xRes = (int) (xDelta / step);
-		int yRes = (int) (yDelta / step);
+		// int xRes = (int) (xDelta / xStep);
+		// int yRes = (int) (yDelta / yStep);
 
 		float max = Float.NEGATIVE_INFINITY;
 		float min = 0.0f;		
-		float[][] matrix = new float[yRes][];
+		float[][] matrix = new float[xRes][];
 		for(int x = 0; x < xRes; x++)
 		{
 			matrix[x] = new float[yRes];
 			for(int y = 0; y < yRes; y++)
-			{
 				matrix[x][y] = 0.0f;				
-			}
 		}
 		
 		int xp, yp;

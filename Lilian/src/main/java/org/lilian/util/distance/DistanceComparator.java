@@ -2,7 +2,6 @@ package org.lilian.util.distance;
 
 import java.util.Comparator;
 
-import org.lilian.util.Metrizable;
 
 /**
  * Compares elements by their distance to a given element
