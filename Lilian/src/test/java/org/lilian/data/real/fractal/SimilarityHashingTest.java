@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -18,9 +19,11 @@ import javax.imageio.ImageIO;
 
 import org.junit.Test;
 import org.lilian.Global;
+import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Generator;
 import org.lilian.data.real.MVN;
+import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
@@ -39,11 +42,11 @@ public class SimilarityHashingTest
 		File dir = new File("/Users/Peter/Documents/PhD/simhash/");
 		dir.mkdirs();
 		
-		// Generator im = IFSs.sierpinski().generator();
+		Generator im = IFSs.sierpinski().generator();
 		// Generator im = IFSs.cantorA().generator();
 		// Generator im = new MVN(2);
-		Generator im = IFSs.random(2, 4, 0.55).generator();
-		Generator gen = new SSGenerator(im);
+		// Generator<Point> im = IFSs.random(2, 4, 0.55).generator();
+		Generator<Point> gen = new SSGenerator(im);
 		
 		try
 		{
@@ -64,7 +67,7 @@ public class SimilarityHashingTest
 			BufferedImage image = Draw.draw(
 					gen, SAMPLES, 
 					new double[]{.0, 1.0}, new double[]{.0, 1.0},
-					1000, 1000, false);
+					250, 250, false);
 			ImageIO.write(image, "PNG", new File(dir, "density.png"));
 		} catch (IOException e)
 		{
@@ -120,14 +123,14 @@ public class SimilarityHashingTest
 		return Math.atan( l1 / l0 );
 	}
 	
-	public static class SSGenerator implements Generator
+	public static class SSGenerator implements Generator<Point>
 	{		
 		private static final int BUFFER_SIZE = 5000;
 		
-		private Generator master;
+		private Generator<Point> master;
 		private List<Point> buffer = new ArrayList<Point>(BUFFER_SIZE);
 	
-		public SSGenerator(Generator master)
+		public SSGenerator(Generator<Point> master)
 		{
 			this.master = master;
 			buffer();
@@ -166,7 +169,19 @@ public class SimilarityHashingTest
 			// * Normalize
 			angle = angle / Math.PI;
 					
-			return new Point(scale, angle);
+			// return new Point(scale, angle);
+			AffineMap map = Maps.findMap(
+					Arrays.asList(a0, a1),
+					Arrays.asList(b0, b1));
+			
+//			return new Point(
+//					Math.abs(map.getTranslation().getEntry(0)),
+//					Math.abs(map.getTranslation().getEntry(1))					
+//				);
+			
+			return new Point(
+					Math.abs(a0.get(0) - b0.get(0)) + Math.abs(a1.get(0) - b1.get(0)) ,
+					Math.abs(a0.get(1) - b0.get(1)) + Math.abs(a1.get(1) - b1.get(1)) );
 		}
 
 		@Override
@@ -183,7 +198,7 @@ public class SimilarityHashingTest
 	/**
 	 * Finds the top n bins in a 2D histogram
 	 */
-	public static List<Bin> top(Generator generator,
+	public static List<Bin> top(Generator<Point> generator,
 											int samples,
 											double[] xrange, 
 											double[] yrange, 

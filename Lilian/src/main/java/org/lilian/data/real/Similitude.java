@@ -1,97 +1,167 @@
-//package org.lilian.data.real;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.Vector;
-//
-//import no.uib.cipr.matrix.DenseMatrix;
-//
-//import org.ujmp.core.Matrix;
-//
-//public class Similitude
-//{
-//	Matrix scale;
-//	
-//	public Similitude(List<Double> parameters)
-//	{
-//		int s = parameters.size();
-//		double ddim =  ( -1.0 + Math.sqrt(-7.0 + s * 8.0))/2.0;
-//		dim = (int)Math.round(ddim);
-//		
-//		if(1 + dim + (dim*dim - dim)/2  != s)
-//			throw new IllegalArgumentException("Number of parameters ("+s+") should satisfy 1 + d + (d^2 - d)/2 (d="+ddim+", " + dim + ")");
-//
-//		double scalar	 = parameters.get(0); 
-//		Vector scale 	 = Functions.singleValue(dim, scalar);
-//		this.translation = Functions.toVector(parameters.subList(1, dim+1)); 		
-//		List<Double> angles = parameters.subList(dim + 1, parameters.size());
-//		Matrix rotation  = Functions.toRotationMatrix(angles);
-//		
-//		Matrix scaleMatrix = Functions.diag(scale);		
-//		this.transformation = rotation.mult(scaleMatrix, new DenseMatrix(dim, dim));
-//		
-//		this.invertible = Functions.isInvertible(transformation);
-//		
-//		this.scale = scale;
-//		this.angles = new ArrayList<Double>(angles.size());
-//		this.angles.addAll(angles);
-//		
-//		mode = Mode.SIMILITUDE;
-//	}	
-//	
-//	/**
-//	 * Returns a list of parameters in the given mode
-//	 * 
-//	 * <ul>
-//	 * 	<li/> If the map was created with TSR parameters, and is asked to output
-//	 * SIMILITUDE parameters, it will average the scale vector to get the 
-//	 * similitude scaling factor. 
-//	 * 	<li/>
-//	 * 	<li/>
-//	 * 	<li/>
-//	 * 	<li/>
-//	 * </ul>
-//	 * 
-//	 * @param mode
-//	 * @return
-//	 */
-//	public List<Double> parameters(Mode mode)
-//	{
-//		List<Double> result = null;
-//		int size;
-//				
-//		size = 1 + dim + (dim * dim - dim)/2;
-//		result = new ArrayList<Double>(size);
-//		
-//		result.add(scale.get(0));
-//		
-//		for(double d : translation)
-//			result.add(d);
-//			
-//		result.addAll(angles);
-//			
-//		return result;
-//	}	
-//	
-//	/**
-//	 * Scaling ratio of the map, can be negative.
-//	 * 
-//	 * @return
-//	 */
-//	public double similitude()
-//	{
-//		return scale.get(0);	
-//	}	
-//
-//	@Override
-//	public Point map(Point in)
-//	{
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//	public static int numParameters(dimension)
-//	{
-//		s = 1 + dimension + (dimension * dimension - dimension)/2; break;
-//	}
-//}
+package org.lilian.data.real;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math.linear.RealVector;
+import org.lilian.search.Builder;
+import org.lilian.search.Parametrizable;
+import org.lilian.util.MatrixTools;
+
+/**
+ * A similitude (or similarity transform) consists of rotation, a uniform 
+ * scaling and a translation. 
+ * 
+ * @author Peter
+ *
+ */
+public class Similitude extends AbstractMap implements Parametrizable
+{
+	private static final long serialVersionUID = 3717926722178382627L;
+
+	protected int dimension;
+	
+	protected double scalar;
+	protected List<Double> angles;
+	
+	// combines the rotation and scaling
+	protected RealMatrix rotScale;
+	
+	protected RealVector translation;
+	
+	public Similitude(List<Double> parameters)
+	{
+		int s = parameters.size();
+		double ddim =  ( -1.0 + Math.sqrt(-7.0 + s * 8.0))/2.0;
+		
+		dimension = (int)Math.round(ddim);
+		
+		if(1 + dimension + (dimension*dimension - dimension)/2  != s)
+			throw new IllegalArgumentException("Number of parameters ("+s+") should satisfy 1 + d + (d^2 - d)/2 (d="+ddim+", " + dimension + ")");
+
+		init(
+				parameters.get(0), 
+				parameters.subList(1, dimension+1), 
+				parameters.subList(dimension + 1, parameters.size()));		
+	}	
+	
+	public Similitude(double scalar, List<Double> translation, List<Double> angles)
+	{
+		init(scalar, translation, angles);
+	}
+	
+	private void init(double scalar, List<Double> translation, List<Double> angles)
+	{
+		dimension = translation.size();
+		
+		this.scalar	= scalar;
+		this.translation = MatrixTools.toVector(translation); 		
+		this.angles = new ArrayList<Double>(angles);
+		
+		RealMatrix rotation = MatrixTools.toRotationMatrix(angles);
+		this.rotScale = rotation.scalarMultiply(scalar);
+	}
+
+	
+	/**
+	 * Returns a representation of this similitude as a list of double values.
+	 * 
+	 * @param mode
+	 * @return
+	 */
+	public List<Double> parameters()
+	{
+		int dim = dimension();
+		int size = 1 + dim + (dim * dim - dim)/2;
+		List<Double> result = new ArrayList<Double>(size);
+		
+		result.add(scalar);
+		
+		for(double d : translation.getData())
+			result.add(d);
+			
+		result.addAll(angles);
+			
+		return result;
+	}	
+	
+	/**
+	 * Scaling ratio of the map, can be negative.
+	 * 
+	 * @return
+	 */
+	public double scalar()
+	{
+		return scalar;	
+	}	
+
+	@Override
+	public Point map(Point in)
+	{
+		RealVector result = rotScale.operate(in.getVector());
+		
+		return new Point(result.add(translation));
+	}
+
+	public static int numParameters(int dimension)
+	{
+		return 1 + dimension + (dimension * dimension - dimension)/2;
+	}
+
+	@Override
+	public boolean invertible()
+	{
+		return scalar != 0;
+	}
+
+	@Override
+	public Similitude inverse()
+	{
+		// inv(s, R, t) = <1/s, R', -1/s * R'>
+		
+		double invScalar = 1.0 / scalar;
+		
+		List<Double> invAngles = new ArrayList<Double>(angles.size());
+		for(int i = 0 ; i < angles.size(); i++)
+			invAngles.add(-angles.get(i));
+		RealMatrix invRotScale = MatrixTools.toRotationMatrix(invAngles).scalarMultiply(-invScalar);
+		RealVector invTranslation = invRotScale.operate(translation);
+
+		return new Similitude(invScalar, new Point(invTranslation), invAngles);
+	}
+
+	@Override
+	public int dimension()
+	{
+		return dimension;
+	}
+	
+	public static Builder<Similitude> builder(int dimension)
+	{
+		return new SBuilder(dimension);
+	}
+	
+	private static class SBuilder implements Builder<Similitude>
+	{
+		private int dimension;
+
+		public SBuilder(int dimension) 
+		{
+			this.dimension = dimension;
+		}
+
+		@Override
+		public Similitude build(List<Double> parameters) 
+		{
+			return new Similitude(parameters);
+		}
+
+		@Override
+		public int numParameters() 
+		{
+			return Similitude.numParameters(dimension);
+		}
+	}
+	
+}

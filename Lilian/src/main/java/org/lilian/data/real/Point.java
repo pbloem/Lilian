@@ -10,6 +10,7 @@ import java.util.*;
 
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
+import org.lilian.Global;
 import org.lilian.util.distance.Metrizable;
 
 public class Point 
@@ -160,6 +161,15 @@ public class Point
 		}
 		
 		return Math.sqrt(distSq);
+	}
+
+	public static Point random(int dim, double var)
+	{
+		Point p = new Point(dim);
+		for(int i = 0; i < dim; i++)
+			p.set(i, Global.random.nextGaussian() * var);
+		
+		return p;
 	}
 	
 }

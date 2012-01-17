@@ -10,7 +10,7 @@ import java.util.Random;
  */
 public interface Generator<P>
 {
-	public Point generate();	
+	public P generate();	
 	
 	public List<P> generate(int n);
 }

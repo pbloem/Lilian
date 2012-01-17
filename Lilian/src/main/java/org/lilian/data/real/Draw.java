@@ -132,7 +132,7 @@ public class Draw
 	 * @param log If true, the log values are plotted, so that low values are 
 	 * 				more visible
 	 */
-	public static BufferedImage draw(Generator generator,
+	public static BufferedImage draw(Generator<Point> generator,
 											int samples,
 											double[] xrange, 
 											double[] yrange, 

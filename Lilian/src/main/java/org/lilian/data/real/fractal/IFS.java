@@ -52,12 +52,12 @@ public class IFS<M extends Map & Parametrizable >
 	 * 
 	 * @return
 	 */
-	public Generator generator()
+	public Generator<Point> generator()
 	{
 		return new IFSGenerator();
 	}
 		
-	private class IFSGenerator implements Generator 
+	private class IFSGenerator implements Generator<Point>
 	{
 		Point p = basis.generate();
 

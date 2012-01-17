@@ -105,7 +105,11 @@ public class MatrixTools
 	
 	public static RealVector toVector(List<Double> values)
 	{
-		return new ArrayRealVector((Double[]) values.toArray());
+		RealVector result = new ArrayRealVector(values.size());
+		for(int i = 0; i < values.size(); i++)
+			result.setEntry(i, values.get(i));
+		
+		return result;
 	}
 	
 
