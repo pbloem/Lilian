@@ -120,6 +120,26 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		return true;
 	}
 
+	/**
+	 * True is this affinemap has the same parameters as the argument, to within 
+	 * a given margin (the difference for each individual parameter should be 
+	 * smaller than the margin).
+	 * 
+	 * @param other
+	 * @param margin
+	 * @return
+	 */
+	public boolean equals(AffineMap other, double margin) 
+	{
+		List<Double> otherParameters = other.parameters();
+		for(int i = 0; i < parameters().size(); i++)
+			if(Math.abs(otherParameters.get(i) - parameters.get(i)) > margin)
+				return false;
+		
+		return true;
+	}
+
+
 	public AffineMap inverse()
 	{
 		if(inverse == null)

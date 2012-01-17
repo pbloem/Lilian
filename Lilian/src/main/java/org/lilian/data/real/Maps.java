@@ -1,133 +1,134 @@
 package org.lilian.data.real;
 
+import java.util.List;
+
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.ArrayRealVector;
+import org.apache.commons.math.linear.DecompositionSolver;
+import org.apache.commons.math.linear.LUDecompositionImpl;
+import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math.linear.RealVector;
+import org.apache.commons.math.linear.SingularValueDecomposition;
+import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.lilian.util.MatrixTools;
+
 public class Maps
 {
-//
-//	/**
-//	 * Finds the best fitting affine transformation from the points in xSet to 
-//	 * the points in ySet. The transformation is composed of a rotation matrix R, 
-//	 * a scalar c and a translation vector t. The transformation combines these 
-//	 * as y = cRx + t.
-//	 * 
-//	 * The error that is minimized by the result of this method is the mean 
-//	 * squared error: e = (1/n) * sum_i-n (||y_i-(cRx_i + t)||^2)
-//	 *  
-//	 * This is an implementation of the method set out by Shinji Umeyama, in the 
-//	 * correspondence "Least squares estimation of transformation parameters
-//	 * between two point patterns".
-//	 * 
-//	 * If the sizes of the two lists of point are not the same, behavior is 
-//	 * undefined.
-//	 *  
-//	 * @param xSet
-//	 * @param ySet
-//	 * @return An AffineMap from xSet to ySet. null if such a map could not be 
-//	 * 	found (this happens when the covariance matrix of x and y cannot 
-//	 * 	be decomposed with a singular value decomposition) 
-//	 */
-//	public static AffineMap findMap(List<Point> xSet, List<Point> ySet)
-//	{
-//		int dim = xSet.get(0).dimensionality();
-//		int size = xSet.size();
-//		
-//		//* Calculate the means
-//		DenseVector xMean = new DenseVector(dim);
-//		for(Point x : xSet)
-//			xMean.add(x.getVector());
-//		xMean.scale(1.0/xSet.size());
-//		
-//		DenseVector yMean = new DenseVector(dim);
-//		for(Point y : ySet)
-//			yMean.add(y.getVector());
-//		yMean.scale(1.0/xSet.size());
-//				
-//		//* Calculate the standard deviations
-//		DenseVector difference = new DenseVector(dim);
-//		double norm;
-//		
-//		double xStdDev = 0.0;
-//		for(Point x : xSet)
-//		{
-//			difference.set(x.getVector());
-//			difference.add(-1.0, xMean);
-//			norm = difference.norm(Vector.Norm.Two);
-//			xStdDev += norm * norm;
-//		}	
-//		xStdDev = xStdDev / xSet.size();
-//		
-//		double yStdDev = 0.0;
-//		for(Point y : ySet)
-//		{
-//			difference.set(y.getVector());
-//			difference.add(-1.0, yMean);
-//			norm = difference.norm(Vector.Norm.Two);
-//			yStdDev += norm * norm;
-//		}	
-//		yStdDev = yStdDev / ySet.size();
-//	
-//		//* Calculate the covariance martix
-//	
-//		DenseVector xDifference = new DenseVector(dim),
-//					yDifference = new DenseVector(dim);
-//		
-//		DenseMatrix covariance = new DenseMatrix(dim, dim);
-//		
-//		for(int i = 0; i < size;i++)
-//		{
-//			xDifference.set(xSet.get(i).getVector());
-//			xDifference.add(-1.0, xMean);
-//			
-//			yDifference.set(ySet.get(i).getVector());
-//			yDifference.add(-1.0, yMean);
-//			
-//			covariance.rank1(yDifference, xDifference);
-//		}
-//		
-//		covariance.scale(1.0/size);
-//		
-//		//* Find U, V and S
-//		
-//		SVD svd = null;
-//		try {
-//			svd = SVD.factorize(covariance);
-//		} catch (NotConvergedException e)
-//		{
-//			return null;
-//		}
-//		DenseMatrix u  = svd.getU();
-//		DenseMatrix vt = svd.getVt();
-//	
-//		
-//		double det = Functions.determinant(covariance); // FIXME: this may not work (broken LU decomp)
-//		DenseMatrix s = Matrices.identity(dim);
-//		
-//		if(det < 0)
-//			s.set(dim-1, dim-1, -1.0);
-//		
-//		//* Calculate R
-//		Matrix r0, r;
-//		
-//		r0 =  u.mult(s,  new DenseMatrix(dim, dim));
-//		r  = r0.mult(vt, new DenseMatrix(dim, dim));
-//		
-//		//* Calculate c
-//		double trace = 0.0;
-//		double[] values = svd.getS();
-//		for(int i = 0; i < dim-1; i++)
-//			trace += values[i];
-//		trace += det < 0 ? -values[dim-1] : values[dim-1];
-//		
-//		double c = 1.0/xStdDev * trace;
-//		
-//		r.scale(c);
-//		
-//		//* calculate t
-//		
-//		DenseVector t = new DenseVector(dim);
-//		t.set(yMean);
-//		t.add(-1.0, r.mult(xMean, new DenseVector(dim)));
-//		
-//		//* Create the map
-//		return new AffineMap(r, t);
-//	}
+
+	/**
+	 * Finds the best fitting affine transformation from the points in xSet to 
+	 * the points in ySet. The transformation is composed of a rotation matrix R, 
+	 * a scalar c and a translation vector t. The transformation combines these 
+	 * as y = cRx + t.
+	 * 
+	 * The error that is minimized by the result of this method is the mean 
+	 * squared error: e = (1/n) * sum_i-n (||y_i-(cRx_i + t)||^2)
+	 *  
+	 * This is an implementation of the method set out by Shinji Umeyama, in the 
+	 * correspondence "Least squares estimation of transformation parameters
+	 * between two point patterns".
+	 * 
+	 * If the sizes of the two lists of point are not the same, behavior is 
+	 * undefined.
+	 *  
+	 * @param xSet
+	 * @param ySet
+	 * @return An AffineMap from xSet to ySet. null if such a map could not be 
+	 * 	found (this happens when the covariance matrix of x and y cannot 
+	 * 	be decomposed with a singular value decomposition) 
+	 */
+	public static AffineMap findMap(List<Point> xSet, List<Point> ySet)
+	{
+		int dim = xSet.get(0).dimensionality();
+		int size = xSet.size();
+		
+		// * Calculate the means
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector xMean = new ArrayRealVector(dim);
+		for(Point x : xSet)
+			xMean = xMean.add(x.getBackingData());
+		xMean.mapMultiplyToSelf(1.0/xSet.size());
+		
+		RealVector yMean = new ArrayRealVector(dim);
+		for(Point y : ySet)
+			yMean = yMean.add(y.getBackingData());
+		yMean.mapMultiplyToSelf(1.0/xSet.size());
+				
+		// * Calculate the standard deviations
+		RealVector difference;
+		double norm;
+		
+		double xStdDev = 0.0;
+		for(Point x : xSet)
+		{
+			difference = x.getVector().subtract(xMean);
+			norm = difference.getNorm();
+			xStdDev += norm * norm;
+		}	
+		xStdDev = xStdDev / xSet.size();
+		
+		double yStdDev = 0.0;
+		for(Point y : ySet)
+		{
+			difference = y.getVector().subtract(yMean);
+			norm = difference.getNorm();
+			yStdDev += norm * norm;
+		}	
+		yStdDev = yStdDev / ySet.size();
+	
+		// * Calculate the covariance martix
+	
+		RealVector xDifference, yDifference;
+		
+		RealMatrix covariance = new Array2DRowRealMatrix(dim, dim);
+		
+		for(int i = 0; i < size;i++)
+		{
+			xDifference = xSet.get(i).getVector().subtract(xMean);
+			yDifference = ySet.get(i).getVector().subtract(yMean);
+			
+			
+			RealMatrix term = yDifference.outerProduct(xDifference); 
+			covariance =  covariance.add(term);
+		}
+		
+		covariance = covariance.scalarMultiply(1.0/size);
+		
+		// * Find U, V and S
+		
+		SingularValueDecomposition svd = new SingularValueDecompositionImpl(covariance);
+	
+		RealMatrix u  = svd.getU();
+		RealMatrix vt = svd.getVT();
+		
+		RealMatrix s = MatrixTools.identity(dim);
+		double det = new LUDecompositionImpl(covariance).getDeterminant();	
+		if(det < 0)
+			s.setEntry(dim-1, dim-1, -1.0);
+		
+		// * Calculate R
+		RealMatrix r =  u.multiply(s).multiply(vt);
+		
+		double detU = new LUDecompositionImpl(u).getDeterminant();	
+		//   a matrix and it's trans have the same det
+		double detV = new LUDecompositionImpl(vt).getDeterminant(); 
+				
+		// * Calculate c
+		double trace = 0.0;
+		//   obtain the non-ordered singular values
+		RealVector values = MatrixTools.diag(svd.getS()); 
+		for(int i = 0; i < dim-1; i++)
+			trace += values.getEntry(i);
+		trace += detU*detV < 0 ? -values.getEntry(dim-1) : values.getEntry(dim-1);
+		
+		double c = (1.0 / xStdDev) * trace;
+		
+		// * Calculate t
+		
+		r = r.scalarMultiply(c);			
+		RealVector t = yMean.subtract(r.operate(xMean));
+		
+		// * Create the map
+		return new AffineMap(r, t);
+	}
 }

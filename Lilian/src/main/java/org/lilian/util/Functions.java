@@ -1,11 +1,16 @@
 package org.lilian.util;
 
 import java.util.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.*;
 import java.text.*;
 
 import org.lilian.Global;
 import org.lilian.corpora.OVISCorpus;
+import org.lilian.data.real.Point;
 import org.lilian.util.trees.Tree;
 import org.lilian.util.trees.Tree.Node;
 
@@ -531,6 +536,27 @@ public class Functions
 		return elem;
 	}
 	
+	public static void toCSV(List<Point> data, File csvFile)
+			throws IOException
+	{
+		BufferedWriter out = new BufferedWriter(new FileWriter(csvFile));
+		
+		boolean first;
+		for(Point point : data)
+		{
+			first = true;
+			for(Double val : point)
+			{
+				if(first) first = false;
+				else out.write(", ");
+				
+				out.write(val.toString());				
+			}
+			out.write("\n");
+		}
+		
+		out.close();
+	}
 	
 	
 	

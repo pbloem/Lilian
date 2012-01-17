@@ -431,7 +431,7 @@ public class Draw
 	 */
 	public static double toCoord(int pixel, int res, double rangeStart, double rangeEnd){
 		double pixSize = abs(rangeStart - rangeEnd) / (double) res;
-		return pixSize * ((double) pixel) + pixSize * 0.5;		
+		return pixSize * ((double) pixel) + pixSize * 0.5 + rangeStart;		
 	}			
 
 }

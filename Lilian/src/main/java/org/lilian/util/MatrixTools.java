@@ -89,6 +89,20 @@ public class MatrixTools
 			m.setEntry(i, i, v.getEntry(i));
 	}
 	
+	/**
+	 * Retrieves the values of the diagonal of m as a vector.
+	 * 
+	 * @param v
+	 * @param m
+	 */
+	public static RealVector diag(RealMatrix m)
+	{
+		RealVector result = new ArrayRealVector(m.getColumnDimension());
+		for(int i = 0; i < m.getColumnDimension(); i ++)
+			result.setEntry(i, m.getEntry(i, i));
+		return result;
+	}
+	
 	public static RealVector toVector(List<Double> values)
 	{
 		return new ArrayRealVector((Double[]) values.toArray());
