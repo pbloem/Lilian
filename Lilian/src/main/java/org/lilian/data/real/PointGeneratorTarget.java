@@ -15,12 +15,12 @@ import org.lilian.util.distance.HausdorffDistance;
  *
  * @param <G>
  */
-public class GeneratorTarget<G extends Generator> implements Target<G>
+public class PointGeneratorTarget implements Target<Generator<Point>>
 {
 	private int sampleSize;
 	private List<Point> target;
 	
-	public GeneratorTarget(int sampleSize, List<Point> target)
+	public PointGeneratorTarget(int sampleSize, List<Point> target)
 	{
 		super();
 		this.sampleSize = sampleSize;
@@ -28,7 +28,7 @@ public class GeneratorTarget<G extends Generator> implements Target<G>
 	}
 
 	@Override
-	public double score(G object)
+	public double score(Generator<Point> object)
 	{
 		List<Point> generatedPoints;
 		List<Point> targetPoints;

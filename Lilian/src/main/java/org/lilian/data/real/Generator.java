@@ -8,9 +8,9 @@ import java.util.Random;
  * 
  * @author Peter
  */
-public interface Generator
+public interface Generator<P>
 {
 	public Point generate();	
 	
-	public List<Point> generate(int n);
+	public List<P> generate(int n);
 }
