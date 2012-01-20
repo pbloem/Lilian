@@ -1,5 +1,7 @@
 package org.lilian.data.real;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
@@ -44,6 +46,19 @@ public class Maps
 		return new AffineMap(
 				result.rotation().scalarMultiply(result.scale()),
 				result.translation()
+			);
+	}
+	
+	public static Similitude findMap(List<Point> xSet, List<Point> ySet, int gen, int pop)
+	{
+		MapResult result = findMapResult(xSet, ySet);
+		List<Double> angles = Rotation.findAngles(result.rotation(), gen, pop);
+	
+		// * Create the map
+		return new Similitude(
+				result.scale(), 
+				new Point(result.translation().getData()),
+				angles
 			);
 	}
 	

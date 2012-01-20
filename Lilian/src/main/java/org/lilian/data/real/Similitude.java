@@ -2,6 +2,7 @@ package org.lilian.data.real;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
@@ -95,7 +96,17 @@ public class Similitude extends AbstractMap implements Parametrizable
 	public double scalar()
 	{
 		return scalar;	
-	}	
+	}
+	
+	public List<Double> angles() 
+	{
+		return Collections.unmodifiableList(angles);
+	}
+	
+	public List<Double> translation() 
+	{
+		return new Point(translation);
+	}
 
 	@Override
 	public Point map(Point in)
@@ -185,4 +196,13 @@ public class Similitude extends AbstractMap implements Parametrizable
 			return Similitude.numParameters(dimension);
 		}
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Similitude [s" + scalar + ", a=" + angles
+				+ ", t=" + translation + "]";
+	}
+	
+	
 }

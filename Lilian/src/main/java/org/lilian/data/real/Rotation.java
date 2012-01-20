@@ -20,6 +20,7 @@ import org.lilian.search.evo.ES;
 import org.lilian.search.evo.Target;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
+import org.lilian.util.distance.SquaredEuclideanDistance;
 
 /**
  * A similitude (or similarity transform) consists of rotation, a uniform 
@@ -208,6 +209,8 @@ public class Rotation extends AbstractMap implements Parametrizable
 	
 				// Multiply
 				left = left.multiply(right);
+				// TODO: It is inefficient to use full matrix multiplication for
+				// given matrices
 				
 				k++;
 			}
@@ -220,14 +223,16 @@ public class Rotation extends AbstractMap implements Parametrizable
 	 * 
 	 * @return
 	 */
-	public static List<Double> findAngles(RealMatrix matrix, int generations)
+	public static List<Double> findAngles(RealMatrix matrix, int generations, int pop)
 	{
 		int dim =  matrix.getColumnDimension();
+		
+		Builder<Rotation> builder = Rotation.builder(dim);
 		ES<Rotation> es = new ES<Rotation>(
-				Rotation.builder(dim), 
+				builder, 
 				new AngleTarget(matrix),
-				ES.initial(400, dim, Math.PI),
-				2, 800, 0, ES.CrossoverMode.UNIFORM,
+				ES.initial(pop, builder.numParameters(), Math.PI),
+				2, 2*pop, 0, ES.CrossoverMode.UNIFORM,
 				0.00005,
 				0.08
 				);
@@ -241,47 +246,97 @@ public class Rotation extends AbstractMap implements Parametrizable
 	private static class AngleTarget implements Target<Rotation> 
 	{
 		private AffineMap target;
-		private int sampleSize = 20;
-
+		List<Point> in;
+		List<Point> out;
+		
 		public AngleTarget(RealMatrix target)
 		{
+			int dim = target.getColumnDimension();
+			int n = dim * (dim - 1) / 2;
+			
 			this.target = new AffineMap(
 					target, 
 					new ArrayRealVector(target.getColumn(0)));
+			
+			in = new ArrayList<Point>(dim);
+			for(int i = 0; i < dim; i++)
+				in.add(Point.random(dim, 3.0));
+				
+			out = this.target.map(in);
 		}
 
 		@Override
 		public double score(Rotation r)
 		{	
-			return -comp(r, target, sampleSize);
-		}
-		
-		/**
-		 * Tests whether these maps are functionally equal
-		 * 
-		 * @param first
-		 * @param second
-		 * @param margin
-		 * @return
-		 */
-		public static double comp(Map first, Map second, int samples)
-		{
-			List<Point> in = new ArrayList<Point>(samples);
-			for(int i = 0; i < samples; i++)
-				in.add(Point.random(first.dimension(), 3.0));
-				
-			List<Point> outFirst = first.map(in);
-			List<Point> outSecond = second.map(in);
-			
+			List<Point> outSecond = r.map(in);
+
 			double error = 0.0;
-			for(int i = 0; i < samples; i++)
-				for(int j = 0; j < first.dimension(); j++)
+			for(int i = 0; i < in.size(); i++)
+				for(int j = 0; j < r.dimension(); j++)
 				{
-					double e = outFirst.get(i).get(j) - outSecond.get(i).get(j);
+					double e = out.get(i).get(j) - outSecond.get(i).get(j);
 					error += e*e;
 				}
 			
-			return error;
+			return - error;
 		}
 	}
+
+	/**
+	 * Uses the ES Algorithm to find angles for a given rotation matrix
+	 * 
+	 * @return
+	 */
+	public static List<Double> findAngles(List<Point> a, List<Point> b, int generations, int pop)
+	{
+		int dim = a.get(0).dimensionality();
+		
+		Builder<Rotation> builder = Rotation.builder(dim);
+		ES<Rotation> es = new ES<Rotation>(
+				builder, 
+				new AngleTarget2(a, b),
+				ES.initial(pop, builder.numParameters(), 0.0),
+				2, 2 * pop, 0, ES.CrossoverMode.UNIFORM,
+				0.00005,
+				0.08
+				);
+		
+		for(int i : series(generations))
+			es.breed();
+		
+		return es.best().parameters();
+	}
+	
+	private static class AngleTarget2 implements Target<Rotation> 
+	{
+		private List<Point> a, b;
+		
+		public AngleTarget2(List<Point> a, List<Point> b)
+		{
+			this.a = a;
+			this.b = b;
+		}
+
+		@Override
+		public double score(Rotation r)
+		{	
+			double e = 0;
+			
+			for(int i = 0; i < a.size(); i++)
+				e += SquaredEuclideanDistance.dist(b.get(i), r.map(a.get(i)));
+			return - e;
+		}
+	}	
+	
+//	public static List<Double> findAngles(RealMatrix matrix)
+//	{
+//		int dim =  matrix.getColumnDimension();
+//		
+//		int k = 0;
+//		for(int i = 0; i < dim-1; i++)
+//			for(int j = i+1; j < dim; j++)
+//			{
+//				
+//			}
+//	}
 }
