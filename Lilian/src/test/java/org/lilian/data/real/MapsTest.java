@@ -31,10 +31,10 @@ public class MapsTest
 	@Test
 	public void testFindMap2()
 	{
-		int num = 2;
+		int num = 30;
 		
 		Distance<List<Double>> d = new EuclideanDistance();
-		Map map = AffineMap.builder(2).build(Parameters.random(6, 0.5));
+		Map map = Similitude.builder(2).build(Parameters.random(4, 0.5));
 		
 		List<Point> x, y;
 		x = points(num, 2, 3.4);
@@ -44,8 +44,8 @@ public class MapsTest
 	
 		for(int i = 0; i < x.size(); i++)
 		{
-			// assertEquals(0.0, d.distance(y.get(i), re.map(x.get(i))), 0.01);
-			System.out.println(x.get(i) + " " + y.get(i) + " " +  re.map(x.get(i)));
+			assertEquals(0.0, d.distance(y.get(i), re.map(x.get(i))), 0.01);
+			// System.out.println(x.get(i) + " " + y.get(i) + " " +  re.map(x.get(i)));
 		}
 	}
 	

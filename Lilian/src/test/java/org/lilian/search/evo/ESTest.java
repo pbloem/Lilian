@@ -6,10 +6,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
 import org.junit.Test;
+import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Map;
@@ -26,16 +28,16 @@ import org.lilian.util.Series;
 public class ESTest
 {
 	private static final int TARGET_SIZE = 10000;
-	private static final int POP_SIZE = 1000;	
-	private static final double VAR = 0.01;
+	private static final int POP_SIZE = 500;	
+	private static final double VAR = 0.6;
 	private static final int SAMPLE_SIZE = 150;
 	private static final int GENERATIONS = 1000;
 	
-	//@Test
+	@Test
 	public void testIFS()
 	{
-		String name = "es_affine";
-		File dir = new File("/Users/Peter/Documents/PhD/output/es/" + name + "/");
+		String name = "es_affine2";
+		File dir = new File("/Users/Peter/Documents/PhD/output/es_ifs/" + name + "/");
 		dir.mkdirs();
 		
 		IFS<AffineMap> targetModel = IFSs.sierpinski();
@@ -64,10 +66,14 @@ public class ESTest
 		}
 	}
 	
-	@Test
+	// @Test
 	public void testIFSSim()
 	{
-		String name = "es_sim2";
+		long seed = new Random().nextLong();
+		Global.random = new Random(seed);
+		System.out.println(seed);
+		
+		String name = "es_sim4";
 		File dir = new File("/Users/Peter/Documents/PhD/output/es/" + name + "/");
 		dir.mkdirs();
 		

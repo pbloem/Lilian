@@ -15,4 +15,9 @@ public abstract class AbstractMap implements Map
 		
 		return out;
 	}
+	
+	public Map compose(Map other)
+	{
+		return new CompositeMap(this, other);
+	}
 }

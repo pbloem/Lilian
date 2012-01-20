@@ -203,23 +203,21 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		return parameters; 
 	}
 	
-	/**
-	 * Creates a new map, which is a composition of this map and the argument,
-	 * such that this.compose(m).map(x); is equal to this.map(m.map(x)); though
-	 * it need not be implemented that way.  
-	 * 
-	 * optional operation
-	 * @return
-	 */	
-	public AffineMap compose(AffineMap m)
+	public Map compose(Map m)
 	{
-		RealMatrix newRot = transformation.multiply(m.transformation);
+		if(m instanceof AffineMap)
+		{
+			AffineMap am = (AffineMap)m;
+			RealMatrix newRot = transformation.multiply(am.transformation);
 		
-		RealVector newTrans = transformation.operate(m.translation);
-		newTrans.add(translation);
+			RealVector newTrans = transformation.operate(am.translation);
+			newTrans.add(translation);
+			
+			return new AffineMap(newRot, newTrans); 
+		}
 		
-		return new AffineMap(newRot, newTrans); 
-	}
+		return super.compose(m);
+	}	
 	
 	/**
 	 * Returns an affine representation of the identity function f(x) = x.

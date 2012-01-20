@@ -1,6 +1,7 @@
 package org.lilian.data.real;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
@@ -59,7 +60,7 @@ public class Similitude extends AbstractMap implements Parametrizable
 		this.translation = MatrixTools.toVector(translation); 		
 		this.angles = new ArrayList<Double>(angles);
 		
-		RealMatrix rotation = MatrixTools.toRotationMatrix(angles);
+		RealMatrix rotation = Rotation.toRotationMatrix(angles);
 		this.rotScale = rotation.scalarMultiply(scalar);
 	}
 
@@ -108,6 +109,27 @@ public class Similitude extends AbstractMap implements Parametrizable
 	{
 		return 1 + dimension + (dimension * dimension - dimension)/2;
 	}
+	
+	public Map compose(Map other)
+	{
+		
+		if(other instanceof Similitude)
+		{
+			Similitude sim = (Similitude) other;
+			
+			double newScalar = this.scalar * sim.scalar;
+
+			List<Double> newAngles = new ArrayList<Double>(angles.size());
+			for(int i = 0; i < angles.size(); i++)
+				newAngles.add(angles.get(i) + sim.angles.get(i));
+			
+			RealVector newTrans = sim.rotScale.operate(this.translation).add(sim.translation);
+			
+			return new Similitude(newScalar, new Point(newTrans), newAngles);
+		}
+		
+		return super.compose(other);
+	}
 
 	@Override
 	public boolean invertible()
@@ -125,7 +147,7 @@ public class Similitude extends AbstractMap implements Parametrizable
 		List<Double> invAngles = new ArrayList<Double>(angles.size());
 		for(int i = 0 ; i < angles.size(); i++)
 			invAngles.add(-angles.get(i));
-		RealMatrix invRotScale = MatrixTools.toRotationMatrix(invAngles).scalarMultiply(-invScalar);
+		RealMatrix invRotScale = Rotation.toRotationMatrix(invAngles).scalarMultiply(-invScalar);
 		RealVector invTranslation = invRotScale.operate(translation);
 
 		return new Similitude(invScalar, new Point(invTranslation), invAngles);
@@ -163,5 +185,4 @@ public class Similitude extends AbstractMap implements Parametrizable
 			return Similitude.numParameters(dimension);
 		}
 	}
-	
 }

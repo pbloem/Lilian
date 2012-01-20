@@ -1,5 +1,6 @@
 package org.lilian.data.real.fractal;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.junit.Assert.*;
@@ -23,6 +24,7 @@ import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Generator;
 import org.lilian.data.real.MVN;
+import org.lilian.data.real.Map;
 import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
 import org.lilian.util.Functions;
@@ -30,8 +32,10 @@ import org.lilian.util.Series;
 
 public class SimilarityHashingTest
 {
-	// private static final int DATA_SIZE = 100000;
+	private static final int DATA_SIZE = 100000;
 	private static final int SAMPLES = 1000000;
+	private static final double LAMBDA = 10E-2;
+	
 	@Test
 	public void test()
 	{
@@ -39,35 +43,37 @@ public class SimilarityHashingTest
 		Global.random = new Random(seed);
 		System.out.println(seed);
 		
-		File dir = new File("/Users/Peter/Documents/PhD/simhash/");
+		File dir = new File("/Users/Peter/Documents/PhD/simple/");
 		dir.mkdirs();
+
+		// Generator<Point> g = IFSs.random(2, 4, 0.4).generator();
+		Generator<Point> g = new MVN(2);
 		
-		Generator im = IFSs.sierpinski().generator();
+		List<Point> in = g.generate(DATA_SIZE);
+//		Map m1 = ifs.get(0);
+//		List<Point> out = m1.map(m1.map(in));
+	
 		// Generator im = IFSs.cantorA().generator();
-		// Generator im = new MVN(2);
-		// Generator<Point> im = IFSs.random(2, 4, 0.55).generator();
-		Generator<Point> gen = new SSGenerator(im);
+		Generator<Point> gen = new SSGenerator(in, in);
 		
 		try
 		{
-			BufferedImage image = Draw.draw(
-					im, SAMPLES, 
-					new double[]{-1.0, 1.0}, new double[]{-1.0, 1.0},
-					1000, 1000, true);
-			ImageIO.write(image, "PNG", new File(dir, "generator.png"));
+			BufferedImage image = Draw.draw(in, 1000, true);
+			ImageIO.write(image, "PNG", new File(dir, "in.png"));
+//			image = Draw.draw(out, 1000, true);
+//			ImageIO.write(image, "PNG", new File(dir, "out.png"));
 		} catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-				
 		
 		try
 		{
 			BufferedImage image = Draw.draw(
 					gen, SAMPLES, 
 					new double[]{.0, 1.0}, new double[]{.0, 1.0},
-					250, 250, false);
+					250, 250, true);
 			ImageIO.write(image, "PNG", new File(dir, "density.png"));
 		} catch (IOException e)
 		{
@@ -107,6 +113,15 @@ public class SimilarityHashingTest
 		
 		return Math.sqrt(l0*l0 + l1*l1);
 	}
+	
+
+	public static double scale(Point[] a, Point[] b, int i)
+	{
+		double la = a[1].get(i) - a[0].get(i);
+		double lb = b[1].get(i) - b[0].get(i);
+		
+		return Math.min(la/lb, lb/la);
+	}
 
 	/**
 	 * Returns the angle that the line (x,y) makes with the horizontal axis
@@ -127,52 +142,101 @@ public class SimilarityHashingTest
 	{		
 		private static final int BUFFER_SIZE = 5000;
 		
-		private Generator<Point> master;
-		private List<Point> buffer = new ArrayList<Point>(BUFFER_SIZE);
-	
-		public SSGenerator(Generator<Point> master)
+		private List<Point> masterIn;
+		private List<Point> masterOut;
+		
+		public SSGenerator(List<Point> in, List<Point> out)
 		{
-			this.master = master;
-			buffer();
+			this.masterIn = in;
+			this.masterOut = out;
 		}
 		
-		private void buffer()
+		private Point[] drawShort(int i, List<Point> master)
 		{
-			if(buffer.size() < 10)
-			{
-				for(int i : Series.series(BUFFER_SIZE))
-					buffer.add(master.generate());
+			Point[] a = new Point[]{
+					master.get(Global.random.nextInt(master.size())), 
+					master.get(Global.random.nextInt(master.size()))};
+			if(i == 0)
+				return a;
 			
-				Collections.shuffle(buffer);
-			}
+			Point[] b =	drawShort(i - 1, master);
+			
+			double la = length(a[0], a[1]);
+			double lb = length(b[0], b[1]);
+			
+			if(la > lb)
+				return b;
+			return a;
+		}
+		
+		public Point[] discretize(Point[] in, double lambda) 
+		{
+			return new Point[] {
+				discretize(in[0], lambda),
+				discretize(in[1], lambda)};
+		}
+		
+		public Point discretize(Point in, double lambda) 
+		{
+			return new Point(
+				discretize(in.get(0), lambda),
+				discretize(in.get(1), lambda));
+		}
+		
+		public double discretize(double in, double lambda)
+		{
+			return in - in % lambda;
 		}
 
 		@Override
 		public Point generate()
 		{
-			buffer();
+			double weight = 0.9;
+			double[] c = generateBase().getBackingData();
 			
-			Point a0 = buffer.remove(0),
-				  a1 = buffer.remove(0),
-				  b0 = buffer.remove(0),
-			      b1 = buffer.remove(0);
+			for(int i = 0; i < 0; i++)
+			{
+				double[] p = generateBase().getBackingData();
+				
+				c[0] = c[0]*weight + p[0]*(1.0 - weight);
+				c[1] = c[1]*weight + p[1]*(1.0 - weight);
+			}
 			
-			double la = length(a0, a1);
-			double lb = length(b0, b1);
+			return new Point(c);
+		}
+		
+		public Point generateBase()
+		{
+			Point[] a = discretize(drawShort(0, masterIn), LAMBDA);
+			Point[] b = discretize(drawShort(0, masterIn), LAMBDA);;
+			
+			double la = length(a[0], a[1]);
+			double lb = length(b[0], b[1]);
+//			System.out.println(la + " " + lb);
 			
 			double scale = min(la / lb, lb / la);
 			
-			double aa = angle(a0, a1);
-			double ab = angle(b0, b1);
+			double aa = angle(a[0], a[1]);
+			double ab = angle(b[0], b[1]);
 			
 			double angle = Math.abs(aa - ab) % Math.PI;	
 			// * Normalize
 			angle = angle / Math.PI;
+			
+			double[] s = {
+					scale(a, b, 0),
+					scale(a, b, 1)
+			};
+			
+			double[] t = {
+						abs(a[0].get(0) - b[0].get(0)),
+						abs(a[0].get(1) - b[0].get(1))
+					};
 					
-			// return new Point(scale, angle);
-			AffineMap map = Maps.findMap(
-					Arrays.asList(a0, a1),
-					Arrays.asList(b0, b1));
+//			return new Point(scale, angle);
+//			AffineMap map = Maps.findMap(
+//					Arrays.asList(a0, a1),
+//					Arrays.asList(b0, b1));
 			
 //			return new Point(
 //					Math.abs(map.getTranslation().getEntry(0)),
@@ -180,8 +244,8 @@ public class SimilarityHashingTest
 //				);
 			
 			return new Point(
-					Math.abs(a0.get(0) - b0.get(0)) + Math.abs(a1.get(0) - b1.get(0)) ,
-					Math.abs(a0.get(1) - b0.get(1)) + Math.abs(a1.get(1) - b1.get(1)) );
+					scale,
+					angle);
 		}
 
 		@Override

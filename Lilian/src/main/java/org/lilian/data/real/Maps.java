@@ -39,6 +39,16 @@ public class Maps
 	 */
 	public static AffineMap findMap(List<Point> xSet, List<Point> ySet)
 	{
+		MapResult result = findMapResult(xSet, ySet);
+		// * Create the map
+		return new AffineMap(
+				result.rotation().scalarMultiply(result.scale()),
+				result.translation()
+			);
+	}
+	
+	public static MapResult findMapResult(List<Point> xSet, List<Point> ySet)
+	{
 		int dim = xSet.get(0).dimensionality();
 		int size = xSet.size();
 		
@@ -124,11 +134,39 @@ public class Maps
 		double c = (1.0 / xStdDev) * trace;
 		
 		// * Calculate t
-		
-		r = r.scalarMultiply(c);			
-		RealVector t = yMean.subtract(r.operate(xMean));
+		RealVector t = yMean.subtract(r.scalarMultiply(c).operate(xMean));
 		
 		// * Create the map
-		return new AffineMap(r, t);
+		return new MapResult(c, r, t);
+	}
+	
+	public static class MapResult {
+		double scale;
+		RealMatrix rotation;
+		RealVector translation;
+		
+		private MapResult(double scale, RealMatrix rotation,
+				RealVector translation)
+		{
+			super();
+			this.scale = scale;
+			this.rotation = rotation;
+			this.translation = translation;
+		}
+
+		public double scale()
+		{
+			return scale;
+		}
+
+		public RealMatrix rotation()
+		{
+			return rotation;
+		}
+
+		public RealVector translation()
+		{
+			return translation;
+		}
 	}
 }

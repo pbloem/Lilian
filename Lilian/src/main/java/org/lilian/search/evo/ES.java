@@ -8,6 +8,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
+import org.lilian.data.real.Rotation;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
@@ -34,10 +35,10 @@ import org.lilian.util.Series;
 public class ES<P extends Parametrizable> 
 {
 	public static enum CrossoverMode {GLOBAL, LOCAL, UNIFORM};
-	public static final int NUM_PARENTS = 50;
-	public static final int NUM_OFFSPRING = 50;
+	public static final int NUM_PARENTS = 2;
+	public static final int OFFSPRING = 2;
 	public static final int MAX_LIFESPAN = 0;
-	public static final CrossoverMode MODE = CrossoverMode.GLOBAL;	
+	public static final CrossoverMode MODE = CrossoverMode.UNIFORM;	
 	
 	private List<Agent> population;
 	private Builder<P> builder;
@@ -69,7 +70,7 @@ public class ES<P extends Parametrizable>
 	
 	public ES(Builder<P> builder, Target<P> target, Collection<List<Double>> initialPop)
 	{
-		this(builder, target, initialPop, NUM_PARENTS, NUM_OFFSPRING, MAX_LIFESPAN, MODE);
+		this(builder, target, initialPop, NUM_PARENTS, initialPop.size() * OFFSPRING, MAX_LIFESPAN, MODE);
 	}	
 	
 	public ES(
@@ -80,6 +81,23 @@ public class ES<P extends Parametrizable>
 			int offspringSize,
 			int maxAge,
 			CrossoverMode mode)
+	{
+		this(
+				builder, target, initialPop, 
+				numParents, offspringSize, maxAge, mode,
+				0.0001, 0.08);
+	}	
+	
+	public ES(
+			Builder<P> builder,
+			Target<P> target,
+			Collection<List<Double>> initialPop,
+			int numParents, 
+			int offspringSize,
+			int maxAge,
+			CrossoverMode mode,
+			double convergenceSpeed,
+			double angleMutationVar)
 	{
 		this.target = target;
 		this.builder = builder;
@@ -97,7 +115,10 @@ public class ES<P extends Parametrizable>
 		
 		this.objectMode = mode;
 		this.scalesMode = mode;
-		this.anglesMode = mode;		
+		this.anglesMode = mode;	
+		
+		this.convergenceSpeed = convergenceSpeed;
+		this.angleMutationVar = angleMutationVar;
 	}
 	
 	/**
@@ -107,7 +128,7 @@ public class ES<P extends Parametrizable>
 	{
 		List<Agent> nextPopulation = new ArrayList<Agent>(offspringSize);
 
-		// * Add all the agents that havent exceeded the max lifespan
+		// * Add all the agents that haven't exceeded the max lifespan
 		//   to the new population
 		for(Agent agent : population)
 		{
@@ -297,12 +318,12 @@ public class ES<P extends Parametrizable>
 				if(params.size() == 1)
 					rot = MatrixTools.identity(1);				
 				else
-					rot = MatrixTools.toRotationMatrix(childAngles);
+					rot = Rotation.toRotationMatrix(childAngles);
 				
 				draw = rot.operate(draw);
 				
 				// - 'draw' is now a random draw form the MVN described by the 
-				//   startegy parameters
+				//   strategy parameters
 				
 				for (int i = 0; i < draw.getDimension(); i++)
 					childParams.set(i, childParams.get(i) + draw.getEntry(i));

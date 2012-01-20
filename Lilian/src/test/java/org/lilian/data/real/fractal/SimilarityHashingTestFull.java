@@ -32,7 +32,9 @@ import org.lilian.util.Series;
 public class SimilarityHashingTestFull
 {
 	// private static final int DATA_SIZE = 100000;
-	private static final int SAMPLES = 1000000;
+	private static final int SAMPLES = 100000;
+	private static final double LAMBDA = 0.09;
+	
 	@Test
 	public void test()
 	{
@@ -40,14 +42,14 @@ public class SimilarityHashingTestFull
 		Global.random = new Random(seed);
 		System.out.println(seed);
 		
-		File dir = new File("/Users/Peter/Documents/PhD/simhash_full/");
+		File dir = new File("/Users/Peter/Documents/PhD/simhash_full_2/");
 		dir.mkdirs();
 		
 		Generator<Point> im = IFSs.sierpinski().generator();
 		// Generator im = IFSs.cantorA().generator();
 		// Generator im = new MVN(2);
 		// Generator im = IFSs.random(2, 4, 0.55).generator();
-		Generator<AffineMap> gen = new SSGenerator(im);
+		Generator<Maps.MapResult> gen = new SSGenerator(im.generate(SAMPLES));
 		
 		try
 		{
@@ -62,15 +64,25 @@ public class SimilarityHashingTestFull
 			e.printStackTrace();
 		}
 
-		List<Double> p = new ArrayList<Double>(new Point(6));			
-			
-		for(int i : series(100000))
+		List<Point> out = new ArrayList<Point>();	
+		for(int i : series(SAMPLES))
 		{
-			AffineMap c = gen.generate();
-			p = combine(p, c.parameters(), 0.9);
-			
-			if(i % 1000 == 0)
-				System.out.println(p);
+			Maps.MapResult map = gen.generate();
+			out.add(new Point(
+					Math.min(map.scale(), 1.0/map.scale()), 
+					Math.abs(map.translation().getEntry(0))
+				));
+		}
+		
+		try
+		{
+			BufferedImage image = Draw.draw(
+					out, 250, true);
+			ImageIO.write(image, "PNG", new File(dir, "density.png"));
+		} catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -91,47 +103,56 @@ public class SimilarityHashingTestFull
 		return result;
 	}
 	
-	public static class SSGenerator implements Generator<AffineMap>
+	public static class SSGenerator implements Generator<Maps.MapResult>
 	{		
 		private static final int BUFFER_SIZE = 5000;
 		
-		private Generator<Point> master;
-		private List<Point> buffer = new ArrayList<Point>(BUFFER_SIZE);
-	
-		public SSGenerator(Generator<Point> master)
+		private List<Point> data ;
+
+		public SSGenerator(List<Point> data)
 		{
-			this.master = master;
-			buffer();
+			super();
+			this.data = data;
+		}
+
+		@Override
+		public Maps.MapResult generate()
+		{			
+			Point[] a = discretize(new Point[]{
+					data.get(Global.random.nextInt(data.size())),
+					data.get(Global.random.nextInt(data.size()))
+			}, LAMBDA);
+			Point[] b = discretize(new Point[]{
+					data.get(Global.random.nextInt(data.size())),
+					data.get(Global.random.nextInt(data.size()))
+			}, LAMBDA);
+
+			return Maps.findMapResult(Arrays.asList(a), Arrays.asList(b));
 		}
 		
-		private void buffer()
+		public Point[] discretize(Point[] in, double lambda) 
 		{
-			if(buffer.size() < 10)
-			{
-				for(int i : Series.series(BUFFER_SIZE))
-					buffer.add(master.generate());
-			
-				Collections.shuffle(buffer);
-			}
+			return new Point[] {
+				discretize(in[0], lambda),
+				discretize(in[1], lambda)};
 		}
+		
+		public Point discretize(Point in, double lambda) 
+		{
+			return new Point(
+				discretize(in.get(0), lambda),
+				discretize(in.get(1), lambda));
+		}
+		
+		public double discretize(double in, double lambda)
+		{
+			return in - in % lambda;
+		}		
 
 		@Override
-		public AffineMap generate()
+		public List<Maps.MapResult> generate(int n)
 		{
-			buffer();
-			
-			Point a0 = buffer.remove(0),
-				  a1 = buffer.remove(0),
-				  b0 = buffer.remove(0),
-			      b1 = buffer.remove(0);
-					
-			return Maps.findMap(Arrays.asList(a0, a1), Arrays.asList(b0, b1));
-		}
-
-		@Override
-		public List<AffineMap> generate(int n)
-		{
-			List<AffineMap> points = new ArrayList<AffineMap>(n);
+			List<Maps.MapResult> points = new ArrayList<Maps.MapResult>(n);
 			for(int i : Series.series(n))
 				points.add(generate());
 			
