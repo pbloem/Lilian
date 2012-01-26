@@ -24,8 +24,6 @@ public class CompressionDistance<T> implements Distance<T> {
 				cx  = comp.compressedSize(x),
 				cy  = comp.compressedSize(y);
 		
-		System.out.println(cxy + " " +cx +" " +cy );
-		
 		return max(cxy - cx, cyx - cy) / max(cx, cy); 
 	}
 }

@@ -24,22 +24,22 @@ import org.lilian.util.Series;
 public class FlameTest
 {
 
-	private static final long STEPS = 10000000l;
-	private static final int XRES = 1920/8;
-	private static final int YRES = 1080/8;
+	private static final long STEPS = (long)2E9;
+	private static final int XRES = 1920;
+	private static final int YRES = 1080;
 	private static final double[] X_RANGE = new double[]{-16.0/9.0, 16.0/9.0};
 	private static final double[] Y_RANGE = new double[]{-1.0, 1.0};	
-	private static final int OSA = 2;
+	private static final int OSA = 3;
 	private static int K = 2;
 	private static int FRAMES = 360;
-	private static double VAR = 0.01;
+	private static double VAR = 0.1;
 	private static double VAR_PERTURB = 0.0001;
 	private static boolean WRAP = false;
 	
-	// @Test
+	@Test
 	public void testFlame()
 	{
-		String name = "gutenberg4";
+		String name = "gutenberg7";
 		File dir = new File("/home/peter/Documents/PhD/output/flame/" + name + "/");
 		dir.mkdirs();
 		
@@ -57,12 +57,17 @@ public class FlameTest
 		for(int i : Series.series(builder.numParameters()))
 		{
 			change.add(0.0);
-			params.add(Global.random.nextGaussian() * VAR);			
+			params.add(Global.random.nextDouble() < VAR ? 1.0 : 0.0);			
 		}
 		
 		Flame flame = builder.build(params);
 		for(int i = 0; i < FRAMES; i++)
 		{
+			perturb(change, Math.pow((FRAMES - i)/(double)FRAMES, 10) * VAR_PERTURB);
+			add(params, change);
+			
+			flame = builder.build(params);			
+			
 			Functions.tic();
 			BufferedImage image = flame.draw(STEPS, XRES, YRES, X_RANGE, Y_RANGE, OSA, WRAP);
 			System.out.println(i + ": " + Functions.toc() + "seconds");
@@ -75,18 +80,13 @@ public class FlameTest
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			perturb(change, Math.pow((FRAMES - i)/(double)FRAMES, 10) * VAR_PERTURB);
-			add(params, change);
-
-			flame = builder.build(params);
 		}	
 	}
 	
-	@Test
+	// @Test
 	public void testFlameEllipse()
 	{
-		String name = "ellipse2";
+		String name = "ellipse4";
 		File dir = new File("/home/peter/Documents/PhD/output/flame/" + name + "/");
 		dir.mkdirs();
 		

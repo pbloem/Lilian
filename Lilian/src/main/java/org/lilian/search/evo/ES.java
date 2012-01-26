@@ -389,6 +389,16 @@ public class ES<P extends Parametrizable>
 		}			
 	}
 	
+	
+	/**
+	 * Generates an initial population of lists of doubles, each drawn from 
+	 * a normal distribution with the given variance.
+	 * 
+	 * @param size
+	 * @param dimension
+	 * @param var
+	 * @return
+	 */
 	public static List<List<Double>> initial(int size, int dimension, double var)
 	{
 		List<List<Double>> initial = new ArrayList<List<Double>>(size);
@@ -397,6 +407,30 @@ public class ES<P extends Parametrizable>
 			List<Double> params = new ArrayList<Double>(dimension);
 			for(int j : Series.series(dimension))
 				params.add(Global.random.nextGaussian() *  var);
+			initial.add(params);		
+		}
+	
+		return initial;
+	}
+	
+	/**
+	 * Creates an initial population where the parameters are either zero or one
+	 * with a given probability.
+	 * 
+	 * @param size
+	 * @param dimension
+	 * @param prob the probability of a one.
+	 * @param var
+	 * @return
+	 */
+	public static List<List<Double>> initialZeroOne(int size, int dimension, double prob)
+	{
+		List<List<Double>> initial = new ArrayList<List<Double>>(size);
+		for(int i : Series.series(size))
+		{
+			List<Double> params = new ArrayList<Double>(dimension);
+			for(int j : Series.series(dimension))
+				params.add(Global.random.nextFloat() < prob ? 1.0 : 0.0);
 			initial.add(params);		
 		}
 	
