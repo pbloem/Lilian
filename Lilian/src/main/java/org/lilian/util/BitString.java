@@ -1,6 +1,9 @@
 package org.lilian.util;
 
+import java.io.Serializable;
 import java.util.*;
+
+import org.lilian.Global;
 
 /**
  * Class representing a bitstring with simple getters and setters by index.
@@ -8,8 +11,10 @@ import java.util.*;
  * @author peter
  *
  */
-public class BitString extends AbstractList<Boolean>
+public class BitString extends AbstractList<Boolean> implements Serializable
 {
+
+	private static final long serialVersionUID = 5693137870101684172L;
 	protected byte[] array;
 	protected int maxIndex = -1;
 	
@@ -31,14 +36,14 @@ public class BitString extends AbstractList<Boolean>
 	}
 	
 	/**
-	 * Ensures that the array is large enough to accomodate a value at the 
+	 * Ensures that the array is large enough to accommodate a value at the 
 	 * given index 
 	 * 
 	 * @param max
 	 */
 	private void ensureCapacity(int max)
 	{
-		int byteSize = (int)Math.ceil(max/8.0);
+ 		int byteSize = max/8 +1;
 		if(byteSize <= array.length) 
 			return;
 		
@@ -78,7 +83,8 @@ public class BitString extends AbstractList<Boolean>
 	}
 	
 	@Override
-	public Boolean set(int index, Boolean bit) {
+	public Boolean set(int index, Boolean bit) 
+	{
 		checkIndex(index);
 		
 		int whichByte = index/8,
@@ -94,6 +100,7 @@ public class BitString extends AbstractList<Boolean>
 		else
 			array[whichByte] = (byte)(b & ~mask);
 		
+		modCount++;
 		return old;
 	}
 	
@@ -143,6 +150,36 @@ public class BitString extends AbstractList<Boolean>
 	{
 		return (8 - size() % 8) % 8;		
 	}
+
+	/**
+	 * Zero-pads this bitstring to a multiple of 16, and returns the result as 
+	 * a list of integers
+	 * @return
+	 */
+	public List<Integer> toIntegers()
+	{
+		int n = size();
+		n = n%32 == 0 ? n : ((n/32)+1) * 32;
+		
+		List<Integer> integers = new ArrayList<Integer>(array.length + 1);
+		for(int i = 0; i < array.length; i += 4)
+		{
+	        int next = (array(i) << 24)
+	                + ((array(i+1) & 0xFF) << 16)
+	                + ((array(i+2) & 0xFF) << 8)
+	                +  (array(i+3) & 0xFF);
+	        integers.add(next);
+		}
+		
+		return integers;
+	}
+	
+	private byte array(int i)
+	{
+		if(i < array.length)
+			return array[i];
+		return 0;
+	}
 	
 	public static byte mask(int index)
 	{
@@ -177,6 +214,21 @@ public class BitString extends AbstractList<Boolean>
 		out.maxIndex = size - 1;
 		return out;
 	}	
+	
+	/**
+	 * Creates a bitstring of the given length with random bits as elements
+	 * @param size
+	 * @return
+	 */
+	public static BitString random(int size)
+	{
+		BitString out = new BitString(size);
+		out.maxIndex = size - 1;
+		for(int i = 0; i < size; i++)
+			out.set(i, Global.random.nextBoolean());
+		
+		return out;
+	}		
 	
 	public static String toString(byte b)
 	{

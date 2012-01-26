@@ -10,6 +10,7 @@ import static java.lang.Math.*;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 import org.junit.Test;
+import org.lilian.data.real.Rotation;
 
 public class MatrixToolsTest
 {
@@ -35,6 +36,8 @@ public class MatrixToolsTest
 		System.out.println(a.multiply(b));		
 	}	
 	
+	
+	// TODO: Mode these to RotationTest
 	@Test
 	public void testToRotationMatrix1()
 	{	
@@ -45,7 +48,7 @@ public class MatrixToolsTest
 		
 		angles.add(0.5 * PI); // 90 deg
 		
-		RealMatrix result = MatrixTools.toRotationMatrix(angles);
+		RealMatrix result = Rotation.toRotationMatrix(angles);
 		
 		assertTrue(MatrixTools.equals(result, expected, 1.0E-10));
 	}
@@ -59,7 +62,7 @@ public class MatrixToolsTest
 		for(int i = 0; i < 3; i ++)
 			angles.add(0.5 * PI); // 90 deg
 		
-		RealMatrix result = MatrixTools.toRotationMatrix(angles);
+		RealMatrix result = Rotation.toRotationMatrix(angles);
 		assertTrue(MatrixTools.equals(result, expected, 1.0E-10));
 	}
 	
@@ -72,7 +75,7 @@ public class MatrixToolsTest
  		for(int i = 0; i < 90; i ++)
  			angles.add(0.5 * PI); // 90 deg
  		
- 		RealMatrix result = MatrixTools.toRotationMatrix(angles);
+ 		RealMatrix result = Rotation.toRotationMatrix(angles);
  		assertTrue(MatrixTools.equals(result, expected, 1.0E-10));
 	}
 
@@ -87,7 +90,7 @@ public class MatrixToolsTest
 		for(int i = 0; i < ((n*n)-n)/2; i ++)
 			angles.add(0.0);
 		
-		RealMatrix result = MatrixTools.toRotationMatrix(angles);
+		RealMatrix result = Rotation.toRotationMatrix(angles);
 		
 		assertTrue(MatrixTools.equals(result, expected, 1.0E-10));
 	}
@@ -102,7 +105,7 @@ public class MatrixToolsTest
 		for(int i = 0; i < ((n*n)-n)/2; i ++)
 			angles.add(0.5 * PI); 
 		
-		RealMatrix result = MatrixTools.toRotationMatrix(angles);
+		RealMatrix result = Rotation.toRotationMatrix(angles);
 		
 		for(int i : series(n))
 			for(int j : series(n))

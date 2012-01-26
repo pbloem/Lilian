@@ -105,7 +105,7 @@ public class IFSTest
 		try
 		{
 		
-			File dir = new File("/home/peter/Documents/PhD/perturb12HD/");
+			File dir = new File("/Users/Peter/Documents/PhD/output/ifs");
 			dir.mkdirs();
 			ImageIO.write(image, "PNG", new File(dir, name + ".png") );
 		} catch (IOException e)

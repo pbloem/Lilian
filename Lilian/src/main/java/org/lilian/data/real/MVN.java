@@ -30,7 +30,7 @@ import org.lilian.util.MatrixTools;
  *   </li>
  * </ul>
  */
-public class MVN implements Density, Generator
+public class MVN implements Density, Generator<Point>
 {
 	// The transformation form the standard normal MVN to this one
 	protected AffineMap transform;

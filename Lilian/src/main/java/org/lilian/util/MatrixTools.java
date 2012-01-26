@@ -89,68 +89,27 @@ public class MatrixTools
 			m.setEntry(i, i, v.getEntry(i));
 	}
 	
-	public static RealVector toVector(List<Double> values)
+	/**
+	 * Retrieves the values of the diagonal of m as a vector.
+	 * 
+	 * @param v
+	 * @param m
+	 */
+	public static RealVector diag(RealMatrix m)
 	{
-		return new ArrayRealVector((Double[]) values.toArray());
+		RealVector result = new ArrayRealVector(m.getColumnDimension());
+		for(int i = 0; i < m.getColumnDimension(); i ++)
+			result.setEntry(i, m.getEntry(i, i));
+		return result;
 	}
 	
-
-	/**
-	 * Transforms a given set of angles to a rotation matrix.  
-	 * 
-	 * To represent arbitrary rotations in dimension d, <code>(d^2-d)/2</code> 
-	 * angles are required. Therefore, when this function is provided with a 
-	 * angles, it assumes a dimension of (1+sqrt(1+8a))/2.  
-	 * 
-	 * @param angles A list of angles 
-	 * @param dimension The target dimension of the rotation transformation 
-	 * 					represented by the resulting matrix 
-	 * @return A transformation matrix constructed for the given angles
-	 */
-	public static RealMatrix toRotationMatrix(List<Double> angles)
+	public static RealVector toVector(List<Double> values)
 	{
-		// calculate the dimension
-		double dimDouble = (1.0 + sqrt(1.0 + 8.0 * angles.size()))/2.0;
-		int dim = (int)Math.floor(dimDouble);
+		RealVector result = new ArrayRealVector(values.size());
+		for(int i = 0; i < values.size(); i++)
+			result.setEntry(i, values.get(i));
 		
-		RealMatrix left, right;
-		
-		double[] cosa = new double[angles.size()];
-		double[] sina = new double[angles.size()];		
-		for(int i = 0; i < angles.size(); i++)
-		{
-			cosa[i] = cos(angles.get(i));
-			sina[i] = sin(angles.get(i));
-		}
-		
-		int k;
-
-		left   = identity(dim);
-		right  = new Array2DRowRealMatrix(dim, dim);
-		
-		for(int i = 0; i < dim-1; i++)
-			for(int j = i+1; j < dim; j++)
-			{
-				// Reset the elementary rotation matrix (this should be faster
-				// than generating a new eye(dim) )
-				zero(right);
-				for(int m = 0; m < dim; m++)
-					right.setEntry(m, m, 1.0);
-
-				k = (((2 * dim - i - 1) * (i + 2))/2) - 2 * dim + j; 
-				// note that (2d-i-1)(i+2) is always an even number
-				// so we can keep the above equation in integers
-
-				right.setEntry(i, i,  cosa[k]);
-				right.setEntry(j, j,  cosa[k]);				
-				right.setEntry(i, j, -sina[k]);
-				right.setEntry(j, i,  sina[k]);
-	
-				// Multiply
-				left = left.multiply(right);
-			}
-	
-		return left;
+		return result;
 	}
 	
 	public static void zero(RealMatrix in)

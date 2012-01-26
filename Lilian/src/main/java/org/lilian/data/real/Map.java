@@ -28,4 +28,6 @@ public interface Map extends Serializable {
 	public int dimension();
 	
 	public List<Point> map(List<Point> points);
+	
+	public Map compose(Map other);
 }
