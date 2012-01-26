@@ -536,13 +536,13 @@ public class Functions
 		return elem;
 	}
 	
-	public static void toCSV(List<Point> data, File csvFile)
+	public static void toCSV(List<List<Double>> data, File csvFile)
 			throws IOException
 	{
 		BufferedWriter out = new BufferedWriter(new FileWriter(csvFile));
 		
 		boolean first;
-		for(Point point : data)
+		for(List<Double> point : data)
 		{
 			first = true;
 			for(Double val : point)
@@ -558,6 +558,14 @@ public class Functions
 		out.close();
 	}
 	
+	public static int mod(int x, int range)
+	{
+		int r = x % range;
+		if(r >= 0)
+			return r;
+		
+		return range + x;
+	}
 	
 	
 }

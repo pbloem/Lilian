@@ -75,6 +75,32 @@ public class BitStringTest {
 		assertEquals(exp, bs.toString());
 	}
 	
+	@Test
+	public void toIntegerTest()
+	{
+		BitString string = new BitString(2);
+		for(int i : Series.series(129))
+			string.add(false);
+		
+		List<Integer> ints = string.toIntegers();
+		assertEquals(5, ints.size());
+	}
+
+	@Test
+	public void toIntegerTest2()
+	{
+		BitString string = new BitString(2);
+		for(int i : Series.series(1000))
+			string.add(Global.random.nextBoolean());
+		
+		List<Integer> ints = string.toIntegers();
+		double sum = 0.0;
+		for(int i : ints)
+			sum += i;
+		
+		System.out.println(sum);
+	}
+	
 	/** 
 	 * Returns a random string
 	 */
@@ -86,6 +112,8 @@ public class BitStringTest {
 		
 		return BitString.parse(str);
 	}
+	
+	
 
 
 }
