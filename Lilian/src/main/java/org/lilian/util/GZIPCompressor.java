@@ -15,7 +15,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public class GZIPCompressor<T> implements Compressor<T> {
 	
-	private int bufferSize = 1;
+	private int bufferSize = 256;
 	
 	public GZIPCompressor() 
 	{
@@ -36,7 +36,10 @@ public class GZIPCompressor<T> implements Compressor<T> {
 
 			for(Object object : objects)
 				oos.writeObject(object);
+			
 			oos.close();
+			goz.finish();
+			goz.close();
 			
 			return baos.size();
 		} catch(IOException e)

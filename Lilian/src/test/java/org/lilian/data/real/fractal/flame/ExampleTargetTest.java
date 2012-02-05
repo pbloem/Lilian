@@ -3,6 +3,7 @@ package org.lilian.data.real.fractal.flame;
 import static org.junit.Assert.*;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -11,6 +12,7 @@ import javax.imageio.ImageIO;
 import org.junit.Test;
 import org.lilian.util.GZIPCompressor;
 import org.lilian.util.distance.CompressionDistance;
+import org.lilian.util.distance.Distance;
 
 public class ExampleTargetTest
 {
@@ -18,20 +20,31 @@ public class ExampleTargetTest
 	@Test
 	public void testScore()
 	{
-		BufferedImage targetImage = null;
+		BufferedImage sexy = null, pig = null, nature = null;
 		try
 		{
-			targetImage = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/jennie.jpg"));
+			sexy = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/sexy.bmp"));
+			pig = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/pig.bmp"));
+			nature = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/nature.bmp"));			
 		} catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ExampleTarget et = new ExampleTarget(targetImage, 0, 0, 0, 0, true, new double[]{}, new double[]{});
-
-		System.out.println(et.score(targetImage));
+		Distance<BufferedImage> d = new ExampleTarget.IMGDistance();
+		
+		System.out.println(d.distance(sexy, sexy));
+		System.out.println(d.distance(pig, pig));
+		System.out.println(d.distance(nature, nature));
+		
+		System.out.println();
+		
+		System.out.println(d.distance(sexy, pig));
+		System.out.println(d.distance(sexy, nature));
+		System.out.println(d.distance(pig, nature));
 	}
 	
+	@Test
 	public void gzipTest()
 	{
 		GZIPCompressor<String> comp = new GZIPCompressor<String>(1);
