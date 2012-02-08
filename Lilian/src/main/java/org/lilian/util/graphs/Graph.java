@@ -6,9 +6,9 @@ import java.util.List;
  * The parent interface for all types of graphs: simple, directed, weighted, 
  * multigraphs, hypergraphs, trees etc.
  * 
- * For the sake of clarity, the standard terminology for graphs is not used. 
- * Instead of vertices we talk about nodes, instead of edges we talk about 
- * links.
+ * For the sake of clarity, the slightlu obscure mathematical terminology for 
+ * graphs is avoided. Instead of vertices we talk about nodes, instead of edges
+ * we talk about links.
  * 
  * The properties of graphs captured and dictated by this interface are as follows
  * <ul>
@@ -32,6 +32,11 @@ import java.util.List;
  *        connected. Any node added will automatically be connected to all
  *        others. </li>   
  * </ul>
+ * 
+ * TODO: Perhaps the basic type should be an unlabeled graph (which would 
+ *       massively simplify the generics). A good number of graphs are 
+ *       unlabeled, and it would be awkward if all those use cases would have to 
+ *       deal with the self-referential generic structure.
  * 
  * @author peter
  *

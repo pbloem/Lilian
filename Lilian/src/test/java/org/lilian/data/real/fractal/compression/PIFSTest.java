@@ -37,7 +37,7 @@ public class PIFSTest
 			e.printStackTrace();
 		}
 		
-		PIFS pifs = new PIFS(face, new int[]{480, 270}, 100, new int[]{240, 135}, 0);
+		PIFS pifs = new PIFS(face, new int[]{480, 270}, 10, new int[]{240, 135}, 1);
 		pifs.search();
 		
 		System.out.println("Search finished.");

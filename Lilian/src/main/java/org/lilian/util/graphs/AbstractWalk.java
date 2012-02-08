@@ -40,7 +40,7 @@ public abstract class AbstractWalk<L, N extends Node<L, N>> implements Walk<L, N
 			{
 				master.remove();
 			}
-			
+
 		}
 
 	}

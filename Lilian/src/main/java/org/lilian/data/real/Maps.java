@@ -41,25 +41,13 @@ public class Maps
 	 */
 	public static AffineMap findMap(List<Point> xSet, List<Point> ySet)
 	{
-		MapResult result = findMapResult(xSet, ySet);
-		// * Create the map
-		return new AffineMap(
-				result.rotation().scalarMultiply(result.scale()),
-				result.translation()
-			);
+		return findMapResult(xSet, ySet).affineMap();
+
 	}
 	
 	public static Similitude findMap(List<Point> xSet, List<Point> ySet, int gen, int pop)
 	{
-		MapResult result = findMapResult(xSet, ySet);
-		List<Double> angles = Rotation.findAngles(result.rotation(), gen, pop);
-	
-		// * Create the map
-		return new Similitude(
-				result.scale(), 
-				new Point(result.translation().getData()),
-				angles
-			);
+		return findMapResult(xSet, ySet).similitude(gen, pop);
 	}
 	
 	public static MapResult findMapResult(List<Point> xSet, List<Point> ySet)
@@ -142,6 +130,7 @@ public class Maps
 		double trace = 0.0;
 		//   obtain the non-ordered singular values
 		RealVector values = MatrixTools.diag(svd.getS()); 
+		//   trace of DS
 		for(int i = 0; i < dim-1; i++)
 			trace += values.getEntry(i);
 		trace += detU*detV < 0 ? -values.getEntry(dim-1) : values.getEntry(dim-1);
@@ -151,22 +140,28 @@ public class Maps
 		// * Calculate t
 		RealVector t = yMean.subtract(r.scalarMultiply(c).operate(xMean));
 		
-		// * Create the map
-		return new MapResult(c, r, t);
+		// * Calculate the error
+		double e = yStdDev - (trace*trace)/xStdDev;
+		
+		// * Create the MapResult
+		return new MapResult(c, r, t, e);
 	}
 	
-	public static class MapResult {
+	public static class MapResult implements Comparable<MapResult>
+	{
 		double scale;
+		double error;
 		RealMatrix rotation;
 		RealVector translation;
 		
 		private MapResult(double scale, RealMatrix rotation,
-				RealVector translation)
+				RealVector translation, double error)
 		{
 			super();
 			this.scale = scale;
 			this.rotation = rotation;
 			this.translation = translation;
+			this.error = error;
 		}
 
 		public double scale()
@@ -182,6 +177,38 @@ public class Maps
 		public RealVector translation()
 		{
 			return translation;
+		}
+		
+		public double error()
+		{
+			return error;
+		}
+		
+		public AffineMap affineMap()
+		{
+			// * Create the map
+			return new AffineMap(
+					rotation().scalarMultiply(scale()),
+					translation()
+				);
+		}
+		
+		public Similitude similitude(int gen , int pop)
+		{
+			List<Double> angles = Rotation.findAngles(rotation(), gen, pop);
+		
+			// * Create the map
+			return new Similitude(
+					scale(), 
+					new Point(translation().getData()),
+					angles
+				);			
+		}
+
+		@Override
+		public int compareTo(MapResult other)
+		{
+			return Double.compare(this.error, other.error);
 		}
 	}
 }

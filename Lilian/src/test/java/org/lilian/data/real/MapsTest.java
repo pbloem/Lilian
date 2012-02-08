@@ -4,9 +4,11 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 import org.lilian.Global;
+import org.lilian.data.real.Maps.MapResult;
 import org.lilian.search.Parameters;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
@@ -26,6 +28,29 @@ public class MapsTest
 		AffineMap map = Maps.findMap(x, y);
 		
 		assertTrue(map.equals(AffineMap.identity(5), 0.01));
+	}
+	
+	@Test
+	public void testFindMapError()
+	{
+		List<Point> x, y, yC;
+		x = points(3, 5, 0.01);
+		y = points(3, 5, 0.01);
+		
+		MapResult result = Maps.findMapResult(x, y);
+		AffineMap map = result.affineMap();
+		
+		yC = map.map(x);
+		double e = 0.0;
+		for(int i : Series.series(x.size()))
+		{
+			double d = yC.get(i).distance(y.get(i));
+			e += d*d;
+		}
+		
+		e /= x.size();
+		
+		assertEquals(e, result.error(), 1E-10);
 	}
 	
 	@Test
@@ -140,6 +165,7 @@ public class MapsTest
 	
 	public static List<Point> points(int num, int dim, double var)
 	{
+		Global.random = new Random();
 		List<Point> points = new ArrayList<Point>(num);
 		
 		for(int i : Series.series(num))
