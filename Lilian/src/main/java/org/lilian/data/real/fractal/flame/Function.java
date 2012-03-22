@@ -132,7 +132,7 @@ public class Function extends AbstractMap implements Parametrizable
 	
 	private static class FunctionBuilder implements Builder<Function>
 	{
-		private static Builder<AffineMap> amBuilder = AffineMap.builder(2);
+		private static Builder<AffineMap> amBuilder = AffineMap.affineMapBuilder(2);
 		
 		@Override
 		public Function build(List<Double> parameters)

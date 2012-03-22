@@ -4,6 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math.linear.ArrayRealVector;
+import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math.linear.RealVector;
+import org.lilian.data.real.AbstractGenerator;
+import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Generator;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Map;
@@ -11,6 +16,7 @@ import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Point;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
+import org.lilian.util.MatrixTools;
 
 /**
  * Represents an Iterated Function System, a collection of weighted maps.
@@ -57,7 +63,7 @@ public class IFS<M extends Map & Parametrizable >
 		return new IFSGenerator();
 	}
 		
-	private class IFSGenerator implements Generator<Point>
+	private class IFSGenerator extends AbstractGenerator<Point>
 	{
 		Point p = basis.generate();
 
@@ -73,17 +79,27 @@ public class IFS<M extends Map & Parametrizable >
 			p = random().map(p);
 			return p;
 		}
-
-		@Override
-		public List<Point> generate(int n)
-		{
-			List<Point> points = new ArrayList<Point>(n);
-			for(int i = 0; i < n; i++)
-				points.add(generate());
-			
-			return points;
-		}
 	}
+
+	/**
+	 * Returns the composition of the maps indicated by the list of integers.
+	 * If the code is (0, 2, 1, 2), the map returned behaves as 
+	 * t_0(t_2(t_1(t_2(x))))).
+	 * 
+	 * @param code
+	 * @return
+	 */
+	public Map compose(List<Integer> code)
+	{
+		Map m = null;
+		
+		for(int i : code)
+			m = m == null? get(i) : m.compose(get(i));
+			
+		return m;
+	}
+	
+	
 
 	/**
 	 * The number of parameters required to represent a MapModel.
@@ -144,5 +160,128 @@ public class IFS<M extends Map & Parametrizable >
 		}	
 		
 		return model;
+	}
+	
+	public static <M extends AffineMap> IFS<AffineMap> makeAffine(IFS<M> in)
+	{
+		IFS<AffineMap> ifs = new IFS<AffineMap>(
+				new AffineMap(in.get(0).getTransformation(), in.get(0).getTranslation()), 
+				in.probability(0));
+		for(int i = 1; i < in.size(); i++)
+			ifs.addMap(
+					new AffineMap(in.get(i).getTransformation(), in.get(i).getTranslation()),
+					in.probability(i));
+		return ifs;
+	}
+	
+	/**
+	 * Finds the transformation of the initial distribution that is most likely 
+	 * to generate the given point. Transformations considered are all d length
+	 * compositions of the base transformations of this IFS model (where d is 
+	 * the model's depth floored).   
+	 * 
+	 * @return null If all codes represent probability distributions which assigns
+	 * a density to this point that is too low to be represented as a double
+	 * 
+	 */
+	public static <M extends AffineMap> List<Integer> code(
+			IFS<M> ifs, Point point, int depth)
+	{
+		Result res = code(
+				ifs, point, depth, new Result(),
+				new ArrayList<Integer>(depth), 0.0, 
+				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()));
+		return res.code();
+	}
+	
+	private static <M extends AffineMap> Result code(
+			IFS<M> ifs, Point point, int depth, 
+			Result result, List<Integer> current, 
+			double prior, RealMatrix transform, RealVector translate)	
+	{
+		if(current.size() == depth)
+		{
+			double prob;
+			
+			AffineMap map = new AffineMap(transform, translate);
+			if(map.invertible())
+			{
+				MVN mvn = new MVN(new AffineMap(transform, translate));
+				prob = prior + Math.log(mvn.density(point));
+			} else prob = 
+					Double.NEGATIVE_INFINITY;
+			
+			double dist = dist(point, translate);
+			
+			result.show(
+				prob, new ArrayList<Integer>(current), dist);
+			return result;
+		}
+		
+		for(int i = 0; i < ifs.size(); i ++)
+		{
+			current.add(i);
+			
+			RealMatrix cr = transform.multiply(ifs.get(i).getTransformation());
+			RealVector ct = transform.operate(ifs.get(i).getTranslation());
+			ct = ct.add(translate);
+			
+			code(ifs, point, depth, result, current, 
+					prior + Math.log(ifs.probability(i)), cr, ct);
+			
+			current.remove(current.size() - 1);
+		}
+		
+		return result;
+		
+	}
+	
+	private static class Result {
+		private double prob = Double.NEGATIVE_INFINITY;
+		private double distance = Double.POSITIVE_INFINITY;
+		private List<Integer> code = null;
+		private List<Integer> codeFallback = null;
+		
+		public void show(double prob, List<Integer> code, double distance)
+		{
+			if(prob > this.prob && !Double.isNaN(prob) && !Double.isInfinite(prob))
+			{	
+				this.prob = prob;
+				this.code = code;
+			}
+			
+			if(distance < this.distance && !Double.isNaN(distance) && !Double.isInfinite(distance))
+			{
+				this.distance = distance;
+				this.codeFallback = code;
+			}
+		}
+		
+		public double prob()
+		{
+			return prob;
+		}
+		
+		public List<Integer> code()
+		{
+			return code != null ? code : codeFallback;
+		}
+	}	
+	
+	/**
+	 * The squared distance between a point and a vector
+	 * @param point
+	 * @param vector
+	 * @return
+	 */
+	private static double dist(Point point, RealVector vector)
+	{
+		double dist = 0.0;
+		for(int i = 0 ; i < point.size(); i++)
+		{
+			double d = point.get(i) - vector.getEntry(i);
+			dist += d*d;
+		}
+		return dist;
 	}
 }

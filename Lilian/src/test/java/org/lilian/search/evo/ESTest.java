@@ -44,7 +44,7 @@ public class ESTest
 		List<Point> targetSet = targetModel.generator().generate(TARGET_SIZE);
 		Target<IFS<AffineMap>> target = new IFSTarget<AffineMap>(SAMPLE_SIZE, targetSet); 
 		
-		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.affineMapBuilder(2));
 		List<List<Double>> initial = ES.initial(POP_SIZE, builder.numParameters(), VAR);
 		
 		ES<IFS<AffineMap>> es = new ES<IFS<AffineMap>>(
@@ -81,7 +81,7 @@ public class ESTest
 		List<Point> targetSet = targetModel.generator().generate(TARGET_SIZE);
 		Target<IFS<Similitude>> target = new IFSTarget<Similitude>(SAMPLE_SIZE, targetSet); 
 		
-		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.builder(2));
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		List<List<Double>> initial = ES.initial(POP_SIZE, builder.numParameters(), VAR);
 		
 		ES<IFS<Similitude>> es = new ES<IFS<Similitude>>(

@@ -16,18 +16,23 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 {
 	private static final long serialVersionUID = 7470030390150319468L;
 	
-	private int dim = -1;
-	private boolean invertible = false;
+	protected int dim = -1;
+	protected boolean invertible = false;
 	
-	private RealMatrix transformation = null;
-	private RealVector translation = null;
+	protected RealMatrix transformation = null;
+	protected RealVector translation = null;
 	
-	private AffineMap inverse = null;
+	protected AffineMap inverse = null;
 	
-	private List<Double> parameters = null;
+	protected List<Double> parameters = null;
 
-	private AffineMap()
+	protected AffineMap()
 	{
+	}
+	
+	public AffineMap(AffineMap map)
+	{
+		this(map.getTransformation(), map.getTranslation());
 	}
 	
 	public AffineMap(RealMatrix transformation, RealVector translation)
@@ -166,6 +171,11 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		return dim;
 	}
 	
+	/** 
+	 * Returns the transformation matrix for this affine transformation
+	 * 
+	 * @return
+	 */
 	public RealMatrix getTransformation() {
 		return transformation.copy();
 	}
@@ -211,7 +221,7 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 			RealMatrix newRot = transformation.multiply(am.transformation);
 		
 			RealVector newTrans = transformation.operate(am.translation);
-			newTrans.add(translation);
+			newTrans = newTrans.add(translation);
 			
 			return new AffineMap(newRot, newTrans); 
 		}
@@ -249,7 +259,7 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		return (int) ddim; 
 	}
 
-	public static Builder<AffineMap> builder(int dimension)
+	public static Builder<AffineMap> affineMapBuilder(int dimension)
 	{
 		return new AMBuilder(dimension);
 	}
@@ -284,5 +294,6 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		out = out.add(translation); // here
 		
 		return new Point(out.getData()); // and here
-	}	
+	}
+
 }

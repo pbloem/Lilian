@@ -7,6 +7,7 @@ import java.util.List;
 import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Map;
+import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 
@@ -25,7 +26,7 @@ public class IFSs
 	 */
 	public static IFS<AffineMap> sierpinskiOff()
 	{	
-		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
 				0.5,0.0, 0.0,0.5,  0.0,-0.5, 10.0, 
 				0.5,0.0, 0.0,0.5,  0.5, 0.5, 5.0, 
@@ -41,7 +42,7 @@ public class IFSs
 	public static IFS<AffineMap> sierpinski()
 	{	
 	
-		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
 				0.5,0.0, 0.0,0.5,  0.0, 0.5, 1.0, 
 				0.5,0.0, 0.0,0.5,  0.5,-0.5, 1.0, 
@@ -54,10 +55,27 @@ public class IFSs
 	 * 
 	 * @return
 	 */
+	public static IFS<Similitude> sierpinskiSim()
+	{	
+	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.0, 0.5, 0.0, 1.0, 
+				0.5,  0.5,-0.5, 0.0, 1.0, 
+				0.5, -0.5,-0.5, 0.0, 1.0
+				));
+	}	
+	
+	/**
+	 * Generates a sierpinski gasket with non-uniform component weights
+	 * 
+	 * @return
+	 */
 	public static IFS<AffineMap> sierpinskiDown()
 	{	
 	
-		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
 				0.5,0.0, 0.0,0.5,  0.0,-0.5, 1.0, 
 				0.5,0.0, 0.0,0.5,  0.5, 0.5, 1.0, 
@@ -69,7 +87,7 @@ public class IFSs
 
 	public static IFS<AffineMap> cantor()
 	{
-		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
 				1/3.0,0.0, 0.0,1/3.0,  2/3.0,0.0, 1.0,
 				1/3.0,0.0, 0.0,1/3.0, -2/3.0,0.0, 1.0
@@ -78,21 +96,79 @@ public class IFSs
 	
 	public static IFS<AffineMap> cantorA()
 	{
-		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
 				.45,0.0, 0.0,.45,  .5, .5, 1.0,
 				.45,0.0, 0.0,.45, -.5,-.5, 1.0
 				));		
 	}
+	
+	public static IFS<Similitude> cantorASim()
+	{
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				.45,  .5, .5, 0.0, 1.0,
+				.45, -.5,-.5, 0.0, 1.0
+				));		
+	}	
 
 	public static IFS<AffineMap> cantorB()
 	{
-		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.builder(2));
+		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
 				.45,0.0, 0.0,.45, -.5, .5, 1.0,
 				.45,0.0, 0.0,.45,  .5,-.5, 1.0
 				));		
-	}		
+	}
+	
+	
+	public static IFS<Similitude> koch2Sim()
+	{
+		double 	a = Math.sqrt(13.0/9.0),
+				angle = Math.atan(2.0/3.0),
+				y = - 0.5 * a * Math.sin(angle),
+				x1 = - 1.0 + 0.5 * a * Math.cos(angle),
+				x2 =   1.0 - 0.5 * a * Math.cos(angle);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				a/2.0, x1,y, -angle - Math.PI, 1.0,
+				a/2.0, x2,y,  angle + Math.PI, 1.0
+				));
+	}
+	
+	public static IFS<Similitude> koch2DownSim()
+	{
+		double 	a = Math.sqrt(13.0/9.0),
+				angle = Math.atan(2.0/3.0),
+				y = - 0.5 * a * Math.sin(angle),
+				x1 = - 1.0 + 0.5 * a * Math.cos(angle),
+				x2 =   1.0 - 0.5 * a * Math.cos(angle);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				a/2.0,  x1, -y, -(angle + Math.PI), 1.0,
+				a/2.0, -x2, -y,  (angle + Math.PI), 1.0
+				));
+	}	
+	
+//	public static IFSDensityModel koch2Down()
+//	{
+//		double 	a = Math.sqrt(13.0/9.0),
+//				angle = Math.atan(2.0/3.0),
+//				y = - 0.5 * a * Math.sin(angle),
+//				x1 = - 1.0 + 0.5 * a * Math.cos(angle),
+//				x2 =   1.0 - 0.5 * a * Math.cos(angle);
+//		
+//		List<Double> params = Arrays.asList(
+//				1.0, x2, -y, a/2.0, a/2.0, -(angle + Math.PI),
+//				1.0, x1, -y, a/2.0, a/2.0,  (angle + Math.PI));		
+//		
+//		IFSDensityModel koch = new IFSDensityModel(params, 2, 2);
+//		
+//		return koch;
+//	}	
+	
 	
 	public static IFS<AffineMap> random()
 	{
@@ -108,7 +184,7 @@ public class IFSs
 		for(int j = 0; j < num; j++)
 				params.add(Global.random.nextGaussian() * stdDev);		
 		
-		Builder<IFS<AffineMap>> builder = IFS.builder(k, AffineMap.builder(d));
+		Builder<IFS<AffineMap>> builder = IFS.builder(k, AffineMap.affineMapBuilder(d));
 		return builder.build(params);		
 	}
 	

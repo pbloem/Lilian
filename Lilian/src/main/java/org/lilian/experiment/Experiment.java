@@ -1,22 +1,30 @@
 package org.lilian.experiment;
 
 /**
- * An experiment represents a piece of code that is run to achieve certain 
- * results.
+ * Classes implementing this interface represent experiments to be run.
  * 
- * A class that is annoted as such can be run automatically with a selection of
- * parameters so that everything affecting the environment is catalogued and 
- * stored together with the basic parameters, information about the run, and 
- * state information required to restart the run if it is interrupted
  * 
- * The experiment can also be run with a selection of values for each parameter,
- * the running code will run the experiment for each possible combination and 
- * collate and plot the results.
+ * Results of the experiments are methods tagged with @Result.
+ * 
  * 
  * @author Peter
  *
  */
-public @interface Experiment
+public interface Experiment
 {
+
+	/**
+	 * Resumes the experiment form the directory indicated by the current 
+	 * environment
+	 */
+	public void resume();
+	
+	/**
+	 * Saves the experiment's state to the directory indicated by the current 
+	 * environment.
+	 * 
+	 * The experiment itself will usually call this method.
+	 */
+	public void save();
 
 }

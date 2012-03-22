@@ -536,13 +536,13 @@ public class Functions
 		return elem;
 	}
 	
-	public static void toCSV(List<List<Double>> data, File csvFile)
+	public static <L extends List<Double>> void toCSV(List<L> data, File csvFile)
 			throws IOException
 	{
 		BufferedWriter out = new BufferedWriter(new FileWriter(csvFile));
 		
 		boolean first;
-		for(List<Double> point : data)
+		for(L point : data)
 		{
 			first = true;
 			for(Double val : point)

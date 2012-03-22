@@ -11,6 +11,7 @@ import java.util.Random;
 
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
+import org.apache.commons.math.linear.SingularMatrixException;
 import org.lilian.Global;
 import org.lilian.util.MatrixTools;
 
@@ -114,7 +115,20 @@ public class MVN implements Density, Generator<Point>
 	public double density(Point p)
 	{
 		double det = abs( MatrixTools.getDeterminant(covariance()));
-		RealMatrix covInv = MatrixTools.inverse(covariance());
+		if(MatrixTools.isSingular(covariance()))
+			return 0.0;
+		
+		RealMatrix covInv = null;
+		try {
+			covInv = MatrixTools.inverse(covariance());
+		} catch(SingularMatrixException e)
+		{
+			System.out.println(covariance());
+			System.out.println(covariance.isSingular());
+			System.out.println(MatrixTools.isSingular(covariance()));
+			
+			throw e;
+		}
 		
 		RealVector diff = p.getVector().subtract(mean().getVector());
 		

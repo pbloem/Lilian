@@ -54,7 +54,7 @@ public class MapModelTest {
 		model.addMap(AffineMap.identity(3), 1.0);
 		model.addMap(AffineMap.identity(3), 1.0);
 		
-		assertEquals(model, MapModel.builder(4, AffineMap.builder(3)).build(model.parameters()));
+		assertEquals(model, MapModel.builder(4, AffineMap.affineMapBuilder(3)).build(model.parameters()));
 	}
 
 }

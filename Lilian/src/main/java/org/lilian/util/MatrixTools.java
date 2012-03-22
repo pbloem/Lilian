@@ -102,6 +102,15 @@ public class MatrixTools
 			result.setEntry(i, m.getEntry(i, i));
 		return result;
 	}
+
+	public static RealVector toVector(double... values)
+	{
+		RealVector result = new ArrayRealVector(values.length);
+		for(int i = 0; i < values.length; i++)
+			result.setEntry(i, values[i]);
+		
+		return result;
+	}
 	
 	public static RealVector toVector(List<Double> values)
 	{
@@ -159,5 +168,10 @@ public class MatrixTools
 	public static RealMatrix inverse(RealMatrix in) 
 	{
 		return new LUDecompositionImpl(in).getSolver().getInverse();
+	}
+	
+	public static boolean isSingular(RealMatrix in)
+	{
+		return ! new LUDecompositionImpl(in).getSolver().isNonSingular();
 	}
 }

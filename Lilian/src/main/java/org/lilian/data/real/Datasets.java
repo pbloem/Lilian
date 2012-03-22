@@ -1,0 +1,142 @@
+package org.lilian.data.real;
+
+import static org.lilian.util.Series.series;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.lilian.Global;
+import org.lilian.util.Series;
+import org.lilian.util.distance.SquaredEuclideanDistance;
+
+/**
+ * Static helper functions on lists of points.
+ * 
+ * @author Peter
+ */
+public class Datasets
+{
+	public static double distance(Point point, List<Point> data)
+	{
+		double d = Double.POSITIVE_INFINITY;
+		for(Point p : data)
+			d = Math.min(d, SquaredEuclideanDistance.dist(point, p));
+		
+		return Math.sqrt(d);
+	}
+	
+	public static double distance(Point point, List<Point> data, int sample)
+	{
+		double d = Double.POSITIVE_INFINITY;
+		for(int i = 0; i < sample; i++)
+		{
+			Point p = data.get(Global.random.nextInt(data.size()));
+			d = Math.min(d, SquaredEuclideanDistance.dist(point, p));
+		}
+		
+		return Math.sqrt(d);
+	}
+	
+	/**
+	 * Sample n elements randomly with replacement
+	 * 
+	 * @return
+	 */
+	public static List<Point> sample(List<Point> data, int n)
+	{
+		List<Point> res = new ArrayList<Point>(n);
+		
+		for(int i : series(n))
+			res.add(data.get(Global.random.nextInt(data.size())));
+		
+		return res;
+	}
+	
+	/**
+	 * Sample n elements randomly with replacement
+	 * 
+	 * @return
+	 */
+	public static List<Point> sampleWithReplacement(List<Point> data, int n)
+	{
+		
+		// *  Shuffle the list and copy the first n items
+		List<Point> res = new ArrayList<Point>(data);
+		Collections.shuffle(res);
+		
+		// * Copy the sublist over, so we the gc can clean up the shuffled list.
+		List<Point> res2 = new ArrayList<Point>(res.subList(0, n));
+		
+		return res2;
+	}
+	
+	/**
+	 * Creates a generator for random points on a sphere of the given dimension,
+	 * with 
+	 */
+	public static Generator<Point> sphere(int dimension)
+	{
+		return new Sphere(dimension);
+	}
+	
+	private static class Sphere extends AbstractGenerator<Point>
+	{
+		protected int dim;
+		
+		public Sphere(int dim)
+		{
+			this.dim = dim;
+		}
+
+		public Point generate()
+		{
+			// ** Draw a vector with standard normal random entries 
+			double[] vector = new double[dim];
+			for(int i = 0; i < dim; i++)
+				vector[i] = Global.random.nextGaussian();
+			
+			
+			double length = 0;
+			for(int i = 0; i < dim; i++)
+				length += vector[i]*vector[i];
+			length = Math.sqrt(length);
+			
+			// ** Normalize it (the distribution is now uniform over the
+			//    unit sphere)
+			if(length != 0.0)
+				for(int i = 0; i < dim; i++)
+					vector[i] /= length;
+			
+			return new Point(vector);
+		}
+	}
+	
+	public static Generator<Point> ball(int dim)
+	{
+		return new Ball(dim);
+	}	
+	
+	private static class Ball extends Sphere
+	{
+		public Ball(int dim)
+		{
+			super(dim);
+		}
+
+		public Point generate()
+		{
+			// * draw a random point on the unit sphere
+			Point point = super.generate();
+			double[] p = point.getBackingData();
+			
+			// * multiply it by a unirandom point from the unit interval
+			//   raised to the power of 1/d
+			double r = Global.random.nextDouble();
+			for(int i = 0; i < dim; i++)
+				p[i] *= Math.pow(r, 1.0/dim);
+			
+			return new Point(p);
+		}
+	}
+}

@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -38,7 +39,7 @@ public class IFSTest
 			IFS<AffineMap> sierpinski = IFSs.sierpinskiOff();
 	//		IFS<AffineMap> sierpinski = IFSs.random(2, 3, 0.5);
 			
-			Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.builder(2));
+			Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.affineMapBuilder(2));
 			List<Double> change = new ArrayList<Double>(builder.numParameters());
 			for(int i : Series.series(builder.numParameters()))
 				change.add(Global.random.nextGaussian() * 0.0);
@@ -117,4 +118,38 @@ public class IFSTest
 		System.out.println(name + ": " + Functions.toc() + " seconds");
 	}
 
+	@Test
+	public void testCompose()
+	{
+		IFS<AffineMap> ifs = IFSs.sierpinski();
+		
+		List<Integer> code = Arrays.asList(0, 2, 1, 0, 1, 1);
+		Map m = ifs.compose(code);
+		
+		Point source = new Point(2), p = source;
+		for(int i : code)
+			p = ifs.get(i).map(p);
+		
+		System.out.println(p + " " + m.map(source));
+		assertEquals(p, m.map(source));
+	}
+	
+	@Test
+	public void testCode()
+	{
+		int depth = 6;
+		IFS<AffineMap> ifs = IFSs.sierpinski();
+		
+		for(int i : Series.series(100))
+		{
+			List<Integer> code = new ArrayList<Integer>(depth);
+			for(int j : Series.series(depth))
+				code.add(Global.random.nextInt(ifs.size()));
+			
+			Map m = ifs.compose(code);
+			
+			assertEquals(code, IFS.code(ifs, m.map(new Point(2)), code.size()));
+		}
+	}
+	
 }

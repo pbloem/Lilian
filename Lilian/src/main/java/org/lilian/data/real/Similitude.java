@@ -18,7 +18,7 @@ import org.lilian.util.MatrixTools;
  * @author Peter
  *
  */
-public class Similitude extends AbstractMap implements Parametrizable
+public class Similitude extends AffineMap
 {
 	private static final long serialVersionUID = 3717926722178382627L;
 
@@ -27,13 +27,9 @@ public class Similitude extends AbstractMap implements Parametrizable
 	protected double scalar;
 	protected List<Double> angles;
 	
-	// combines the rotation and scaling
-	protected RealMatrix rotScale;
-	
-	protected RealVector translation;
-	
 	public Similitude(List<Double> parameters)
 	{
+		super();
 		int s = parameters.size();
 		double ddim =  ( -1.0 + Math.sqrt(-7.0 + s * 8.0))/2.0;
 		
@@ -62,7 +58,7 @@ public class Similitude extends AbstractMap implements Parametrizable
 		this.angles = new ArrayList<Double>(angles);
 		
 		RealMatrix rotation = Rotation.toRotationMatrix(angles);
-		this.rotScale = rotation.scalarMultiply(scalar);
+		this.transformation = rotation.scalarMultiply(scalar);
 	}
 
 	
@@ -111,7 +107,7 @@ public class Similitude extends AbstractMap implements Parametrizable
 	@Override
 	public Point map(Point in)
 	{
-		RealVector result = rotScale.operate(in.getVector());
+		RealVector result = transformation.operate(in.getVector());
 		
 		return new Point(result.add(translation));
 	}
@@ -134,7 +130,7 @@ public class Similitude extends AbstractMap implements Parametrizable
 			for(int i = 0; i < angles.size(); i++)
 				newAngles.add(angles.get(i) + sim.angles.get(i));
 			
-			RealVector newTrans = sim.rotScale.operate(this.translation).add(sim.translation);
+			RealVector newTrans = sim.transformation.operate(this.translation).add(sim.translation);
 			
 			return new Similitude(newScalar, new Point(newTrans), newAngles);
 		}
@@ -170,7 +166,7 @@ public class Similitude extends AbstractMap implements Parametrizable
 		return dimension;
 	}
 	
-	public static Builder<Similitude> builder(int dimension)
+	public static Builder<Similitude> similitudeBuilder(int dimension)
 	{
 		return new SBuilder(dimension);
 	}
@@ -203,6 +199,4 @@ public class Similitude extends AbstractMap implements Parametrizable
 		return "Similitude [s" + scalar + ", a=" + angles
 				+ ", t=" + translation + "]";
 	}
-	
-	
 }

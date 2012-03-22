@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
+import org.lilian.experiment.Reportable;
+
 /**
  * This class contains methods and objects that are used globally by all other 
  * classes. 
@@ -21,9 +23,15 @@ import java.util.logging.Logger;
 public class Global
 {
 	/**
+	 * The default random seed. May be changed during runtime.
+	 */
+	@Reportable(description = "Default random seed")
+	public static final int RANDOM_SEED = 42;
+	
+	/**
 	 *
 	 */
-	public static Random random = new Random(42);
+	public static Random random = new Random(RANDOM_SEED);
 	
 	// FIXME: Use a better solution for resources
 	private static File resourcesDir = new File("/home/peter/Documents/Eclipse Workspace 3/lilian/resources/");

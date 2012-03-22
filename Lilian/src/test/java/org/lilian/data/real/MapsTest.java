@@ -59,7 +59,7 @@ public class MapsTest
 		int num = 30;
 		
 		Distance<List<Double>> d = new EuclideanDistance();
-		Map map = Similitude.builder(2).build(Parameters.random(4, 0.5));
+		Map map = Similitude.affineMapBuilder(2).build(Parameters.random(4, 0.5));
 		
 		List<Point> x, y;
 		x = points(num, 2, 3.4);

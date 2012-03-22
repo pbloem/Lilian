@@ -213,6 +213,20 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 		BitString out = new BitString(size);
 		out.maxIndex = size - 1;
 		return out;
+	}
+	
+	/**
+	 * Creates a bitstring of the given length with only zero bits as elements
+	 * @param size
+	 * @return
+	 */
+	public static BitString ones(int size)
+	{
+		BitString out = new BitString(size);
+		for(int i = 0; i < size; i++)
+			out.add(true);
+		
+		return out;
 	}	
 	
 	/**
@@ -226,6 +240,23 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 		out.maxIndex = size - 1;
 		for(int i = 0; i < size; i++)
 			out.set(i, Global.random.nextBoolean());
+		
+		return out;
+	}	
+	
+	/**
+	 * Creates a bitstring of the given length with random bits as elements
+	 * 
+	 * @param size
+	 * @param probTrue The probability of a 'true' bit being entered
+	 * @return
+	 */
+	public static BitString random(int size, double probTrue)
+	{
+		BitString out = new BitString(size);
+		out.maxIndex = size - 1;
+		for(int i = 0; i < size; i++)
+			out.set(i, Global.random.nextDouble() < probTrue ? true : false);
 		
 		return out;
 	}		

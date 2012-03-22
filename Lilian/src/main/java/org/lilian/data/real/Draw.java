@@ -7,7 +7,13 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
+import org.lilian.data.real.fractal.IFS;
+import org.lilian.models.BasicFrequencyModel;
+import org.lilian.models.FrequencyModel;
 
 /**
  * A set of static methods to generate simple density plots of data.
@@ -46,7 +52,7 @@ public class Draw
 											double[] yrange, 
 											int res,
 											boolean log)
-	{
+	{	
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
 		
@@ -208,6 +214,102 @@ public class Draw
 		
 		return image;
 	}
+	
+	
+	public static ArrayList<Color> colors = new ArrayList<Color>();
+	public static ArrayList<Color> componentColors = new ArrayList<Color>();	
+	public static Color errorColor = Color.RED;		
+	
+	static 
+	{
+		colors.add(Color.BLACK);
+		colors.add(Color.WHITE);		
+		colors.add(Color.BLUE);
+		colors.add(Color.GREEN);
+		colors.add(Color.YELLOW);
+		colors.add(Color.PINK);
+		
+		componentColors.add(Color.GREEN);
+		componentColors.add(Color.RED);		
+		componentColors.add(Color.YELLOW);	
+		componentColors.add(Color.ORANGE);
+		componentColors.add(Color.WHITE);
+		componentColors.add(Color.CYAN);
+		componentColors.add(Color.MAGENTA);
+		componentColors.add(Color.PINK);
+		componentColors.add(Color.LIGHT_GRAY);
+
+		
+	}
+
+	/**
+	 * Draws the component distribution in the codes of a three component 
+	 * classifier.
+	 * 
+	 * @param res The resolution of the smallest side of the image.
+	 */
+	public static <M extends AffineMap> 
+		BufferedImage drawCodes(IFS<M> ifs, 
+											double[] xrange, 
+											double[] yrange, 
+											int res, int depth)
+		throws IOException
+	{
+		if(ifs.size() > 3)
+			throw new IllegalArgumentException("IFS must have three components or less, had "+ifs.size()+".");
+		
+		double 	xDelta = xrange[1] - xrange[0],
+				yDelta = yrange[1] - yrange[0];
+		
+		double maxDelta = Math.max(xDelta, yDelta); 		
+		double minDelta = Math.min(xDelta, yDelta);
+		
+		double step = minDelta/(double) res;
+		
+		int xRes = (int) (xDelta / step);
+		int yRes = (int) (yDelta / step);
+		
+		BufferedImage image = 
+			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_RGB);		
+		
+		double x, y;
+		int classInt;
+		Point p;
+		
+		for(int i = 0; i < xRes; i++)
+		{
+			x =  xrange[0] + step*0.5 + step * i;
+			for(int j = 0; j < yRes; j++)				
+			{
+				y = yrange[0] + step*0.5 + step * j;
+				
+				
+				p = new Point(x, y);
+				List<Integer> code = IFS.code(ifs, p, depth);
+				
+				Color color = null;
+				
+				if(code == null)
+				{
+					color = Color.BLACK;
+				} else
+				{
+					FrequencyModel<Integer> mod = 
+							new BasicFrequencyModel<Integer>(code);
+					
+					float red   = (float)mod.probability(0);
+					float green = (float)mod.probability(1);
+					float blue  = (float)mod.probability(2);
+					color = new Color(red, green, blue);
+				}
+				
+				image.setRGB(i, j, color.getRGB());			
+			}
+		}
+
+		return image;
+	}
+		
 
 //	/**
 //	 * Draws multidimensional classed data.

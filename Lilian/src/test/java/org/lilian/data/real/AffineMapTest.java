@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.lilian.search.Builder;
+import org.lilian.search.Parameters;
 
 public class AffineMapTest 
 {
@@ -82,7 +83,7 @@ public class AffineMapTest
 	@Test
 	public void testBuilder()
 	{
-		Builder<AffineMap> builder = AffineMap.builder(3);
+		Builder<AffineMap> builder = AffineMap.affineMapBuilder(3);
 		
 		assertEquals(12, builder.numParameters());
 		
@@ -96,4 +97,40 @@ public class AffineMapTest
 		
 		assertEquals(result, result2);		
 	}
+	
+	@Test
+	public void testCompose1()
+	{
+		AffineMap a = AffineMap.identity(3), b = AffineMap.identity(3);
+		
+		Map ab = a.compose(b);
+		
+		Point p = new Point(1, 2, 3);
+		assertEquals(p.get(0), ab.map(p).get(0), 0.00001);
+		assertEquals(p.get(1), ab.map(p).get(1), 0.00001);
+		assertEquals(p.get(2), ab.map(p).get(2), 0.00001);		
+	}
+	
+	@Test
+	public void testCompose2()
+	{
+		AffineMap a = random(3), b = random(3);
+		
+		Map ab = a.compose(b);
+		
+		Point p = new Point(1, 2, 3),
+		      ps = a.map(b.map(p));
+		
+		assertEquals(ps.get(0), ab.map(p).get(0), 0.00001);
+		assertEquals(ps.get(1), ab.map(p).get(1), 0.00001);
+		assertEquals(ps.get(2), ab.map(p).get(2), 0.00001);		
+	}
+	
+	public AffineMap random(int dim)
+	{
+		Builder<AffineMap> builder = AffineMap.affineMapBuilder(dim);
+		List<Double> p = Parameters.random(builder.numParameters(), 1.0);
+		return builder.build(p);
+	}
+
 }

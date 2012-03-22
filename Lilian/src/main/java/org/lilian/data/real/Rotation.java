@@ -29,7 +29,7 @@ import org.lilian.util.distance.SquaredEuclideanDistance;
  * @author Peter
  *
  */
-public class Rotation extends AbstractMap implements Parametrizable
+public class Rotation extends AffineMap implements Parametrizable
 {
 	private static final long serialVersionUID = 3717926722178382627L;
 
@@ -38,8 +38,7 @@ public class Rotation extends AbstractMap implements Parametrizable
 
 	protected List<Double> angles;
 	
-	// combines the rotation and scaling
-	protected RealMatrix rot;
+	protected RealMatrix transformation;
 		
 	public Rotation(List<Double> parameters)
 	{
@@ -54,7 +53,7 @@ public class Rotation extends AbstractMap implements Parametrizable
 		this.angles = new ArrayList<Double>(parameters);
 		
 		RealMatrix rotation = toRotationMatrix(angles);
-		this.rot = rotation;
+		this.transformation = rotation;
 	}
 
 	
@@ -75,13 +74,13 @@ public class Rotation extends AbstractMap implements Parametrizable
 	 */
 	public RealMatrix matrix()
 	{
-		return rot.copy();
+		return transformation.copy();
 	}
 
 	@Override
 	public Point map(Point in)
 	{
-		RealVector result = rot.operate(in.getVector());
+		RealVector result = transformation.operate(in.getVector());
 		
 		return new Point(result);
 	}
@@ -130,7 +129,7 @@ public class Rotation extends AbstractMap implements Parametrizable
 		return dimension;
 	}
 	
-	public static Builder<Rotation> builder(int dimension)
+	public static Builder<Rotation> rotationBuilder(int dimension)
 	{
 		return new SBuilder(dimension);
 	}
@@ -227,14 +226,14 @@ public class Rotation extends AbstractMap implements Parametrizable
 	{
 		int dim =  matrix.getColumnDimension();
 		
-		Builder<Rotation> builder = Rotation.builder(dim);
+		Builder<Rotation> builder = Rotation.rotationBuilder(dim);
 		ES<Rotation> es = new ES<Rotation>(
 				builder, 
 				new AngleTarget(matrix),
 				ES.initial(pop, builder.numParameters(), Math.PI),
 				2, 2*pop, 0, ES.CrossoverMode.UNIFORM,
-				0.00005,
-				0.08
+				0.000005,
+				0.02
 				);
 		
 		for(int i : series(generations))
@@ -291,7 +290,7 @@ public class Rotation extends AbstractMap implements Parametrizable
 	{
 		int dim = a.get(0).dimensionality();
 		
-		Builder<Rotation> builder = Rotation.builder(dim);
+		Builder<Rotation> builder = Rotation.rotationBuilder(dim);
 		ES<Rotation> es = new ES<Rotation>(
 				builder, 
 				new AngleTarget2(a, b),

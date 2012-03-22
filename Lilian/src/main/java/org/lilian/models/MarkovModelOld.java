@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
+ * Old, deprecated version of markov model. See package models.markov
+ * 
  * Creates a markov model of a corpus.
  * 
  * NOTE: To include markers for the end of a sentence, use a special corpus 
@@ -17,7 +19,7 @@ import java.io.Serializable;
  * NOTE: The calculation of the entropy should be changed once smoothing is
  * 	implemented. 
  */
-public class MarkovModel<T> implements Serializable
+public class MarkovModelOld<T> implements Serializable
 {
 	
 	private Vector<T> queue;
@@ -30,7 +32,7 @@ public class MarkovModel<T> implements Serializable
 	// Totals for the number of ngrams encountered
 	private List<Integer> totals = new ArrayList<Integer>();
 	
-	public MarkovModel(int order)
+	public MarkovModelOld(int order)
 	{
 		if(order < 1)
 			throw new IllegalArgumentException("Order ("+order+")  cannot be less than 1"); 
@@ -42,7 +44,7 @@ public class MarkovModel<T> implements Serializable
 			totals.add(0);
 	}
 	
-	public MarkovModel(int order, Corpus<T> corpus)
+	public MarkovModelOld(int order, Corpus<T> corpus)
 	{
 		this(order);
 		add(corpus);
