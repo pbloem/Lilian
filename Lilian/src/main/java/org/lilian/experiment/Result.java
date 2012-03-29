@@ -1,5 +1,7 @@
 package org.lilian.experiment;
 
+import java.lang.annotation.*;
+
 /**
  * Any method annotated as a Result returns some value which represents the 
  * outcome of the experiment.
@@ -14,7 +16,9 @@ package org.lilian.experiment;
  * @author Peter
  *
  */
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Result
 {
 	String name();
+	String description() default "";
 }

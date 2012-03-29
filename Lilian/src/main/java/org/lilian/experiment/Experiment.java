@@ -12,7 +12,12 @@ package org.lilian.experiment;
  */
 public interface Experiment
 {
-
+	/**
+	 * Runs the experiment. Resumes if the current directory contains a state 
+	 * description.
+	 */
+	public void run();
+	
 	/**
 	 * Resumes the experiment form the directory indicated by the current 
 	 * environment
