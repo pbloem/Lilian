@@ -1,5 +1,6 @@
 package org.lilian.models;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -11,7 +12,7 @@ import java.util.*;
  * @param <T> The type of token. T should have a proper equals(), hashcode() and 
  * toString() implementation.
  */
-public interface ProbabilityModel<T> {
+public interface ProbabilityModel<T> extends Serializable {
 	
 	/**
 	 * The probability of a token.

@@ -139,4 +139,59 @@ public class Datasets
 			return new Point(p);
 		}
 	}
+	
+	public static Generator<Point> mandelbrot()
+	{
+		return new Mandelbrot();
+	}
+	
+	private static class Mandelbrot extends AbstractGenerator<Point>
+	{
+		
+		
+	    /**
+	     * @param point
+	    * @return
+	    */
+		public static boolean inM(double x0, double y0)
+		{
+			double range = 10.0, topRange = 100000.0;
+			int steps = 1000;
+			
+			double x = x0, y = y0;
+			double xp, yp;
+			
+			for(int i = 0; i < steps; i ++)
+			{
+				xp = x*x - y*y + x0;
+				yp = 2*x*y + y0;
+	
+				x = xp; y = yp;
+				
+				if(x*x + y*y > topRange*topRange)
+					break;
+			}
+			
+			if(x*x + y*y > range * range)
+				return false;
+			return true;
+		}
+
+		@Override
+		public Point generate()
+		{
+			double x = 0.0, y = 0.0;
+			
+			boolean rejected = true;
+			while(rejected)
+			{
+				x = Global.random.nextDouble() * 3.0 - 2.0;
+				y = Global.random.nextDouble() * 2.0 - 1.0;
+				
+				rejected = ! inM(x, y);
+			}			
+			
+			return new Point(x+0.5, y);
+		}
+	}
 }
