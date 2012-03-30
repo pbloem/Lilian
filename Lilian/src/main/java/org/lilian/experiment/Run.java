@@ -92,14 +92,11 @@ public class Run
 		if(numExperiments == 0)
 			System.out.print("No experiments found");
 		
-		else if(numExperiments == 1)
+		else 
 		{
-			System.out.println("Single experiment found. Running.");
+			System.out.println(numExperiments + " experiment(s) found. Running.");
 			Environment.current = new Environment(new File("."), System.out);
 			experiments.get(0).run();
-		} else {
-			System.out.println("Found multiple experiments ("+ numExperiments+"). Running.");
-			// TODO
 		}
 	
 	}
@@ -195,7 +192,9 @@ public class Run
 		Experiment exp = null;
 		if(runMulti)
 		{
-			// TODO
+			MultiExperiment mexp = new MultiExperiment((Constructor<Experiment>)match, inputs);
+			numExperiments += mexp.size();
+			exp = mexp;
 		} else 
 		{
 			try
@@ -216,25 +215,33 @@ public class Run
 	public static Object interpretValue(Object value, Parameter parameter, Class<?> type)
 	{
 		if(value instanceof Map<?, ?>)
-			if(((Map) value).containsKey("resource"))
+			if(((Map<String, ?>) value).containsKey("resource"))
 				return interpretResource(value, parameter, type);
 
-		if(value.getClass().equals(type)) // There is some potential for problems here
-			return value;
-		
-		if(
-				value.getClass().equals(Integer.class) && type.equals(int.class) || 
-				value.getClass().equals(Long.class) && type.equals(long.class) ||
-				value.getClass().equals(Double.class) && type.equals(double.class) ||
-				value.getClass().equals(Float.class) && type.equals(float.class)) // There is some potential for problems here
+		if(equals(value.getClass(), type))
 			return value;
 		
 		if(value instanceof Collection<?>)
-			if( ((Collection<?>)value).isEmpty() ||
-					type.equals( ((Collection<?>)value).iterator().next().getClass() ))
+		{
+			Class<?> typeClass = ((Collection<?>)value).iterator().next().getClass();
+			if( !((Collection<?>)value).isEmpty() &&
+					equals(typeClass, type))
 				return interpretMulti(value, parameter, type);
+		}
 		
 		throw new IllegalArgumentException("Error on value '"+value+"' of type '"+value.getClass()+"' for parameter '"+parameter+"'. Object of type '"+type+"' was expected or a collection of such objects, or a description that can be parsed into such an object.");
+	}
+	
+	private static boolean equals(Class<?> c, Class<?> type)
+	{
+		if(c.equals(type)) 
+			return true;
+		if( c.equals(Integer.class) && type.equals(int.class) || 
+		    c.equals(Long.class) && type.equals(long.class) ||
+		    c.equals(Double.class) && type.equals(double.class) ||
+		    c.equals(Float.class) && type.equals(float.class))
+			return true;
+		return false;
 	}
 	
 	public static Object interpretResource(Object value, Parameter parameter, Class<?> type)
@@ -318,7 +325,7 @@ public class Run
 		return m;
 	}
 
-	private static class Multi<T> extends ArrayList<T>
+	public static class Multi<T> extends ArrayList<T>
 	{
 		private static final long serialVersionUID = 2956329843595902841L;
 
