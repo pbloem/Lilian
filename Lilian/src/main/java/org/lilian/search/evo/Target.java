@@ -1,10 +1,11 @@
 package org.lilian.search.evo;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.lilian.search.Parametrizable;
 
-public interface Target<P>
+public interface Target<P> extends Serializable
 {
 	/**
 	 * Scores an object according to this target function.

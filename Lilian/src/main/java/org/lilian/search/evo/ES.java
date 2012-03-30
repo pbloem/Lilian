@@ -32,8 +32,10 @@ import org.lilian.util.Series;
  * @param <P>
  * @param <T>
  */
-public class ES<P extends Parametrizable> 
+public class ES<P extends Parametrizable> implements Serializable
 {
+	private static final long serialVersionUID = 3586222214435236218L;
+
 	public static enum CrossoverMode {GLOBAL, LOCAL, UNIFORM};
 	public static final int NUM_PARENTS = 2;
 	public static final int OFFSPRING = 2;
@@ -182,7 +184,7 @@ public class ES<P extends Parametrizable>
 		out.println();		
 	}
 	
-	public class Agent implements Comparable<Agent>
+	public class Agent implements Comparable<Agent>, Serializable
 	{
 		protected P instance;
 		protected List<Double> params;

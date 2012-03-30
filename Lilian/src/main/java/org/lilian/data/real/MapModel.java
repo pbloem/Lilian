@@ -1,5 +1,6 @@
 package org.lilian.data.real;
 
+import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +31,7 @@ import org.lilian.util.Functions;
  */
 public class MapModel<M extends Map & Parametrizable> 
 	extends AbstractList<M>
-	implements Parametrizable
+	implements Parametrizable, Serializable
 {
 	
 	protected int dimension;

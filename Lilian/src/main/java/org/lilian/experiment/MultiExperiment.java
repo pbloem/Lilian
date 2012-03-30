@@ -35,4 +35,10 @@ public class MultiExperiment extends AbstractExperiment
 		for(Experiment exp : experiments)
 			exp.run();
 	}
+
+	@Override
+	protected void setup()
+	{
+		
+	}
 }

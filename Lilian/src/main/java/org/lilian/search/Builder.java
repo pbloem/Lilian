@@ -1,8 +1,9 @@
 package org.lilian.search;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface Builder<P extends Parametrizable> 
+public interface Builder<P extends Parametrizable> extends Serializable
 {
 	/**
 	 * Returns an instance for the given parameters
