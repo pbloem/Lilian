@@ -9,6 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.linear.ArrayRealVector;
+import org.apache.commons.math.linear.CholeskyDecomposition;
+import org.apache.commons.math.linear.CholeskyDecompositionImpl;
+import org.apache.commons.math.linear.NonSquareMatrixException;
+import org.apache.commons.math.linear.NotPositiveDefiniteMatrixException;
+import org.apache.commons.math.linear.NotSymmetricMatrixException;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.apache.commons.math.linear.SingularMatrixException;
@@ -33,6 +40,8 @@ import org.lilian.util.MatrixTools;
  */
 public class MVN implements Density, Generator<Point>
 {
+	public static final double THRESHOLD = 10E-10;
+	
 	// The transformation form the standard normal MVN to this one
 	protected AffineMap transform;
 
@@ -63,14 +72,21 @@ public class MVN implements Density, Generator<Point>
 		inverse = transform.inverse();		
 	}
 	
-//	public MVN(Point mean, Matrix covariance)
-//	{
-//		
-//		
-//		transform = new AffineMap( ..., mean.getVector());
-//
-//		inverse = transform.inverse();	
-//	}	
+	public MVN(Point mean, RealMatrix covariance)
+	{
+		CholeskyDecomposition decomp;
+		try
+		{
+			decomp = new CholeskyDecompositionImpl(covariance, THRESHOLD, THRESHOLD);
+		} catch (MathException e)
+		{
+			throw new RuntimeException(e);
+		}
+		
+		transform = new AffineMap(decomp.getL(), mean.getVector());
+
+		inverse = transform.inverse();	
+	}	
 	
 	public MVN(AffineMap transform)
 	{
@@ -138,6 +154,11 @@ public class MVN implements Density, Generator<Point>
 		return scalar * exp(exponent);	
 	}
 	
+	public AffineMap map()
+	{
+		return transform;
+	}
+	
 	public RealMatrix covariance()
 	{
 		if(covariance == null)
@@ -156,10 +177,7 @@ public class MVN implements Density, Generator<Point>
 	public Point mean()
 	{
 		if(mean == null)
-		{
-			Point orig = new Point(dimension());
-			mean = transform.map(orig);
-		}
+			mean = new Point(transform.getTranslation());
 		
 		return mean;
 	}
@@ -193,4 +211,31 @@ public class MVN implements Density, Generator<Point>
 		return null;
 	}
 
+	public static MVN find(List<Point> points)
+	{
+		int dim = points.get(0).dimensionality();
+		int size = points.size();
+		
+		// * Calculate the mean
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector mean = new ArrayRealVector(dim);
+		for(Point x : points)
+			mean = mean.add(x.getBackingData());
+		mean.mapMultiplyToSelf(1.0/size);
+	
+		// * Calculate the covariance
+		RealVector difference;
+		RealMatrix cov = MatrixTools.identity(dim);
+		
+		double xStdDev = 0.0;
+		for(Point x : points)
+		{
+			difference = x.getVector().subtract(mean);
+			cov = cov.add(difference.outerProduct(difference));
+		}
+		
+		cov = cov.scalarMultiply(1.0/(size-1));
+		
+		return new MVN(new Point(mean), cov);
+	}
 }

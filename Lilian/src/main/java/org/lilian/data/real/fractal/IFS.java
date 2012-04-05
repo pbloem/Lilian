@@ -177,8 +177,7 @@ public class IFS<M extends Map & Parametrizable >
 	/**
 	 * Finds the transformation of the initial distribution that is most likely 
 	 * to generate the given point. Transformations considered are all d length
-	 * compositions of the base transformations of this IFS model (where d is 
-	 * the model's depth floored).   
+	 * compositions of the base transformations of this IFS model.
 	 * 
 	 * @return null If all codes represent probability distributions which assigns
 	 * a density to this point that is too low to be represented as a double
@@ -213,8 +212,7 @@ public class IFS<M extends Map & Parametrizable >
 			
 			double dist = dist(point, translate);
 			
-			result.show(
-				prob, new ArrayList<Integer>(current), dist);
+			result.show(prob, new ArrayList<Integer>(current), dist);
 			return result;
 		}
 		
