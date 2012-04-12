@@ -29,6 +29,15 @@ public class Resources
 		return data;
 	}
 	
+	@Resource(name="sierpinski-off")
+	public static List<Point> sierpinskiOff(@Name("size") int size, @Name("p1") double p1, @Name("p2") double p2, @Name("p3") double p3)
+	{
+		List<Point> data = IFSs.sierpinskiOff(p1, p2, p3).generator().generate(size);
+		Collections.shuffle(data);
+		
+		return data;
+	}	
+	
 	@Resource(name="mandelbrot")
 	public static List<Point> mandelbrot(@Name("size") int size)
 	{

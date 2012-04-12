@@ -132,7 +132,7 @@ public class MultiExperiment extends AbstractExperiment
 			// * set up environment
 			File subdir = new File(dir, i + "/");
 			subdir.mkdirs();
-			Environment sub = new Environment(subdir, out);
+			Environment sub = new Environment(subdir);
 			Environment.current = sub;
 			
 			// * Run experiment

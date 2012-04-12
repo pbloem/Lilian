@@ -1,9 +1,15 @@
 package org.lilian.experiment;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
  * Represents the basics of a running experiment, for instance the details of which
@@ -18,13 +24,31 @@ public class Environment
 {
 	protected List<Environment> children = new ArrayList<Environment>();
 	protected File dir;
-	protected PrintStream out;
+	protected Logger logger;
 	
-	public Environment(File dir, PrintStream out)
+	public Environment(File dir)
 	{
 		super();
 		this.dir = dir;
-		this.out = out;
+		
+		
+		this.logger = Logger.getLogger(this.getClass().toString());
+		logger.setLevel(Level.INFO);
+		
+		FileHandler handler;
+		try
+		{
+			handler = new FileHandler(dir.getAbsolutePath() + File.separator + "log.txt");
+		} catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		handler.setFormatter(new SimpleFormatter());
+		logger.addHandler(handler);
+		
+		ConsoleHandler cHandler = new ConsoleHandler();
+		cHandler.setFormatter(new SimpleFormatter());
+		logger.addHandler(cHandler);
 	}
 
 	/**
@@ -52,9 +76,9 @@ public class Environment
 	 * A printstream to write information to. 
 	 * @return
 	 */
-	public PrintStream out()
+	public Logger logger()
 	{
-		return out;
+		return logger;
 	}
 	
 	/**

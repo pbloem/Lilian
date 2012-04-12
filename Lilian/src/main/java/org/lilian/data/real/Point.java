@@ -10,6 +10,7 @@ import java.util.*;
 
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
+import org.hamcrest.core.IsInstanceOf;
 import org.lilian.Global;
 import org.lilian.util.distance.Metrizable;
 
@@ -170,6 +171,14 @@ public class Point
 			p.set(i, Global.random.nextGaussian() * var);
 		
 		return p;
+	}
+	
+	public static Point point(List<Double> in)
+	{
+		if(in instanceof Point)
+			return (Point)in;
+		
+		return new Point(in);
 	}
 	
 }

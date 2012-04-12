@@ -39,6 +39,21 @@ public class IFSs
 	 * 
 	 * @return
 	 */
+	public static IFS<AffineMap> sierpinskiOff(double p1, double p2, double p3)
+	{	
+		Builder<IFS<AffineMap>> builder = IFS.builder(3, AffineMap.affineMapBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,0.0, 0.0,0.5,  0.0,-0.5, p1, 
+				0.5,0.0, 0.0,0.5,  0.5, 0.5, p2, 
+				0.5,0.0, 0.0,0.5, -0.5, 0.5, p3
+				));
+	}
+	
+	/**
+	 * Generates a sierpinski gasket with non-uniform component weights
+	 * 
+	 * @return
+	 */
 	public static IFS<AffineMap> sierpinski()
 	{	
 	

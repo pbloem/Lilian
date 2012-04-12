@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 public abstract class AbstractExperiment implements Experiment
 {
@@ -24,25 +25,31 @@ public abstract class AbstractExperiment implements Experiment
 	private long t;
 	
 	protected File dir;
-	protected PrintStream out;
+	protected Logger logger;
 
 	public final void run()
 	{
 		dir = Environment.current().directory();
-		out = Environment.current().out();
+		logger = Environment.current().logger();
 		
 		t0 = System.currentTimeMillis();
-		Environment.current().out().println("Starting run for experiment of type" + this.getClass());
+		logger.info("Starting run for experiment of type" + this.getClass());
 		
 		if(new File(dir, STATE_FILE).exists())
 		{
-			out.println("Found statefile. Attempting to restart experiment.");
+			logger.info("Found statefile. Attempting to restart experiment.");
 			load();
 		} else {
-			out.println("No statefile found. Starting experiment from scratch.");
+			logger.info("No statefile found. Starting experiment from scratch.");
 			setup();
-		}		
+		}	
+		
 		body();
+		
+		if(new File(dir, STATE_FILE).exists())
+		{
+			new File(dir, STATE_FILE).delete();	
+		}
 		
 		t = System.currentTimeMillis() - t0;
 	}
@@ -60,7 +67,7 @@ public abstract class AbstractExperiment implements Experiment
 		// * Save all the fields tagged with @State
 		@SuppressWarnings("unchecked")
 		Class<Experiment> c = (Class<Experiment>)this.getClass();
-		out.println(c);
+		logger.info(c + "");
 		
 		List<Field> stateFields = new ArrayList<Field>();
 		for(Field field : c.getFields())
@@ -72,7 +79,7 @@ public abstract class AbstractExperiment implements Experiment
 				{
 					stateFields.add(field);	
 				}
-				out.println(annotation);
+				logger.info(annotation + "");
 			}
 		}
 		
@@ -136,10 +143,10 @@ public abstract class AbstractExperiment implements Experiment
 			
 			for(Field field : stateFields())
 			{
-				out.println("Reading object for field " + field);
+				logger.info("Reading object for field " + field);
 				Object value = in.readObject();
-				out.println(" * " + value.getClass());
-				out.println(" - " + value);
+				logger.info(" * " + value.getClass());
+				logger.info(" - " + value);
 				field.set(this, value);
 			}
 			

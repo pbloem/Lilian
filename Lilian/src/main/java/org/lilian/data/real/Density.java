@@ -11,4 +11,6 @@ import java.io.Serializable;
 public interface Density extends Serializable
 {
 	public double density(Point p);
+	
+	public int dimension();
 }

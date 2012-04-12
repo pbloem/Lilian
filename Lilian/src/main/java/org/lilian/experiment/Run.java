@@ -2,6 +2,7 @@ package org.lilian.experiment;
 
 import static org.lilian.util.Series.series;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -16,7 +17,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
+import javax.imageio.ImageIO;
+
+import org.lilian.data.real.Datasets;
+import org.lilian.data.real.Histogram2D;
+import org.lilian.data.real.Point;
 import org.lilian.util.Series;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
@@ -95,7 +102,7 @@ public class Run
 		else 
 		{
 			System.out.println(numExperiments + " experiment(s) found. Running.");
-			Environment.current = new Environment(new File("."), System.out);
+			Environment.current = new Environment(new File("."));
 			experiments.get(0).run();
 		}
 	
@@ -215,8 +222,14 @@ public class Run
 	public static Object interpretValue(Object value, Parameter parameter, Class<?> type)
 	{
 		if(value instanceof Map<?, ?>)
+		{
 			if(((Map<String, ?>) value).containsKey("resource"))
 				return interpretResource(value, parameter, type);
+			if(((Map<String, ?>) value).containsKey("file"))
+				return interpretFile(((Map<String, ?>) value), parameter, type);
+			if(((Map<String, ?>) value).containsKey("image"))
+				return interpretImage(((Map<String, ?>) value), parameter, type);	
+		}
 
 		if(equals(value.getClass(), type))
 			return value;
@@ -243,6 +256,57 @@ public class Run
 			return true;
 		return false;
 	}
+	
+	public static Object interpretFile(Map<String, ?> map, Parameter parameter, Class<?> type)
+	{
+		String fileName = (String)map.get("file");
+		File file = new File(fileName);
+		
+		if(type.equals(List.class)) // 
+		{
+			List<Point> data = null;
+			try
+			{
+				data = Datasets.readCSV(file);
+			} catch (Exception e)
+			{
+				throw new RuntimeException("Failed to read CSV file " + file, e);
+			}
+			
+			return data;
+		}
+		
+		return file;
+	}
+	
+	public static Object interpretImage(Map<String, ?> map, Parameter parameter, Class<?> type)
+	{
+		String fileName = (String)map.get("image");
+		File file = new File(fileName);
+		BufferedImage image;
+		try
+		{
+			image = ImageIO.read(file);
+		} catch (IOException e)
+		{
+			throw new RuntimeException("Failed to read image file " + file, e);
+		}
+		
+		if(type.equals(List.class)) // 
+		{
+			Map<String, ?> par = (Map<String, ?>) map.get("parameters");
+			if(par == null)
+				throw new IllegalArgumentException("No parameters were passed for image key");
+		
+			int n = (Integer)par.get("size"); // TODO handle exceptions
+			
+			List<Point> data = Histogram2D.fromImage(image).generate(n);
+
+			return data;
+		}
+		
+		return image;
+	}	
 	
 	public static Object interpretResource(Object value, Parameter parameter, Class<?> type)
 	{
