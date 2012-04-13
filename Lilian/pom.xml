@@ -36,6 +36,11 @@
   		<artifactId>opencsv</artifactId>
   		<version>2.3</version>
   	</dependency>
+  	<dependency>
+  		<groupId>freemarker</groupId>
+  		<artifactId>freemarker</artifactId>
+  		<version>2.3.9</version>
+  	</dependency>
   </dependencies>
    <repositories>
     <repository>
@@ -56,33 +61,38 @@
     </repository>    
   </repositories>
   <build>
-  <pluginManagement>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-    		<source>1.6</source>
-    		<target>1.6</target>
- 		</configuration>
-        <executions>
-          <execution>
-            <id>default-testCompile</id>
-            <phase>test-compile</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>default-compile</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </pluginManagement>
+	  <resources>
+		<resource>
+	      <directory>src/main/resources</directory>
+	    </resource>
+	  </resources>
+	  <pluginManagement>
+	    <plugins>
+	      <plugin>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>2.3.2</version>
+	        <configuration>
+	    		<source>1.6</source>
+	    		<target>1.6</target>
+	 		</configuration>
+	        <executions>
+	          <execution>
+	            <id>default-testCompile</id>
+	            <phase>test-compile</phase>
+	            <goals>
+	              <goal>testCompile</goal>
+	            </goals>
+	          </execution>
+	          <execution>
+	            <id>default-compile</id>
+	            <phase>compile</phase>
+	            <goals>
+	              <goal>compile</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+	      </plugin>
+	    </plugins>
+	  </pluginManagement>
   </build>
 </project>

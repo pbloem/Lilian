@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
+import org.lilian.Global;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Histogram2D;
 import org.lilian.data.real.Point;
@@ -29,19 +30,20 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
- * Exectuable. Runs either the experiment defined in the current directory, or
+ * Executable. Runs either the experiment defined in the current directory, or
  * in the directory specified in the parameter.
- * 
  * 
  * @author Peter
  *
  */
 public class Run
 {
+
 	
 	public static final String INIT_FILE = "init.yaml";
 	private static int numExperiments = 0;
-
+	
+	public static int repeats = 1;
 
 	/**
 	 * @param args
@@ -102,7 +104,7 @@ public class Run
 		else 
 		{
 			System.out.println(numExperiments + " experiment(s) found. Running.");
-			Environment.current = new Environment(new File("."));
+			Environment.current = new Environment(new File("."), Global.RANDOM_SEED);
 			experiments.get(0).run();
 		}
 	
@@ -128,12 +130,27 @@ public class Run
 		}
 		
 		System.out.println("Class found: " + experimentClass);
-				
+		
+		
+		if(in.containsKey("repeat"))
+		{
+			Object r = in.get("repeat");
+			if (r instanceof Integer)
+				repeats = (Integer) r;
+			else 
+			{
+				throw new IllegalArgumentException("Integer value expected for key 'repeat'. Value ("+r+") could not be parsed to integer.");
+			}
+			System.out.println("Found 'repeat' key. Each single experiment will be repeated " + repeats +" times.");
+		}
+		
 		List<String> parameters = new ArrayList<String>(in.keySet());
 		
+		// * These are standard key. The rest are passed to the experiment
 		parameters.remove("class");
 		parameters.remove("name");
 		parameters.remove("description");
+		parameters.remove("repeat");
 		
 		System.out.println("parameters: " + parameters);
 		
@@ -183,6 +200,9 @@ public class Run
 		System.out.println(parametersOrdered);
 		System.out.println(match);
 		
+		if(match == null)
+			throw new IllegalArgumentException("Parameters given in init file do not match any of the constructors of the experiment " + classNameObj);
+		
 		Object[] inputs = new Object[parametersOrdered.size()];
 		Class<?>[] types = match.getParameterTypes();
 		
@@ -199,7 +219,7 @@ public class Run
 		Experiment exp = null;
 		if(runMulti)
 		{
-			MultiExperiment mexp = new MultiExperiment((Constructor<Experiment>)match, inputs);
+			MultiExperiment mexp = new MultiExperiment((Constructor<Experiment>)match, true, repeats, inputs);
 			numExperiments += mexp.size();
 			exp = mexp;
 		} else 
@@ -209,11 +229,16 @@ public class Run
 				for(Object input : inputs)
 					System.out.println("* " + input.getClass());
 				exp =  (Experiment)match.newInstance(inputs);
+				numExperiments ++;
+				if(repeats > 1)
+				{
+					MultiExperiment mexp = new MultiExperiment(exp, false, repeats);
+					numExperiments += mexp.size();
+					exp = mexp;					
+				}
 			} catch (Exception e) {
 				throw new RuntimeException("Error instantiating experiment", e);
 			}
-			
-			numExperiments ++;
 		}
 			
 		return exp;
@@ -252,7 +277,8 @@ public class Run
 		if( c.equals(Integer.class) && type.equals(int.class) || 
 		    c.equals(Long.class) && type.equals(long.class) ||
 		    c.equals(Double.class) && type.equals(double.class) ||
-		    c.equals(Float.class) && type.equals(float.class))
+		    c.equals(Float.class) && type.equals(float.class) ||
+		    c.equals(Boolean.class) && type.equals(boolean.class))
 			return true;
 		return false;
 	}

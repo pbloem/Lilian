@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.lilian.Global;
 import org.lilian.util.Series;
 
 import au.com.bytecode.opencsv.CSVWriter;
@@ -40,7 +41,7 @@ import au.com.bytecode.opencsv.CSVWriter;
  */
 public class MultiExperiment extends AbstractExperiment
 {
-	private Class<Experiment> experiment;
+	private Class<? extends Experiment> experiment;
 	private Constructor<Experiment> structor;
 	
 	// * The experiments to perform
@@ -58,14 +59,36 @@ public class MultiExperiment extends AbstractExperiment
 	 */
 	public @State int lastFinished;
 	public @State List<List<Object>> results;
-	
+	public @State boolean sameSeed = true;
+
+	/**
+	 * Repeat a single experiment a given number of times
+	 * 
+	 * @param exp
+	 * @param sameSeed use same seed every time (perhaps to test whether code is 
+	 * properly deterministic, would normally be false)
+	 * @param repeats
+	 */
+	public MultiExperiment(Experiment exp, boolean sameSeed, int repeats)
+	{
+		experiment = exp.getClass();
+		
+		findResultMethods();
+		
+		for(int i : series(repeats))
+			experiments.add(exp.clone());
+		
+		this.sameSeed = sameSeed;
+	}
 	
 	/**
+	 * Create different experiments for different inputs
 	 * 
 	 * @param ctr
+	 * @param sameSeed Whether to start each experiment with the same seed, or to give ach a new seed
 	 * @param inputs
 	 */
-	public MultiExperiment(Constructor<Experiment> ctr, Object... inputs)
+	public MultiExperiment(Constructor<Experiment> ctr, boolean sameSeed, int repeats, Object... inputs)
 	{
 		experiment = ctr.getDeclaringClass();
 		structor = ctr;
@@ -81,6 +104,15 @@ public class MultiExperiment extends AbstractExperiment
 			}
 		}
 		
+		findResultMethods();
+		
+		createExperiments(inputs, new Object[inputs.length], 0, repeats);
+		
+		this.sameSeed = sameSeed;
+	}
+	
+	private void findResultMethods()
+	{
 		for(Method method : experiment.getDeclaredMethods())
 		{
 			for(Annotation annotation : method.getDeclaredAnnotations())
@@ -90,17 +122,18 @@ public class MultiExperiment extends AbstractExperiment
 					resultMethods.add(method);
 				}
 		}
-		
-		createExperiments(inputs, new Object[inputs.length], 0);
 	}
-	
-	private void createExperiments(Object[] master, Object[] current, int i)
+
+	private void createExperiments(Object[] master, Object[] current, int i, int repeats)
 	{
 		if(master.length == i)
 		{
 			try
 			{
-				experiments.add(structor.newInstance(current));
+				if(repeats == 1)
+					experiments.add(structor.newInstance(current));
+				else 
+					experiments.add(new MultiExperiment(structor.newInstance(current), false, repeats));
 			} catch (Exception e)
 			{
 				throw new RuntimeException("Failed to create experiment", e);
@@ -108,31 +141,32 @@ public class MultiExperiment extends AbstractExperiment
 		} else if(! multiParameterIndices.contains(i))
 		{
 			current[i] = master[i];
-			createExperiments(master, current, i + 1);
+			createExperiments(master, current, i + 1, repeats);
 		} else 
 		{
 			for(Object value : ((Run.Multi<?>) master[i]))
 			{
 				Object[] newCurrent = Arrays.copyOf(current, current.length);
 				newCurrent[i] = value;
-				createExperiments(master, newCurrent, i+1);
+				createExperiments(master, newCurrent, i+1, repeats);
 			}
 		}
-		
 	}
 
 	@Override
 	protected void body()
 	{
 		Environment main = Environment.current();
-		while(lastFinished < experiments.size())
+		while(lastFinished < experiments.size() - 1)
 		{
 			int i = lastFinished + 1;
 			
 			// * set up environment
 			File subdir = new File(dir, i + "/");
 			subdir.mkdirs();
-			Environment sub = new Environment(subdir);
+			
+			long subSeed = Environment.current().seed();
+			Environment sub = new Environment(subdir, sameSeed ? subSeed : Global.random.nextLong());
 			Environment.current = sub;
 			
 			// * Run experiment
@@ -195,4 +229,6 @@ public class MultiExperiment extends AbstractExperiment
 	{
 		return experiments.size();
 	}
+	
+	
 }

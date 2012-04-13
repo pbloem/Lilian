@@ -5,11 +5,14 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import org.lilian.Global;
 
 /**
  * Represents the basics of a running experiment, for instance the details of which
@@ -26,11 +29,16 @@ public class Environment
 	protected File dir;
 	protected Logger logger;
 	
-	public Environment(File dir)
+	@Reportable
+	protected long rngSeed;
+	
+	public Environment(File dir, long rngSeed)
 	{
 		super();
 		this.dir = dir;
 		
+		this.rngSeed = rngSeed;
+		Global.random = new Random(rngSeed);
 		
 		this.logger = Logger.getLogger(this.getClass().toString());
 		logger.setLevel(Level.INFO);
@@ -91,4 +99,9 @@ public class Environment
 	}
 	
 	public static Environment current;
+
+	public long seed()
+	{
+		return rngSeed;
+	}
 }

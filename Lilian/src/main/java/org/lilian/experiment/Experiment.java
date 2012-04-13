@@ -8,12 +8,14 @@ package org.lilian.experiment;
  * @author Peter
  *
  */
-public interface Experiment
+public interface Experiment extends Cloneable
 {
 	/**
 	 * Runs the experiment. Resumes if the current directory contains a state 
 	 * description.
 	 */
 	public void run();
+
+	public Experiment clone();
 
 }
