@@ -12,9 +12,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -24,6 +27,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.lilian.Global;
+import org.lilian.util.Series;
 
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -35,10 +39,13 @@ public abstract class AbstractExperiment implements Experiment
 	private static final String STATE_FILE = "state.lilian";
 
 	// *  FreeMarker config
-	private static Configuration fmConfig = new Configuration();
+	protected static Configuration fmConfig = new Configuration();
 	
 	private long t0;
+	private long t1;
 	private long t;
+	
+	private String description = "";	
 	
 	protected File dir;
 	protected Logger logger;
@@ -73,7 +80,8 @@ public abstract class AbstractExperiment implements Experiment
 			new File(dir, STATE_FILE).delete();	
 		}
 		
-		t = System.currentTimeMillis() - t0;
+		t1 = System.currentTimeMillis();
+		t = t1 - t0;
 		
 		writeReport();
 	}
@@ -186,22 +194,22 @@ public abstract class AbstractExperiment implements Experiment
 		}
 	}
 
-	@Result(name = "Total running time of a run of the experiment in seconds.")
+	@Result(name = "run time", description = "Total running time of this run of the experiment in seconds.")
 	public double runtime()
 	{
-		return 0;
+		return t/1000.0;
 	}
 	
 	@Reportable(description = "The date and time at which the run of the experiment was started.")
 	public Date startTime()
 	{
-		return null;
+		return new Date(t0);
 	}
 	
 	@Reportable(description = "The date and time at which the run of the experiment was finished.")
 	public Date finishTime()
 	{
-		return null;
+		return new Date(t1);
 	}
 	
 	public void writeReport()
@@ -210,8 +218,24 @@ public abstract class AbstractExperiment implements Experiment
 		Map<String, Object> results = new HashMap<String, Object>();
 		
 		// * Fill data model
-		results.put("name", "Peter");
-		results.put("result", "Hello world");
+		results.put("short_name", this.getClass().getName());
+		results.put("name", this.getClass().toString());
+		results.put("description", description());
+		results.put("start_date_time", new Date(this.t0).toString());
+		results.put("start_millis", t0);
+		results.put("end_date_time", new Date(this.t).toString());
+		results.put("end_millis", t);
+		
+		// * Run through all methods tagged 'result'
+		List<Map<String, Object>> rs = new ArrayList<Map<String, Object>>();
+		for(Method method : Tools.allMethods(this.getClass()))
+			for(Annotation anno : method.getAnnotations())
+				if(anno instanceof Result)
+					processResult(rs, invoke(method), (Result) anno);
+		
+		logger.info("Found " + rs.size() + " results");
+		results.put("results", rs);
+		
 		
 		Template tpl = null;
 		try
@@ -247,6 +271,67 @@ public abstract class AbstractExperiment implements Experiment
 		}
 	}
 	
+	private void processResult(List<Map<String, Object>> rs, Object value, Result anno)
+	{
+		// *  The method returns multiple results in a Results object
+		if(value instanceof Results)
+		{
+			Results results = (Results) value;
+			
+			for(int i : Series.series(results.size()))
+				processResult(rs, results.value(i), results.annotation(i));
+			
+			return;
+		}
+		
+		Map<String, Object> resMap = new HashMap<String, Object>();
+
+
+		if(value instanceof Reporting)
+		{
+			Reporting reporting = (Reporting) value;
+			
+			resMap.put("name", reporting.name());
+			resMap.put("description", reporting.description());
+			
+			Template tpl = reporting.template();
+			Object dataModel = reporting.data();
+			
+			resMap.put("value", "Failed to invoke result method. See the log file for details.");
+
+			try
+			{
+				StringWriter out = new StringWriter();
+				tpl.process(dataModel, out);
+				out.flush();
+				
+				resMap.put("value", out.toString());
+			} 
+			catch (TemplateException e) { Global.log().warning("Failed to process result-specific template " + tpl + " " + this + ". Exception: " + e.getMessage() + " -  " + Arrays.toString(e.getStackTrace())); }	
+			catch (IOException e) { throw new IllegalStateException("IOException on StringWriter", e); } 
+		} else
+		{
+			resMap.put("value", value.toString());
+
+			resMap.put("name", anno.name());
+			resMap.put("description", anno.description());
+		}
+
+		rs.add(resMap);
+	}
+	
+	private Object invoke(Method method)
+	{
+		try{
+			return method.invoke(this);
+		}
+		catch (InvocationTargetException e) { Global.log().warning("Failed to invoke result method " + method + " on experiment " + this + ". Exception: " + e.getMessage() + " -  " + Arrays.toString(e.getStackTrace())); }
+		catch (IllegalArgumentException e) { Global.log().warning("Failed to invoke result method " + method + " on experiment " + this + ". Exception: " + e.getMessage() + " -  " + Arrays.toString(e.getStackTrace())); }
+		catch (IllegalAccessException e) { Global.log().warning("Failed to invoke result method " + method + " on experiment " + this + ". Exception: " + e.getMessage() + " -  " + Arrays.toString(e.getStackTrace())); } 
+		
+		return null;
+	}
+	
 	public Experiment clone()
 	{
 		try
@@ -257,5 +342,15 @@ public abstract class AbstractExperiment implements Experiment
 			// * This should be impossible
 			throw new IllegalStateException(e);
 		}
+	}
+	
+	public String description() 
+	{
+		return description;
+	}
+	
+	public void setDescription(String description)
+	{
+		this.description = description; 
 	}
 }

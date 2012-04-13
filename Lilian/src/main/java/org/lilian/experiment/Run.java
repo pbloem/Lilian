@@ -144,6 +144,10 @@ public class Run
 			System.out.println("Found 'repeat' key. Each single experiment will be repeated " + repeats +" times.");
 		}
 		
+		String description = "";
+		if(in.containsKey("description"))
+			description = in.get("description") + "";
+		
 		List<String> parameters = new ArrayList<String>(in.keySet());
 		
 		// * These are standard key. The rest are passed to the experiment
@@ -219,7 +223,7 @@ public class Run
 		Experiment exp = null;
 		if(runMulti)
 		{
-			MultiExperiment mexp = new MultiExperiment((Constructor<Experiment>)match, true, repeats, inputs);
+			MultiExperiment mexp = new MultiValueExperiment((Constructor<Experiment>)match, true, repeats, inputs);
 			numExperiments += mexp.size();
 			exp = mexp;
 		} else 
@@ -232,7 +236,7 @@ public class Run
 				numExperiments ++;
 				if(repeats > 1)
 				{
-					MultiExperiment mexp = new MultiExperiment(exp, false, repeats);
+					MultiExperiment mexp = new RepeatExperiment(exp, repeats);
 					numExperiments += mexp.size();
 					exp = mexp;					
 				}
@@ -240,6 +244,8 @@ public class Run
 				throw new RuntimeException("Error instantiating experiment", e);
 			}
 		}
+		
+		exp.setDescription(description); 
 			
 		return exp;
 	}

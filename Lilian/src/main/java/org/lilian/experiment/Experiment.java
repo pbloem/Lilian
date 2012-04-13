@@ -17,5 +17,9 @@ public interface Experiment extends Cloneable
 	public void run();
 
 	public Experiment clone();
+	
+	public String description();
+	
+	public void setDescription(String description);
 
 }
