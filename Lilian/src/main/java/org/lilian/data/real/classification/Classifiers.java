@@ -5,8 +5,12 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
@@ -635,6 +639,237 @@ public class Classifiers
 			wrong += classifier.classify(points.get(i)) == classes.get(i) ? 0 : 1;
 		
 		return wrong/total;
+	}
+	
+	public static <P> Classified<P> combine(List<P> data, List<Integer> classes)
+	{
+		return new Combination<P>(data, classes);
+	}
+	
+	private static class Combination<P> implements List<P>, Classified<P>
+	{
+		private List<P> data;
+		private List<Integer> classes;
+		
+		public Combination(List<P> data, List<Integer> classes)
+		{
+		}
+
+		@Override
+		public int cls(int i)
+		{
+			return classes.get(i);
+		}
+
+		@Override
+		public boolean add(P item, int cls)
+		{
+			classes.add(cls);
+			data.add(item);
+			return true;
+		}
+
+		@Override
+		public boolean addAll(Collection<? extends P> c, int cls)
+		{
+			if(c.isEmpty())
+				return false;
+			
+			for(P item : c)
+				add(item, cls);
+			return true;
+		}
+
+		@Override
+		public boolean addAll(int index, Collection<? extends P> c, int cls)
+		{
+			if(c.isEmpty())
+				return false;
+			
+			for(P item : c)
+			    add(index++, item, cls);
+			return true;
+		}
+
+		@Override
+		public P set(int i, P item, int cls)
+		{
+			classes.set(i, cls);
+			return data.set(i, item);
+		}
+
+		@Override
+		public P get(int i)
+		{
+			return data.get(i);
+		}
+
+		@Override
+		public int size()
+		{
+			return data.size();
+		}
+
+		@Override
+		public boolean add(P item)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void add(int i, P item)
+		{
+			throw new UnsupportedOperationException();			
+		}
+
+		@Override
+		public boolean addAll(Collection<? extends P> arg0)
+		{
+			throw new UnsupportedOperationException();			
+		}
+
+		@Override
+		public boolean addAll(int arg0, Collection<? extends P> arg1)
+		{
+			throw new UnsupportedOperationException();			
+		}
+
+		@Override
+		public void clear()
+		{
+			data.clear();
+			classes.clear();
+		}
+
+		@Override
+		public boolean contains(Object item)
+		{
+			return data.contains(item);
+		}
+
+		@Override
+		public boolean containsAll(Collection<?> items)
+		{
+			return data.containsAll(items);
+		}
+
+		@Override
+		public int indexOf(Object item)
+		{
+			return data.indexOf(item);
+		}
+
+		@Override
+		public boolean isEmpty()
+		{
+			return data.isEmpty();
+		}
+
+		@Override
+		public Iterator<P> iterator()
+		{
+			return data.iterator();
+		}
+
+		@Override
+		public int lastIndexOf(Object item)
+		{
+			return data.lastIndexOf(item);
+		}
+
+		@Override
+		public ListIterator<P> listIterator()
+		{
+			return data.listIterator();
+		}
+
+		@Override
+		public ListIterator<P> listIterator(int arg0)
+		{
+			return data.listIterator();
+		}
+
+		@Override
+		public boolean remove(Object item)
+		{
+			int i = data.indexOf(item);
+			if(i == -1)
+				return false;
+			
+			this.remove(i);
+			return true;
+		}
+
+		@Override
+		public P remove(int i)
+		{
+			classes.remove(i);
+			return data.remove(i);
+		}
+
+		@Override
+		public boolean removeAll(Collection<?> items)
+		{
+			boolean modified = false;
+			for(Object item : items)
+			{
+				modified = modified || remove(item);
+			}
+			return modified;
+		}
+
+		@Override
+		public boolean retainAll(Collection<?> items)
+		{
+			boolean modified = false;
+			for(P item : this)
+				if(! items.contains(item))
+				{		
+					remove(item);
+					modified = true;
+				}
+			
+			return modified;
+		}
+
+		@Override
+		public P set(int i, P item)
+		{
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public List<P> subList(int from, int to)
+		{
+			return data.subList(from, to);
+		}
+
+		@Override
+		public Object[] toArray()
+		{
+			return data.toArray();
+		}
+
+		@Override
+		public <T> T[] toArray(T[] t)
+		{
+			return data.toArray(t);
+		}
+
+		@Override
+		public boolean add(int index, P item, int cls)
+		{
+			data.add(item);
+			classes.add(cls);
+			return true;
+		}
+
+		@Override
+		public Classified<P> subClassified(int from, int to)
+		{
+			return new Combination<P>(data.subList(from, to), classes.subList(from, to));
+		}
+		
 	}
 
 }
