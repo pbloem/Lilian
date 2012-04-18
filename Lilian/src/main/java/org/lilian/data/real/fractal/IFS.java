@@ -116,6 +116,7 @@ public class IFS<M extends Map & Parametrizable >
 	
 	protected static class IFSBuilder<M extends Map & Parametrizable> implements Builder<IFS<M>>
 	{
+		private static final long serialVersionUID = 6666857793341545956L;
 		private Builder<M> mapBuilder;
 		private int size;
 

@@ -20,6 +20,8 @@ public interface Classified<P> extends List<P>
 
 	public int cls(int i);
 	
+	public int numClasses();	
+	
 	/**
 	 * Optional operation 
 	 * 
@@ -45,5 +47,7 @@ public interface Classified<P> extends List<P>
 	public P set(int i, P item, int cls);
 	
 	public Classified<P> subClassified(int from, int to);
-
+	
+	
+	public List<P> points(int cls);
 }

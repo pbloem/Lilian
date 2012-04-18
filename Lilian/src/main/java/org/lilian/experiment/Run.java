@@ -139,7 +139,7 @@ public class Run
 				repeats = (Integer) r;
 			else 
 			{
-				throw new IllegalArgumentException("Integer value expected for key 'repeat'. Value ("+r+") could not be parsed to integer.");
+				throw new IllegalArgumentException("Integer value expected for key 'repeat'. Value (" + r + ") could not be parsed to integer.");
 			}
 			System.out.println("Found 'repeat' key. Each single experiment will be repeated " + repeats +" times.");
 		}
@@ -236,7 +236,7 @@ public class Run
 				numExperiments ++;
 				if(repeats > 1)
 				{
-					MultiExperiment mexp = new RepeatExperiment(exp, repeats);
+					MultiExperiment mexp = new RepeatExperiment((Constructor<Experiment>)match, repeats, inputs);
 					numExperiments += mexp.size();
 					exp = mexp;					
 				}

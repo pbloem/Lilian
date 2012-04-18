@@ -1,5 +1,6 @@
 package org.lilian.data.real.classification;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -14,6 +15,7 @@ import java.util.ListIterator;
 
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
+import org.lilian.data.real.Draw;
 import org.lilian.data.real.Point;
 
 public class Classifiers
@@ -50,10 +52,9 @@ public class Classifiers
 	 * 
 	 * @param res The resolution of the smallest side of the image.
 	 */
-	public static BufferedImage drawClassifier(Classifier classifier, int res)
-		throws IOException
+	public static BufferedImage draw(Classifier classifier, int res)
 	{
-		return drawClassifier(
+		return draw(
 				classifier, 
 				new double[]{-1.0, 1.0},
 				new double[]{-1.0, 1.0},
@@ -181,11 +182,10 @@ public class Classifiers
 	 * 
 	 * @param res The resolution of the smallest side of the image.
 	 */
-	public static BufferedImage drawClassifier(Classifier classifier, 
+	public static BufferedImage draw(Classifier classifier, 
 											double[] xrange, 
 											double[] yrange, 
 											int res)
-		throws IOException
 	{
 		if(classifier.dimension() != 2)
 			throw new IllegalArgumentException("Classifier must have dimensionality two (has "+classifier.dimension()+")");
@@ -231,6 +231,49 @@ public class Classifiers
 		return image;
 	}
 	
+	
+	public static BufferedImage draw(Classified<Point> data,
+			int res,
+			boolean log)	
+	{
+		double[] range = new double[]{-1.0, 1.0};		
+		return draw(data, range, range, res, log);
+	}
+	
+	public static BufferedImage draw(
+			Classified<Point> data,
+			double[] xrange, 
+			double[] yrange, 
+			int res,
+			boolean log)	
+	{
+		BufferedImage image = new BufferedImage(res, res, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = image.createGraphics();
+		
+		graphics.setBackground(Color.black);
+		graphics.clearRect(0, 0, image.getWidth(), image.getHeight());		
+		
+		BufferedImage current = null;
+		
+		// graphics.setComposite(AlphaComposite.SrcAtop);
+		
+		for(int i = 0; i < data.numClasses(); i++)
+		{
+			System.out.println(i + ":" + data.points(i).size());
+			current = Draw.draw(data.points(i), xrange, yrange, res, log);
+			
+			// * Colorize
+			current = Draw.colorize(componentColors.get(i)).filter(current, null);
+			
+			graphics.drawImage(current, 0, 0, null);
+		}
+		
+		graphics.dispose();
+		
+		return image;
+	}	
+	
+	
 	/**
 	 * Returns a classifier that classifies 2d points according to the 
 	 * mandelbrot set. The classifier does not learn, and is only used to define 
@@ -252,12 +295,12 @@ public class Classifiers
 			super(2, 2);
 		}
 
-		public int classify(List<Double> point) 
+		public int classify(Point point) 
 		{
 			double range = 10.0, topRange = 100000.0;
 			int steps = 1000;
 			
-			double x0 = point.get(0), y0 = point.get(1);
+			double x0 = point.get(0) - 0.5, y0 = point.get(1);
 			double x = x0, y = y0;
 			double xp, yp;
 			
@@ -306,7 +349,7 @@ public class Classifiers
 			super(2, 3);
 		}
 
-		public int classify(List<Double> point) {
+		public int classify(Point point) {
 			
 			int steps = 2000;
 			
@@ -485,7 +528,7 @@ public class Classifiers
 			this.max = max;
 		}
 
-		public int classify(List<Double> point) 
+		public int classify(Point point) 
 		{
 			List<Integer> ints = new ArrayList<Integer>();
 			for(double d : point)
@@ -516,7 +559,7 @@ public class Classifiers
 			this.max = max;
 		}
 
-		public int classify(List<Double> point) 
+		public int classify(Point point) 
 		{
 			int n = (int)Math.floor(((point.get(0) + 1.0)/2.0) * max);
 			int m = (int)Math.floor(((point.get(1) + 1.0)/2.0) * max);			
@@ -526,15 +569,6 @@ public class Classifiers
 			if((int)Math.floor(phi * phi * k) == m && (int)Math.floor(phi * k) == n)
 				return 0;
 			return 1;
-		}
-
-		public void learn(List<? extends List<Double>> data, List<Integer> classes) {
-			throw new UnsupportedOperationException("The Nim classifier doesn't learn");			
-		}
-		
-		private static double sq(double in)
-		{
-			return in*in;
 		}
 	}	
 	
@@ -618,258 +652,4 @@ public class Classifiers
 			throw new UnsupportedOperationException("The Square classifier doesn't learn");			
 		}
 	}		
-	
-//	public static double symmetricError(Classifier classifier, Dataset<Integer> data)
-//	{
-//		double total = data.size();
-//		int wrong = 0;
-//		
-//		for(int i = 0; i < data.size(); i++)
-//			wrong += classifier.classify(data.get(i)) == data.getTarget(i) ? 0 : 1;
-//		
-//		return wrong/total;
-//	}
-	
-	public static double symmetricError(Classifier classifier, List<Point> points, List<Integer> classes)
-	{
-		double total = points.size();
-		int wrong = 0;
-		
-		for(int i = 0; i < points.size(); i++)
-			wrong += classifier.classify(points.get(i)) == classes.get(i) ? 0 : 1;
-		
-		return wrong/total;
-	}
-	
-	public static <P> Classified<P> combine(List<P> data, List<Integer> classes)
-	{
-		return new Combination<P>(data, classes);
-	}
-	
-	private static class Combination<P> implements List<P>, Classified<P>
-	{
-		private List<P> data;
-		private List<Integer> classes;
-		
-		public Combination(List<P> data, List<Integer> classes)
-		{
-		}
-
-		@Override
-		public int cls(int i)
-		{
-			return classes.get(i);
-		}
-
-		@Override
-		public boolean add(P item, int cls)
-		{
-			classes.add(cls);
-			data.add(item);
-			return true;
-		}
-
-		@Override
-		public boolean addAll(Collection<? extends P> c, int cls)
-		{
-			if(c.isEmpty())
-				return false;
-			
-			for(P item : c)
-				add(item, cls);
-			return true;
-		}
-
-		@Override
-		public boolean addAll(int index, Collection<? extends P> c, int cls)
-		{
-			if(c.isEmpty())
-				return false;
-			
-			for(P item : c)
-			    add(index++, item, cls);
-			return true;
-		}
-
-		@Override
-		public P set(int i, P item, int cls)
-		{
-			classes.set(i, cls);
-			return data.set(i, item);
-		}
-
-		@Override
-		public P get(int i)
-		{
-			return data.get(i);
-		}
-
-		@Override
-		public int size()
-		{
-			return data.size();
-		}
-
-		@Override
-		public boolean add(P item)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void add(int i, P item)
-		{
-			throw new UnsupportedOperationException();			
-		}
-
-		@Override
-		public boolean addAll(Collection<? extends P> arg0)
-		{
-			throw new UnsupportedOperationException();			
-		}
-
-		@Override
-		public boolean addAll(int arg0, Collection<? extends P> arg1)
-		{
-			throw new UnsupportedOperationException();			
-		}
-
-		@Override
-		public void clear()
-		{
-			data.clear();
-			classes.clear();
-		}
-
-		@Override
-		public boolean contains(Object item)
-		{
-			return data.contains(item);
-		}
-
-		@Override
-		public boolean containsAll(Collection<?> items)
-		{
-			return data.containsAll(items);
-		}
-
-		@Override
-		public int indexOf(Object item)
-		{
-			return data.indexOf(item);
-		}
-
-		@Override
-		public boolean isEmpty()
-		{
-			return data.isEmpty();
-		}
-
-		@Override
-		public Iterator<P> iterator()
-		{
-			return data.iterator();
-		}
-
-		@Override
-		public int lastIndexOf(Object item)
-		{
-			return data.lastIndexOf(item);
-		}
-
-		@Override
-		public ListIterator<P> listIterator()
-		{
-			return data.listIterator();
-		}
-
-		@Override
-		public ListIterator<P> listIterator(int arg0)
-		{
-			return data.listIterator();
-		}
-
-		@Override
-		public boolean remove(Object item)
-		{
-			int i = data.indexOf(item);
-			if(i == -1)
-				return false;
-			
-			this.remove(i);
-			return true;
-		}
-
-		@Override
-		public P remove(int i)
-		{
-			classes.remove(i);
-			return data.remove(i);
-		}
-
-		@Override
-		public boolean removeAll(Collection<?> items)
-		{
-			boolean modified = false;
-			for(Object item : items)
-			{
-				modified = modified || remove(item);
-			}
-			return modified;
-		}
-
-		@Override
-		public boolean retainAll(Collection<?> items)
-		{
-			boolean modified = false;
-			for(P item : this)
-				if(! items.contains(item))
-				{		
-					remove(item);
-					modified = true;
-				}
-			
-			return modified;
-		}
-
-		@Override
-		public P set(int i, P item)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public List<P> subList(int from, int to)
-		{
-			return data.subList(from, to);
-		}
-
-		@Override
-		public Object[] toArray()
-		{
-			return data.toArray();
-		}
-
-		@Override
-		public <T> T[] toArray(T[] t)
-		{
-			return data.toArray(t);
-		}
-
-		@Override
-		public boolean add(int index, P item, int cls)
-		{
-			data.add(item);
-			classes.add(cls);
-			return true;
-		}
-
-		@Override
-		public Classified<P> subClassified(int from, int to)
-		{
-			return new Combination<P>(data.subList(from, to), classes.subList(from, to));
-		}
-		
-	}
-
 }

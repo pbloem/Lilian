@@ -78,6 +78,34 @@ public class Datasets
 	}
 	
 	/**
+	 * Creates a generator for random points on the bi-unit cube of the given 
+	 * dimension
+	 */
+	public static Generator<Point> cube(int dimension)
+	{
+		return new Cube(dimension);
+	}
+	
+	private static class Cube extends AbstractGenerator<Point>
+	{
+		protected int dim;
+		
+		public Cube(int dim)
+		{
+			this.dim = dim;
+		}
+
+		public Point generate()
+		{
+			double[] vector = new double[dim];
+			for(int i = 0; i < dim; i++)
+				vector[i] = Global.random.nextDouble()*2.0 - 1.0;
+			
+			return new Point(vector);
+		}
+	}
+	
+	/**
 	 * Creates a generator for random points on a sphere of the given dimension,
 	 * with 
 	 */

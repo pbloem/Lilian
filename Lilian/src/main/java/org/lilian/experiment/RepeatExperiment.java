@@ -3,9 +3,11 @@ package org.lilian.experiment;
 import static org.lilian.util.Series.series;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,13 +29,19 @@ public class RepeatExperiment extends MultiExperiment
 	 * properly deterministic, would normally be false)
 	 * @param repeats
 	 */
-	public RepeatExperiment(Experiment exp, int repeats)
+	public RepeatExperiment(Constructor<? extends Experiment> structor, int repeats, Object... inputs)
 	{		
-		super(exp.getClass(), false);
+		super(structor.getDeclaringClass(), false);
 		this.repeats = repeats;
 		
 		for(int i : series(repeats))
-			experiments.add(exp.clone());
+			try
+			{
+				experiments.add(structor.newInstance(inputs));
+			} catch(Exception e) 
+			{
+				throw new RuntimeException("Experiment ("+type()+") cannot be instantiated with the given parameters ("+Arrays.toString(inputs)+").", e);
+			}
 	}
 	
 	@Result(name = "Repeat results")
@@ -41,7 +49,7 @@ public class RepeatExperiment extends MultiExperiment
 	{
 		BasicResults results = new BasicResults();
 		
-		for(Method method : Tools.allMethods(experiment, Result.class))
+		for(Method method : Tools.allMethods(type(), Result.class))
 		{
 			Result anno = method.getAnnotation(Result.class);
 			CollatedResult cres = new CollatedResult(anno);
@@ -84,7 +92,7 @@ public class RepeatExperiment extends MultiExperiment
 		@Override
 		public String name()
 		{
-			return annotation.name() + "(over "+repeats()+" trials)";
+			return annotation.name() + "(over " + repeats() + " trials)";
 		}
 
 		@Override
@@ -115,7 +123,7 @@ public class RepeatExperiment extends MultiExperiment
 			data.put("mean", num ? mean() : "Data is not numeric");		
 			data.put("std_dev", num ? standardDeviation() : "Data is not numeric");
 			data.put("median", num ? median() : "Data is not numeric");
-			data.put("mode", mode());
+			data.put("mode", mode().toString());
 			data.put("raw", values.toString());
 				
 			return data;

@@ -1,14 +1,19 @@
 package org.lilian.data.real.fractal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List; 
 
 import org.lilian.data.real.Map;
+import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.data.real.classification.AbstractClassifier;
 import org.lilian.data.real.classification.DensityClassifier;
+import org.lilian.data.real.fractal.IFS.IFSBuilder;
+import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
+import org.lilian.util.Series;
 import org.lilian.util.distance.Distance;
 import org.lilian.util.distance.SquaredEuclideanDistance;
 
@@ -16,13 +21,16 @@ import org.lilian.util.distance.SquaredEuclideanDistance;
  * A more efficient implementation of the IFSDensityClassifier, which stores a 
  * great deal of information to speed up classification.
  *   
- * NOTE: The bhavior of this classifier is only technically correct when 
- * similitudes are used a the parameter mode.
+ * This classifier uses some shortcuts that only works for IFSs built on 
+ * similitudes. For this reason these are the only IFS types the classifier accepts. 
+ * To construct a classifier on general IFS models, a generic DensityClassifier
+ * can be used.
  *
  */
-public class IFSClassifier extends AbstractClassifier
+public class IFSClassifier extends AbstractClassifier implements Parametrizable, Serializable
 {
-	
+
+	private static final long serialVersionUID = -5452654582429802283L;
 	protected List<IFS<Similitude>> models = new ArrayList<IFS<Similitude>>();
 	protected List<Double> priors = new ArrayList<Double>();
 	protected double priorSum = 0.0;
@@ -33,15 +41,15 @@ public class IFSClassifier extends AbstractClassifier
 	
 	public IFSClassifier(IFS<Similitude> firstModel, double firstPrior, int depth)
 	{
-		super(firstModel.dimension(), 1);
-		
-		addModel(firstModel, firstPrior);
+		super(firstModel.dimension(), 0);
 		this.depth = depth;
+		
+		add(firstModel, firstPrior);
 		
 		checkStore();		
 	}
 	
-	public void addModel(IFS<Similitude> model, double prior)
+	public void add(IFS<Similitude> model, double prior)
 	{
 		models.add(model);
 		priors.add(prior);
@@ -113,7 +121,7 @@ public class IFSClassifier extends AbstractClassifier
 		for(int i  = 0; i < size; i++)
 		{
 			double scale = store.scales.get(i);
-
+				
 			sqDist = distance.distance(point, store.means.get(i));
 
 			prod =  Math.pow(scale, -dimension());
@@ -146,7 +154,7 @@ public class IFSClassifier extends AbstractClassifier
 				List<Double> scales = new ArrayList<Double>(size);		
 		
 				endPoints(model, depth, means, priors, scales);
-		
+						
 				Store store = new Store(means, scales, priors);
 		
 				stores.set(i, store);
@@ -155,7 +163,9 @@ public class IFSClassifier extends AbstractClassifier
 	}
 	
 	
-	public class Store {
+	public class Store implements Serializable 
+	{
+		private static final long serialVersionUID = 5997041299265837943L;
 		public List<Point> means;
 		public List<Double> scales;		
 		public List<Double> priors;
@@ -210,5 +220,81 @@ public class IFSClassifier extends AbstractClassifier
 					  depth - 1, points, weights, scales);
 		}
 	}
+
+	@Override
+	public List<Double> parameters()
+	{
+		List<Double> params = new ArrayList<Double>();
+		
+		for(int i : Series.series(models.size()))
+		{
+			params.add(priors.get(i));
+			params.addAll(models.get(i).parameters());			
+		}
+		
+		return params;
+	}
+	
+	public IFS<Similitude> model(int i)
+	{
+		return models.get(i);
+	}
+	
+	public static Builder<IFSClassifier> builder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder)
+	{
+		return new IFSClassifierBuilder(size, depth, ifsBuilder);
+	}
+	
+	protected static class IFSClassifierBuilder implements Builder<IFSClassifier>
+	{
+		private static final long serialVersionUID = 6666857793341545956L;
+		private Builder<IFS<Similitude>> ifsBuilder;
+		private int size;
+		private int depth;
+
+		public IFSClassifierBuilder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder) 
+		{
+			this.size = size;
+			this.ifsBuilder = ifsBuilder;
+			this.depth = depth;
+		}
+
+		@Override
+		public IFSClassifier build(List<Double> parameters) 
+		{
+			return IFSClassifier.build(parameters, ifsBuilder, depth);
+		}
+
+		@Override
+		public int numParameters() 
+		{
+			return size * (1 + ifsBuilder.numParameters());
+		}
+	}
+	
+	public static IFSClassifier build(List<Double> parameters, Builder<IFS<Similitude>> builder, int depth)
+	{
+		int n = builder.numParameters(),  s = parameters.size();
+				
+		if( s % (n+1)  != 0)
+			throw new IllegalArgumentException("Number of parameters ("+s+") should be divisible by the number of parameters per component ("+n+") plus one");
+		
+		IFSClassifier model = null;
+		for(int from = 0; from + n < s; from += n + 1)
+		{
+			int to = from + n;
+			List<Double> ifsParams = parameters.subList(from, to);
+			double weight = Math.abs(parameters.get(to));
+			
+			IFS<Similitude> map = builder.build(ifsParams);
+			if(model == null)
+				model = new IFSClassifier(map, weight, depth);
+			else
+				model.add(map, weight);
+		}	
+		
+		return model;
+	}
+	
 	
 }

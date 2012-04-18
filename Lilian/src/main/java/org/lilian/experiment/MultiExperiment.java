@@ -30,8 +30,8 @@ import au.com.bytecode.opencsv.CSVWriter;
  */
 public abstract class MultiExperiment extends AbstractExperiment
 {	
-	protected Class<? extends Experiment> experiment;
-
+	protected Class<? extends Experiment> type;
+	
 	// * The experiments to perform
 	protected List<Experiment> experiments = new ArrayList<Experiment>();
 
@@ -45,19 +45,40 @@ public abstract class MultiExperiment extends AbstractExperiment
 	 */
 	public @State int lastFinished;
 	public @State List<List<Object>> results;
-	public @State boolean sameSeed = true;
+	public @State boolean sameSeed;
 	
-	public MultiExperiment(Class<? extends Experiment> experiment, boolean sameSeed)
+	public MultiExperiment(Class<? extends Experiment> type, boolean sameSeed)
 	{
-		this.experiment = experiment;
+		this.type = type;
 		this.sameSeed = sameSeed;
+	}
+	
+//	public MultiExperiment(Class<? extends Experiment> experiment, boolean sameSeed)
+//	{
+//		this.experiment = experiment;
+//		this.sameSeed = sameSeed;
+//		
+//		findResultMethods();
+//	}
+	
+	public void add(Experiment exp)
+	{
 		
-		findResultMethods();
+	}
+	
+	/**
+	 * Returns the type of experiment
+	 * 
+	 * @return
+	 */
+	public Class<? extends Experiment> type()
+	{
+		return type;
 	}
 	
 	private void findResultMethods()
 	{
-		for(Method method : experiment.getDeclaredMethods())
+		for(Method method : type.getDeclaredMethods())
 		{
 			for(Annotation annotation : method.getDeclaredAnnotations())
 				if(annotation instanceof Result)

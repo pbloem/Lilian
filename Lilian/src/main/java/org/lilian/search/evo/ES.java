@@ -44,7 +44,7 @@ public class ES<P extends Parametrizable> implements Serializable
 	
 	private List<Agent> population;
 	private Builder<P> builder;
-	private Target<P> target;
+	private Target<? super P> target;
 	private int n;
 	private int dimension;
 
@@ -70,14 +70,14 @@ public class ES<P extends Parametrizable> implements Serializable
 	private double mutationProbabilityScales = 1.0;	
 	private double mutationProbabilityObject = 1.0;	
 	
-	public ES(Builder<P> builder, Target<P> target, Collection<List<Double>> initialPop)
+	public ES(Builder<P> builder, Target<? super P> target, Collection<List<Double>> initialPop)
 	{
 		this(builder, target, initialPop, NUM_PARENTS, initialPop.size() * OFFSPRING, MAX_LIFESPAN, MODE);
 	}	
 	
 	public ES(
 			Builder<P> builder,
-			Target<P> target,
+			Target<? super P> target,
 			Collection<List<Double>> initialPop,
 			int numParents, 
 			int offspringSize,
@@ -92,7 +92,7 @@ public class ES<P extends Parametrizable> implements Serializable
 	
 	public ES(
 			Builder<P> builder,
-			Target<P> target,
+			Target<? super P> target,
 			Collection<List<Double>> initialPop,
 			int numParents, 
 			int offspringSize,

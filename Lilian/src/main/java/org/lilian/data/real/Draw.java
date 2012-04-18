@@ -7,6 +7,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
+import java.awt.image.LookupOp;
+import java.awt.image.LookupTable;
+import java.awt.image.ShortLookupTable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +119,7 @@ public class Draw
 				else if(gray > 1.0)
 					color = Color.RED;
 				else				
-					color  = new Color(gray, gray, gray, 1.0f);
+					color  = new Color(gray, gray, gray, gray);
 				
 				image.setRGB(x, y, color.getRGB());
 			}
@@ -505,7 +508,35 @@ public class Draw
 //
 //		return image;
 //	}
+	
+	public static LookupOp colorize(Color color)
+	{
+		short r = (short) color.getRed(), 
+		      g = (short) color.getGreen(), 
+		      b = (short) color.getBlue();
+		
+	    short[] alpha = new short[256];
+	    short[] red   = new short[256];
+	    short[] green = new short[256];
+	    short[] blue  = new short[256];
 
+	    for (short i = 0; i < 256; i++) {
+	        alpha[i] = i;
+	        red[i]   = (short) ((r + i * .3)/2);
+	        green[i] = (short) ((g + i * .59)/2);
+	        blue[i]  = (short) ((b + i * .11)/2);
+	    }
+
+	    short[][] data = new short[][] {
+	            red, green, blue, alpha
+	    };
+
+	    LookupTable lookupTable = new ShortLookupTable(0, data);
+	    return new LookupOp(lookupTable, null);
+	}
+
+	
+	
 	/**
 	 * Converts a double value to its index in a given range when that range 
 	 * is discretized to a given number of bins. Useful for finding pixel values 

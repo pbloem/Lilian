@@ -4,6 +4,15 @@ import java.util.List;
 
 import org.lilian.data.real.Point;
 
+/**
+ * A class which assigns points to one of a fixed number of categories.
+ * 
+ * Classes are represented by non-negative integers. If integer n is a class then all 
+ * integers below it are also valid classes.
+ * 
+ * @author Peter
+ *
+ */
 public interface Classifier
 {
 	/**
@@ -12,6 +21,8 @@ public interface Classifier
 	 * @return
 	 */
 	public int classify(Point in);
+	
+	public List<Integer> classify(List<Point> in);
 	
 	/**
 	 * Returns a probability distribution over classes for the given point.

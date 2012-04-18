@@ -332,18 +332,6 @@ public abstract class AbstractExperiment implements Experiment
 		return null;
 	}
 	
-	public Experiment clone()
-	{
-		try
-		{
-			return (Experiment) super.clone();
-		} catch (CloneNotSupportedException e)
-		{
-			// * This should be impossible
-			throw new IllegalStateException(e);
-		}
-	}
-	
 	public String description() 
 	{
 		return description;

@@ -7,6 +7,10 @@ import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Generator;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
+import org.lilian.data.real.classification.Classification;
+import org.lilian.data.real.classification.Classified;
+import org.lilian.data.real.classification.Classifier;
+import org.lilian.data.real.classification.Classifiers;
 import org.lilian.data.real.fractal.IFSs;
 
 /**
@@ -70,4 +74,13 @@ public class Resources
 		
 		return data;
 	}	
+	
+	@Resource(name="mandelbrot-class")
+	public static Classified<Point> mandelbrotClass(@Name("size") int size)
+	{
+		List<Point> points = Datasets.cube(2).generate(size);
+		List<Integer> classes = Classifiers.mandelbrot().classify(points);
+		
+		return Classification.combine(points, classes);
+	}		
 }

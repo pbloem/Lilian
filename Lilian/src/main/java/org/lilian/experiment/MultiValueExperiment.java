@@ -34,6 +34,7 @@ public class MultiValueExperiment extends MultiExperiment
 	private List<Parameter> multiParameter = new ArrayList<Parameter>();
 	
 	public @State int repeats = 1;
+
 	/**
 	 * Create different experiments for different inputs
 	 * 
@@ -73,7 +74,7 @@ public class MultiValueExperiment extends MultiExperiment
 				if(repeats == 1)
 					experiments.add(structor.newInstance(current));
 				else 
-					experiments.add(new RepeatExperiment(structor.newInstance(current), repeats));
+					experiments.add(new RepeatExperiment(structor, repeats, current));
 			} catch (Exception e)
 			{
 				throw new RuntimeException("Failed to create experiment", e);

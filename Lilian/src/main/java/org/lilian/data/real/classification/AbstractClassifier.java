@@ -15,6 +15,15 @@ public abstract class AbstractClassifier implements Classifier {
 		this.dimensionality = dimensionality;
 	}
 	
+	public List<Integer> classify(List<Point> points)
+	{
+		List<Integer> classes = new ArrayList<Integer>(points.size());
+		for(Point point : points)
+			classes.add(classify(point));
+		
+		return classes;
+	}
+	
 	public int classify(Point point) 
 	{
 		List<Double> probs = probabilities(point);
