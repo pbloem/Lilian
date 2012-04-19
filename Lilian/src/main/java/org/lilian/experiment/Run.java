@@ -50,9 +50,13 @@ public class Run
 	 */
 	public static void main(String[] args)
 	{
+		String dir = ".";
+		if(args.length == 1)
+			dir = args[0];
+		
 		try
 		{
-			run(new File("."));
+			run(new File(dir));
 		} catch (IOException e)
 		{
 			e.printStackTrace();
