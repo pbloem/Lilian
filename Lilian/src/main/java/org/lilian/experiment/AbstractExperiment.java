@@ -62,7 +62,7 @@ public abstract class AbstractExperiment implements Experiment
 		logger = Environment.current().logger();
 		
 		t0 = System.currentTimeMillis();
-		logger.info("Starting run for experiment of type" + this.getClass());
+		logger.info("Starting run for experiment of type" + this.getClass() + "(directory is "+dir+")");
 		
 		if(new File(dir, STATE_FILE).exists())
 		{
