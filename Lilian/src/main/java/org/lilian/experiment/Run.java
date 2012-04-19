@@ -52,7 +52,7 @@ public class Run
 	{
 		try
 		{
-			run(new File(System.getProperty("user.dir")));
+			run(new File("."));
 		} catch (IOException e)
 		{
 			e.printStackTrace();
