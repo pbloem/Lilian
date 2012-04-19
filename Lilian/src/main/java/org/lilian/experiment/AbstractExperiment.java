@@ -97,8 +97,8 @@ public abstract class AbstractExperiment implements Experiment
 	private List<Field> stateFields()
 	{
 		// * Save all the fields tagged with @State
-		@SuppressWarnings("unchecked")
-		Class<Experiment> c = (Class<Experiment>)this.getClass();
+		// @SuppressWarnings("unchecked")
+		Class<? extends Experiment> c = (Class<? extends Experiment>)this.getClass();
 		logger.info(c + "");
 		
 		List<Field> stateFields = new ArrayList<Field>();

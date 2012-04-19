@@ -33,7 +33,8 @@ public class MapModel<M extends Map & Parametrizable>
 	extends AbstractList<M>
 	implements Parametrizable, Serializable
 {
-	
+	private static final long serialVersionUID = -6894388080122503364L;
+
 	protected int dimension;
 
 	protected ArrayList<Double> weights = new ArrayList<Double>();
@@ -205,6 +206,10 @@ public class MapModel<M extends Map & Parametrizable>
 	
 	protected static class MMBuilder<M extends Map & Parametrizable> implements Builder<MapModel<M>>
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -6919361840502575913L;
 		private Builder<M> mapBuilder;
 		private int size;
 
