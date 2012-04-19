@@ -108,7 +108,7 @@ public class Run
 		else 
 		{
 			System.out.println(numExperiments + " experiment(s) found. Running.");
-			Environment.current = new Environment(new File("."), Global.RANDOM_SEED);
+			Environment.current = new Environment(dir, Global.RANDOM_SEED);
 			experiments.get(0).run();
 		}
 	
