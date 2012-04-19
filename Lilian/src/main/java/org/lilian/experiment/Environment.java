@@ -57,6 +57,14 @@ public class Environment
 		ConsoleHandler cHandler = new ConsoleHandler();
 		cHandler.setFormatter(new SimpleFormatter());
 		logger.addHandler(cHandler);
+		
+		try
+		{
+			logger.info("Environment created in directory " + dir.getCanonicalPath());
+		} catch (IOException e)
+		{
+			throw new RuntimeException("Directory " + dir + " not acessible");
+		}
 	}
 
 	/**
