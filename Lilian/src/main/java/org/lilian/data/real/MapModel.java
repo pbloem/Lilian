@@ -228,7 +228,9 @@ public class MapModel<M extends Map & Parametrizable>
 		@Override
 		public int numParameters() 
 		{
-			return MapModel.numParameters(size, mapBuilder.numParameters());
+			// return MapModel.numParameters(size, mapBuilder.numParameters());
+			return (mapBuilder.numParameters() + 1) * size;
+
 		}
 	}
 	
