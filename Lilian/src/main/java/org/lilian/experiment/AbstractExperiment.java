@@ -132,8 +132,8 @@ public abstract class AbstractExperiment implements Experiment
 									new FileOutputStream(stateFileNext)));
 
 			// * Save all the fields tagged with @State
-			@SuppressWarnings("unchecked")
-			Class<Experiment> c = (Class<Experiment>)this.getClass();
+			// @SuppressWarnings("unchecked")
+			Class<? extends Experiment> c = this.getClass();
 			
 			System.out.println(stateFields());
 			
@@ -170,8 +170,8 @@ public abstract class AbstractExperiment implements Experiment
 									new FileInputStream(stateFile)));
 
 			// * Save all the fields tagged with @State
-			@SuppressWarnings("unchecked")
-			Class<Experiment> c = (Class<Experiment>)this.getClass();
+			// @SuppressWarnings("unchecked")
+			Class<? extends Experiment> c = this.getClass();
 			
 			for(Field field : stateFields())
 			{
