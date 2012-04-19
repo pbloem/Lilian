@@ -17,32 +17,32 @@ import org.lilian.util.distance.Distance;
 public class ExampleTargetTest
 {
 
-	@Test
-	public void testScore()
-	{
-		BufferedImage sexy = null, pig = null, nature = null;
-		try
-		{
-			sexy = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/sexy.bmp"));
-			pig = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/pig.bmp"));
-			nature = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/nature.bmp"));			
-		} catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Distance<BufferedImage> d = new ExampleTarget.IMGDistance();
-		
-		System.out.println(d.distance(sexy, sexy));
-		System.out.println(d.distance(pig, pig));
-		System.out.println(d.distance(nature, nature));
-		
-		System.out.println();
-		
-		System.out.println(d.distance(sexy, pig));
-		System.out.println(d.distance(sexy, nature));
-		System.out.println(d.distance(pig, nature));
-	}
+//	@Test
+//	public void testScore()
+//	{
+//		BufferedImage sexy = null, pig = null, nature = null;
+//		try
+//		{
+//			sexy = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/sexy.bmp"));
+//			pig = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/pig.bmp"));
+//			nature = ImageIO.read(new File("/home/peter/Documents/PhD/output/es_flame/example_1/nature.bmp"));			
+//		} catch (IOException e)
+//		{
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		Distance<BufferedImage> d = new ExampleTarget.IMGDistance();
+//		
+//		System.out.println(d.distance(sexy, sexy));
+//		System.out.println(d.distance(pig, pig));
+//		System.out.println(d.distance(nature, nature));
+//		
+//		System.out.println();
+//		
+//		System.out.println(d.distance(sexy, pig));
+//		System.out.println(d.distance(sexy, nature));
+//		System.out.println(d.distance(pig, nature));
+//	}
 	
 	@Test
 	public void gzipTest()
