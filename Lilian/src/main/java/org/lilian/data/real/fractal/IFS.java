@@ -106,7 +106,7 @@ public class IFS<M extends Map & Parametrizable >
 	 */	
 	public static <M extends Map & Parametrizable> int numParameters(int size, int perMap)
 	{
-		return MapModel.numParameters(size, perMap);
+		return MapModel.<M>numParameters(size, perMap);
 	}
 	
 	public static <M extends Map & Parametrizable> Builder<IFS<M>> builder(int size, Builder<M> mapBuilder)
@@ -235,7 +235,8 @@ public class IFS<M extends Map & Parametrizable >
 		
 	}
 	
-	private static class Result {
+	private static class Result 
+	{
 		private double prob = Double.NEGATIVE_INFINITY;
 		private double distance = Double.POSITIVE_INFINITY;
 		private List<Integer> code = null;
