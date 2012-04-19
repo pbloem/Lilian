@@ -135,7 +135,7 @@ public class IFS<M extends Map & Parametrizable >
 		@Override
 		public int numParameters() 
 		{
-			return IFS.numParameters(size, mapBuilder.numParameters());
+			return IFS.<M>numParameters(size, mapBuilder.numParameters());
 		}
 	}
 	

@@ -193,13 +193,13 @@ public class IFSs
 	public static IFS<AffineMap> random(int d, int k, double stdDev)
 	{
 		// * Create a random IFS model
-		int num = IFS.numParameters(k, AffineMap.numParameters(d));
+		Builder<IFS<AffineMap>> builder = IFS.builder(k, AffineMap.affineMapBuilder(d));
+		int num = builder.numParameters(); //IFS.numParameters(k, AffineMap.numParameters(d));
 		
 		List<Double> params = new ArrayList<Double>(num);
 		for(int j = 0; j < num; j++)
 				params.add(Global.random.nextGaussian() * stdDev);		
 		
-		Builder<IFS<AffineMap>> builder = IFS.builder(k, AffineMap.affineMapBuilder(d));
 		return builder.build(params);		
 	}
 	
