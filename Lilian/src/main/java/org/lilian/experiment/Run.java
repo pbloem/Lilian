@@ -69,7 +69,7 @@ public class Run
 		// * Read the init file
 		File initFile = new File(dir, INIT_FILE);
 		if(! initFile.exists())
-			throw new IOException("Init file ("+INIT_FILE+") not found in current directory ("+dir+").");
+			throw new IOException("Init file ("+INIT_FILE+") not found in current directory ("+dir.getCanonicalPath()+").");
 			
 		Yaml yaml = new Yaml(new SafeConstructor());
 		Object initObject = null;
