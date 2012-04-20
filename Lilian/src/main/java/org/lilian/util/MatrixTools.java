@@ -70,6 +70,14 @@ public class MatrixTools
 		return m;
 	}
 	
+	public static RealVector base(int d, int i)
+	{
+		RealVector v = new ArrayRealVector(d);
+		v.setEntry(i, 1.0);
+		
+		return v;
+	}
+	
 	public static RealMatrix diag(RealVector v)
 	{
 		RealMatrix m = identity(v.getDimension());

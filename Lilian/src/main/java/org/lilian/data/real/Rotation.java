@@ -258,13 +258,13 @@ public class Rotation extends AffineMap implements Parametrizable
 				RealMatrix rik = elementary(d, i, j , angle);
 				product = rik.multiply(product);	
 				
-				System.out.println(i + " - " + j + " " + product.operate(ek));
+				// System.out.println(i + " - " + j + " " + product.operate(ek));
 
 			}
 			
 			// * at this point m(k) = +1 or -1
 			m = product.operate(ek);
-			System.out.println("ek k" + m.getEntry(j));
+			// System.out.println("ek k" + m.getEntry(j));
 			if(m.getEntry(j) < 0)
 			{
 				// * add pi to the last angle

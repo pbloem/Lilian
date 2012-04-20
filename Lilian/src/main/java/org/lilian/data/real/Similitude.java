@@ -9,7 +9,9 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
+import org.lilian.search.evo.Target;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Series;
 
 /**
  * A similitude (or similarity transform) consists of rotation, a uniform 

@@ -1,5 +1,7 @@
 package org.lilian.data.real.fractal;
 
+import static org.lilian.util.Series.series;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,6 +12,7 @@ import org.lilian.data.real.Map;
 import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
+import org.lilian.util.Series;
 
 
 /**
@@ -237,7 +240,7 @@ public class IFSs
 			params.set(i,  params.get(i) + change.get(i));
 		
 		return builder.build(params);
-	}	
+	}
 
 //	public static IFSDensityModel randomTSR(int comp, double stdDev)
 //	{

@@ -33,21 +33,27 @@ public class Maps
 	 * If the sizes of the two lists of point are not the same, behavior is 
 	 * undefined.
 	 *  
+	 * 
 	 * @param xSet
 	 * @param ySet
 	 * @return An AffineMap from xSet to ySet. null if such a map could not be 
 	 * 	found (this happens when the covariance matrix of x and y cannot 
 	 * 	be decomposed with a singular value decomposition) 
 	 */
-	public static AffineMap findMap(List<Point> xSet, List<Point> ySet)
+	public static AffineMap findAffineMap(List<Point> xSet, List<Point> ySet)
 	{
 		return findMapResult(xSet, ySet).affineMap();
-
 	}
 	
-	public static Similitude findMap(List<Point> xSet, List<Point> ySet, int gen, int pop)
+	/**
+	 * Like findAffineMap, but converts the rotation matrix to a set of angles
+	 * @param xSet
+	 * @param ySet
+	 * @return
+	 */
+	public static Similitude findMap(List<Point> xSet, List<Point> ySet)
 	{
-		return findMapResult(xSet, ySet).similitude(gen, pop);
+		return findMapResult(xSet, ySet).similitude();
 	}
 	
 	public static MapResult findMapResult(List<Point> xSet, List<Point> ySet)
@@ -193,9 +199,9 @@ public class Maps
 				);
 		}
 		
-		public Similitude similitude(int gen , int pop)
+		public Similitude similitude()
 		{
-			List<Double> angles = Rotation.findAngles(rotation(), gen, pop);
+			List<Double> angles = Rotation.findAngles(rotation());
 		
 			// * Create the map
 			return new Similitude(
