@@ -1,8 +1,7 @@
 package org.lilian.data.real;
 
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
+import static org.lilian.util.MatrixTools.*;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
@@ -34,6 +33,7 @@ public class Rotation extends AffineMap implements Parametrizable
 	private static final long serialVersionUID = 3717926722178382627L;
 
 	protected int dimension;
+	public static double ACCURACY = 10E-12;
 	
 
 	protected List<Double> angles;
@@ -175,46 +175,171 @@ public class Rotation extends AffineMap implements Parametrizable
 		int dim = (int)Math.floor(dimDouble);
 		
 		RealMatrix left, right;
-		
-		double[] cosa = new double[angles.size()];
-		double[] sina = new double[angles.size()];		
-		for(int i = 0; i < angles.size(); i++)
-		{
-			cosa[i] = cos(angles.get(i));
-			sina[i] = sin(angles.get(i));
-		}
-		
+//		
+//		double[] cosa = new double[angles.size()];
+//		double[] sina = new double[angles.size()];		
+//		for(int i = 0; i < angles.size(); i++)
+//		{
+//			cosa[i] = cos(angles.get(i));
+//			sina[i] = sin(angles.get(i));
+//		}
+//		
 
 		left   = MatrixTools.identity(dim);
 		right  = new Array2DRowRealMatrix(dim, dim);
 		
+		// * The columns iterate from high to low, and the rows from low to 
+		//   high, to facilitate the inverse operation of retrieving the angles 
+		//   from a rotation matrix
+		
 		int k = 0;
-		for(int i = 0; i < dim-1; i++)
-			for(int j = i+1; j < dim; j++)
+		for(int j = dim-2; j >= 0; j--) // - columns
+			for(int i = j+1; i < dim; i++) // rows
 			{
-				// Reset the elementary rotation matrix (this should be faster
-				// than generating a new eye(dim) )
-				MatrixTools.zero(right);
-				for(int m = 0; m < dim; m++)
-					right.setEntry(m, m, 1.0);
+//				// Reset the elementary rotation matrix (this should be faster
+//				// than generating a new eye(dim) )
+//				MatrixTools.zero(right);
+//				for(int m = 0; m < dim; m++)
+//					right.setEntry(m, m, 1.0);
+//
+//				// k = (((2 * dim - i - 1) * (i + 2))/2) - 2 * dim + j; 
+//				// This is just a bloody counter!
+//
+//				right.setEntry(i, i,  cosa[k]);
+//				right.setEntry(j, j,  cosa[k]);				
+//				right.setEntry(i, j, -sina[k]);
+//				right.setEntry(j, i,  sina[k]);
 
-				// k = (((2 * dim - i - 1) * (i + 2))/2) - 2 * dim + j; 
-				// This is just a bloody counter!
-
-				right.setEntry(i, i,  cosa[k]);
-				right.setEntry(j, j,  cosa[k]);				
-				right.setEntry(i, j, -sina[k]);
-				right.setEntry(j, i,  sina[k]);
+				right = elementary(dim, i, j, angles.get(k));
 	
 				// Multiply
 				left = left.multiply(right);
 				// TODO: It is inefficient to use full matrix multiplication for
-				// given matrices
+				// givens matrices
 				
 				k++;
 			}
 	
 		return left;
+	}
+	
+	/**
+	 * Uses the method described here:
+	 * 	http://math.stackexchange.com/questions/119770/retrieving-angles-from-a-rotation-matrix/119797#comment278460_119797
+	 * 
+	 * to find the angles for a rotation matrix
+	 * @return
+	 */
+	public static List<Double> findAngles(RealMatrix matrix)
+	{
+		if(! matrix.isSquare())
+			throw new IllegalArgumentException("Matrix ("+matrix+") not square");
+		if(! MatrixTools.isInvertible(matrix))
+			throw new IllegalArgumentException("Matrix ("+matrix+") not invertible");
+		
+		int d = matrix.getColumnDimension();
+		int num = (d*d - d) / 2;
+		List<Double> angles = new ArrayList<Double>(num);
+		
+		RealMatrix product = MatrixTools.inverse(matrix); // product of all rotations so far
+		
+		// * Iterate over axes-pairs in the opposite direction from toRotationMatrix
+		for(int j = 0; j < d-1 ; j++) 
+		{
+			RealVector ek = base(d, j), m = null;
+			for(int i = d-1; i >= j+1; i--)
+			{
+				// * Choose R_ik such that element i of  (R_ik * product * e_k) is 0
+				m = product.operate(ek);
+				
+				double angle = angle(m.getEntry(i), m.getEntry(j));
+				angles.add(0, angle);	
+												
+				RealMatrix rik = elementary(d, i, j , angle);
+				product = rik.multiply(product);	
+				
+				System.out.println(i + " - " + j + " " + product.operate(ek));
+
+			}
+			
+			// * at this point m(k) = +1 or -1
+			m = product.operate(ek);
+			System.out.println("ek k" + m.getEntry(j));
+			if(m.getEntry(j) < 0)
+			{
+				// * add pi to the last angle
+				angles.set(0, angles.get(0) + Math.PI);
+				product = elementary(d, j, j+1, PI).multiply(product);
+			}
+		}
+		// * at this point product * R^-1 = I
+		
+		return angles;
+	}
+	
+	/**
+	 * Returns an elementary rotation matrix in R^d (also known as a Givens 
+	 * matrix).
+	 * 
+	 * The matrix rotates by a given angle in the plane between axes i and j.
+	 * 
+	 * @param dim
+	 * @param i
+	 * @param j
+	 * @param angle
+	 * @return
+	 */
+	public static RealMatrix elementary(int dim, int i, int j, double angle)
+	{		
+		// System.out.println(i + ", " + j);
+		
+		RealMatrix m = MatrixTools.identity(dim);
+		
+		double s = sin(angle);
+		double c = cos(angle);
+		
+		m.setEntry(i, i,  c);
+		m.setEntry(j, j,  c);
+		m.setEntry(i, j, -s);
+		m.setEntry(j, i,  s);
+
+		return m;
+	}	
+	
+	/**
+	 * Solve cos(a) * h_i - sin(a) * h_j = 0 for a
+	 * 
+	 * This is the angle for the givens rotation on dimensions i and k 
+	 * 
+	 * @param hi
+	 * @param hj
+	 * @return
+	 */
+	public static double angle(double hi, double hj)
+	{
+		if(zero(hi) && zero(hj))
+			return 0.0; // the angle doesn't matter
+		if(zero(hj))
+			return 1.0;
+		if(zero(hi))
+			return 0.0;
+		
+		double c = hj/hi;
+		
+		double a = 2.0 * atan( sqrt(c*c + 1.0) - c);
+		
+		if(Double.isInfinite(a) || Double.isNaN(a))
+			a = 2.0 * atan( - sqrt(c*c + 1.0) - c);
+		
+		if(Double.isInfinite(a) || Double.isNaN(a))
+			throw new IllegalStateException("Result ("+a+") is infinite or NaN for inputs hi = "+hi+" and hk = "+hj+".");
+				
+		return a;
+	}
+	
+	private static boolean zero(double in)
+	{
+		return Math.abs(in) < ACCURACY;
 	}
 	
 	/**
