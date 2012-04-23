@@ -125,8 +125,8 @@ public class RepeatExperiment extends MultiExperiment
 			data.put("median", num ? median() : "Data is not numeric");
 			data.put("mode", mode().toString());
 			data.put("raw", values.toString());
-			data.put("infs", infs());
-			data.put("nans", nans());
+			data.put("infs", num ? infs() : "Data is not numeric");
+			data.put("nans", num ? nans() : "Data is not numeric");
 				
 			return data;
 		}
