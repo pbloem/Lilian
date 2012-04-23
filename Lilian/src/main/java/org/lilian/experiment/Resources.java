@@ -78,7 +78,7 @@ public class Resources
 	@Resource(name="mandelbrot-class")
 	public static Classified<Point> mandelbrotClass(@Name("size") int size)
 	{
-		List<Point> points = Datasets.cube(2).generate(size);
+		List<Point> points = new MVN(2).generate(size);
 		List<Integer> classes = Classifiers.mandelbrot().classify(points);
 		
 		return Classification.combine(points, classes);

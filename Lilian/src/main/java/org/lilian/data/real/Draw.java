@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.Tools;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;
 
@@ -255,7 +256,8 @@ public class Draw
 		BufferedImage drawCodes(IFS<M> ifs, 
 											double[] xrange, 
 											double[] yrange, 
-											int res, int depth)
+											int res, int depth,
+											int beamWidth)
 		throws IOException
 	{
 		if(ifs.size() > 3)
@@ -288,7 +290,15 @@ public class Draw
 				
 				
 				p = new Point(x, y);
-				List<Integer> code = IFS.code(ifs, p, depth);
+				
+				List<Integer> code = null;
+				if(beamWidth == -1)
+				{
+					code = IFS.code(ifs, p, depth);
+				} else
+				{
+					code = Tools.search(p, ifs, depth, beamWidth);
+				}
 				
 				Color color = null;
 				
