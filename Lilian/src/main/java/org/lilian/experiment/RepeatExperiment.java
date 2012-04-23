@@ -125,6 +125,8 @@ public class RepeatExperiment extends MultiExperiment
 			data.put("median", num ? median() : "Data is not numeric");
 			data.put("mode", mode().toString());
 			data.put("raw", values.toString());
+			data.put("infs", infs());
+			data.put("nans", nans());
 				
 			return data;
 		}
@@ -144,39 +146,90 @@ public class RepeatExperiment extends MultiExperiment
 		public double mean()
 		{
 			double sum = 0.0;
-			for(Object value : values)
-				sum += ((Number) value).doubleValue();
+			double num = 0.0;
 			
-			return sum/values.size();
+			for(Object value : values)
+			{
+				double v = ((Number) value).doubleValue();
+				if(!(Double.isNaN(v) || Double.isNaN(v)))
+				{
+					sum += v; 
+					num ++;
+				}
+			}
+			
+			return sum/num;
+		}
+		
+		public int nans()
+		{
+			int num = 0;
+			
+			for(Object value : values)
+			{
+				double v = ((Number) value).doubleValue();
+				if(Double.isNaN(v))
+					num ++;
+			}
+			
+			return num;	
+		}
+		
+		public int infs()
+		{
+			int num = 0;
+			
+			for(Object value : values)
+			{
+				double v = ((Number) value).doubleValue();
+				if(Double.isInfinite(v))
+					num ++;
+			}
+			
+			return num;	
 		}
 		
 		public double standardDeviation()
 		{
 			double mean = mean();
-		
+			double num = 0.0;
+			
 			double varSum = 0.0;
 			for(Object value : values)
 			{
-				double diff = mean - ((Number) value).doubleValue();
-				varSum += diff * diff;
+				double v = ((Number) value).doubleValue();
+				
+				if(!(Double.isNaN(v) || Double.isNaN(v)))
+				{
+					double diff = mean - v;
+					varSum += diff * diff;
+					num++;
+				}
 			}
 
-			double variance = varSum/(values.size() - 1);
+			double variance = varSum/(num - 1);
 			return Math.sqrt(variance);
 		}
 		
 		public double median()
 		{
-			List<Double> v = new ArrayList<Double>(values.size());
+			List<Double> vs = new ArrayList<Double>(values.size());
 			
 			for(Object value : values)
-				v.add(((Number) value).doubleValue());
+			{
+				double v = ((Number) value).doubleValue();
+
+				if(!(Double.isNaN(v) || Double.isNaN(v)))
+				{
+					vs.add(v);
+				}
+			}
 			
-			Collections.sort(v);
+			Collections.sort(vs);
 			
-			if(v.size() % 2 == 1)
-				return v.get(v.size()/2); // element s/2+1, but index s/2
-			return (v.get(v.size()/2 - 1) + v.get(v.size()/2)) / 2.0;
+			if(vs.size() % 2 == 1)
+				return vs.get(vs.size()/2); // element s/2+1, but index s/2
+			return (vs.get(vs.size()/2 - 1) + vs.get(vs.size()/2)) / 2.0;
 		}
 		
 		public Object mode()

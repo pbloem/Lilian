@@ -28,6 +28,20 @@
 	</dd>
 	
 	<dt>
+		NaN values (not counted in the means, stddev etc)
+	</dt>
+	<dd>
+		${nans}
+	</dd>		
+	
+	<dt>
+		Infinity values (not counted in the means, stddev etc)
+	</dt>
+	<dd>
+		${infs}
+	</dd>		
+	
+	<dt>
 		raw values
 	</dt>
 	<dd>
