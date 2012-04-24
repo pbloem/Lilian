@@ -48,6 +48,12 @@ public class Similitude extends AffineMap
 	
 	public Similitude(double scalar, List<Double> translation, List<Double> angles)
 	{
+		int dim = translation.size();
+		int a = angles.size();
+		
+		if( (dim*dim - dim)/2 != a)
+			throw new IllegalArgumentException("Wrong number of angles ("+a+") for the given dimension (size of translation vector = "+dim+"). The number of angles should be (d*d - d) / 2");
+		
 		init(scalar, translation, angles);
 	}
 	
