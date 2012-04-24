@@ -106,21 +106,33 @@ public class Datasets
 	}
 	
 	/**
-	 * Creates a generator for random points on a sphere of the given dimension,
-	 * with 
+	 * Creates a generator for random points on a sphere of the given dimension 
+	 * with radius 1.0
 	 */
 	public static Generator<Point> sphere(int dimension)
 	{
-		return new Sphere(dimension);
+		return new Sphere(dimension, 1.0);
 	}
+	
+
+	/**
+	 * Creates a generator for random points on a sphere of the given dimension 
+	 * and radius
+	 */
+	public static Generator<Point> sphere(int dimension, double radius)
+	{
+		return new Sphere(dimension, radius);
+	}	
 	
 	private static class Sphere extends AbstractGenerator<Point>
 	{
 		protected int dim;
+		protected double radius;
 		
-		public Sphere(int dim)
+		public Sphere(int dim, double radius)
 		{
 			this.dim = dim;
+			this.radius = radius;
 		}
 
 		public Point generate()
@@ -142,20 +154,33 @@ public class Datasets
 				for(int i = 0; i < dim; i++)
 					vector[i] /= length;
 			
+			// ** Extend to the required radius
+			if(radius != 1.0)
+				for(int i = 0; i < dim; i++)
+					vector[i] *= radius;
+			
 			return new Point(vector);
 		}
 	}
 	
+	public static Generator<Point> ball(int dim, double radius)
+	{
+		return new Ball(dim, radius);
+	}	
+	
+	
 	public static Generator<Point> ball(int dim)
 	{
-		return new Ball(dim);
+		return new Ball(dim, 1.0);
 	}	
 	
 	private static class Ball extends Sphere
 	{
-		public Ball(int dim)
+		double ballRadius;
+		public Ball(int dim, double radius)
 		{
-			super(dim);
+			super(dim, 1.0);
+			this.ballRadius = radius;
 		}
 
 		public Point generate()
@@ -169,6 +194,11 @@ public class Datasets
 			double r = Global.random.nextDouble();
 			for(int i = 0; i < dim; i++)
 				p[i] *= Math.pow(r, 1.0/dim);
+			
+			// ** Extend to the required radius
+			if(ballRadius != 1.0)
+				for(int i = 0; i < dim; i++)
+					p[i] *= ballRadius;
 			
 			return new Point(p);
 		}
