@@ -2,9 +2,12 @@ package org.lilian.data.real;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
+import static org.lilian.util.Series.series;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.LookupOp;
@@ -18,6 +21,8 @@ import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.Tools;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;
+import org.lilian.search.Parametrizable;
+import org.lilian.util.Series;
 
 /**
  * A set of static methods to generate simple density plots of data.
@@ -135,6 +140,73 @@ public class Draw
 		return draw(generator, samples, range, range, res, res, log);
 	}
 	
+	public static <M extends Map & Parametrizable> BufferedImage draw(IFS<M> ifs, int samples, double[] xrange, double[] yrange, int xRes, int yRes, boolean log)
+	{
+		BufferedImage image = draw(ifs.generator(), samples, xrange, yrange, xRes, yRes, log);
+			
+		List<Point> frame = new ArrayList<Point>(6);
+		frame.add(new Point(-1.0, -1.0));
+		frame.add(new Point(-1.0,  1.0));
+		frame.add(new Point( 0.9,  1.0));
+		frame.add(new Point( 0.9,  0.9));
+		frame.add(new Point( 1.0,  0.9));
+		frame.add(new Point( 1.0, -1.0));
+		
+		List<Point> bar = new ArrayList<Point>(2);
+		bar.add(new Point(-0.95, -0.95));
+		bar.add(new Point(-0.95,  0.95));
+
+		
+		Graphics2D graphics = image.createGraphics();
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		
+		drawFrame(graphics, frame, Color.RED, xrange, yrange, xRes, yRes);
+		for(int i : series(ifs.size()))
+		{
+			drawFrame(graphics, ifs.get(i).map(frame), Color.BLUE, xrange, yrange, xRes, yRes); 
+			drawBar(graphics, ifs.get(i).map(bar), ifs.probability(i), xrange, yrange, xRes, yRes);
+		}
+		
+		graphics.dispose();
+		
+		return image;
+	}
+	
+	private static void drawFrame(Graphics2D graphics, List<Point> frame, Color color, double[] xrange, double[] yrange, int xres, int yres)
+	{				
+		graphics.setColor(color);
+		graphics.setStroke(new BasicStroke(2.0f));	
+	
+		
+		int[] xpoints = new int[frame.size()];
+		int[] ypoints = new int[frame.size()];
+		
+		for(int i = 0; i < frame.size(); i++)
+		{
+			xpoints[i] = toPixel(frame.get(i).get(0), xres, xrange[0], xrange[1]);
+			ypoints[i] = toPixel(frame.get(i).get(1), yres, yrange[0], yrange[1]);
+		}
+		
+		graphics.drawPolygon(xpoints, ypoints, frame.size());
+	}
+	
+	private static void drawBar(Graphics2D graphics,List<Point> bar, double prob, double[] xrange, double[] yrange, int xres, int yres)
+	{
+		
+		graphics.setColor(Color.GREEN);
+		graphics.setStroke(new BasicStroke(5.0f));
+		
+		double x1 = bar.get(0).get(0), y1 = bar.get(0).get(1);
+		double x2 = bar.get(0).get(0) * (1.0 - prob) + bar.get(1).get(0) * prob;
+		double y2 = bar.get(0).get(1) * (1.0 - prob) + bar.get(1).get(1) * prob;
+		
+		graphics.drawLine(
+				toPixel(x1, xres, xrange[0], xrange[1]),
+				toPixel(y1, yres, yrange[0], yrange[1]), 
+				toPixel(x2, xres, xrange[0], xrange[1]),
+				toPixel(y2, yres, yrange[0], yrange[1]));
+	}
+
 	/**
 	 * Draws a histogram of a 2D dataset as a grayscale image. 
 	 * 
@@ -150,6 +222,7 @@ public class Draw
 											int yRes,											
 											boolean log)
 	{
+
 		// * size of the image in coordinates
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
@@ -219,7 +292,6 @@ public class Draw
 		return image;
 	}
 	
-	
 	public static ArrayList<Color> colors = new ArrayList<Color>();
 	public static ArrayList<Color> componentColors = new ArrayList<Color>();	
 	public static Color errorColor = Color.RED;		
@@ -261,7 +333,7 @@ public class Draw
 		throws IOException
 	{
 		if(ifs.size() > 3)
-			throw new IllegalArgumentException("IFS must have three components or less, had "+ifs.size()+".");
+			throw new IllegalArgumentException("IFS must have three components or less (had "+ifs.size()+").");
 		
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];

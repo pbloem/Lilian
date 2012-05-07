@@ -1,3 +1,19 @@
+<table>
+  <tr>
+	<#list names as name>
+		<th>${name}</th>
+	</#list>
+  </tr>
+  <#list pairs as pair>
+	<tr>
+		<#list pair.parameters as parameter>
+			<td>${parameter}</td>
+		</#list>
+		<td>${pair.value}</td>
+	</tr>  
+  </#list>
+</table>
+
 <table>	
   <tr>
 	<th>

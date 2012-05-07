@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * A collection of multiple experiment results
+ * 
  * @author Peter
  *
  */

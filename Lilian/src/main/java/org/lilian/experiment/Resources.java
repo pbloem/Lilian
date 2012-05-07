@@ -33,6 +33,16 @@ public class Resources
 		return data;
 	}
 	
+	@Resource(name="koch")
+	public static List<Point> koch(@Name("size") int size)
+	{
+		List<Point> data = IFSs.koch2Sim().generator().generate(size);
+		Collections.shuffle(data);
+		
+		return data;
+	}
+		
+	
 	@Resource(name="sierpinski-off")
 	public static List<Point> sierpinskiOff(@Name("size") int size, @Name("p1") double p1, @Name("p2") double p2, @Name("p3") double p3)
 	{
