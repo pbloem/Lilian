@@ -5,6 +5,7 @@ import static org.lilian.util.Series.series;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +57,7 @@ public class MultiValueExperiment extends MultiExperiment
 	public MultiValueExperiment(Constructor<Experiment> ctr, boolean sameSeed, int repeats, Object... inputs)
 	{
 		
-		super(ctr.getDeclaringClass(), sameSeed);
+		super(repeats == 1 ? ctr.getDeclaringClass() : RepeatExperiment.class, sameSeed);
 		structor = ctr;
 		
 		for(int i : series(inputs.length))
@@ -113,32 +114,52 @@ public class MultiValueExperiment extends MultiExperiment
 
 	
 	@Result(name = "Multivalue results")
-	public Results results()
+	public Results results() throws IllegalAccessException, InvocationTargetException
 	{
 		BasicResults results = new BasicResults();
 		
 		for(Method method : Tools.allMethods(type(), Result.class))
+			addResult(method, results);
+			
+		return results;
+	}
+	
+	private void addResult(Method method, BasicResults results) throws IllegalAccessException, InvocationTargetException
+	{
+		if(Results.class.isAssignableFrom(method.getReturnType()))
 		{
+			Results example = (Results) method.invoke(experiments.get(0));
+			for(int i = 0; i < example.size(); i++)
+			{	
+				Result anno = example.annotation(i);
+				CollatedResult cres = new CollatedResult(anno);
+				
+				for(int j : series(experiments.size()))
+				{
+					Results res = (Results) method.invoke(experiments.get(j));
+					List<Object> tuple = paramTuples.get(j);
+					cres.add(tuple, res.value(i));
+				}
+	
+				results.add(cres, anno);					
+			}
+			
+		} else
+		{
+				
 			Result anno = method.getAnnotation(Result.class);
 			CollatedResult cres = new CollatedResult(anno);
 			
-			try
+			for(int i : series(experiments.size()))
 			{
-				for(int i : series(experiments.size()))
-				{
-					Experiment experiment = experiments.get(i);
-					List<Object> tuple = paramTuples.get(i);
-					cres.add(tuple, method.invoke(experiment));
-				}
-			} catch(Exception e) {
-				throw new RuntimeException("Error invoking.", e); // TODO Make nicer
+				Experiment experiment = experiments.get(i);
+				List<Object> tuple = paramTuples.get(i);
+				cres.add(tuple, method.invoke(experiment));
 			}
-			
-			results.add(cres, anno);
 
+			results.add(cres, anno);		
+			
 		}
-		
-		return results;
 	}
 	
 	/**
@@ -153,7 +174,7 @@ public class MultiValueExperiment extends MultiExperiment
 	 * @author Peter
 	 *
 	 */
-	private class CollatedResult implements Reporting
+	private class CollatedResult implements Reporting, HasResults
 	{
 		List<Object> values = new ArrayList<Object>();
 		List<List<Object>> parameters = new ArrayList<List<Object>>();
@@ -202,42 +223,83 @@ public class MultiValueExperiment extends MultiExperiment
 			
 			
 			boolean num = isNumeric();
-
-			data.put("mean", num ? mean() : "Data is not numeric");		
-			data.put("std_dev", num ? standardDeviation() : "Data is not numeric");
-			data.put("median", num ? median() : "Data is not numeric");
-			data.put("mode", mode().toString());
-			data.put("infs", num ? infs() : "Data is not numeric");
-			data.put("nans", num ? nans() : "Data is not numeric");
+			boolean res = hasResults();
 			
-			List<String> names = new ArrayList<String>();
-			for(Parameter p : multiParameter)
-				names.add(p.name());
-			names.add(annotation.name());
-			data.put("names", names);
-			
-			List<Map<String, Object>> pairs = new ArrayList<Map<String, Object>>();
-			for(int i : series(values.size()))
+			if(res)
 			{
-				Map<String, Object> pair = new HashMap<String, Object>();
-				pair.put("parameters", stringList(parameters.get(i)));
-				pair.put("value", values.get(i).toString());
-				pairs.add(pair);
+				Class<?> resClass = values.get(0).getClass();
+				
+				List<String> names = new ArrayList<String>();
+				for(Parameter p : multiParameter)
+					names.add(p.name());
+				for(Method method : Tools.allMethods(resClass, Result.class))
+					names.add(method.getAnnotation(Result.class).name());
+					
+				data.put("row_headers", names);
+				
+				List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+				for(int i : series(values.size()))
+				{
+					Map<String, Object> row = new HashMap<String, Object>();
+					row.put("parameters", Tools.stringList(parameters.get(i)));
+					
+					// * Find all @Result methods in the HasResults object
+					List<Object> outputs = new ArrayList<Object>();
+					for(Method method : Tools.allMethods(resClass, Result.class))
+						try
+						{
+							outputs.add(method.invoke(values.get(i)));
+						} catch (Exception e)
+						{
+							throw new RuntimeException(e);
+						} 
+					row.put("values", outputs);
+					rows.add(row);
+				}
+				
+				data.put("rows", rows);				
+				
+			} else
+			{
+				data.put("mean", num ? mean() : "Data is not numeric");		
+				data.put("std_dev", num ? standardDeviation() : "Data is not numeric");
+				data.put("median", num ? median() : "Data is not numeric");
+				data.put("mode", mode().toString());
+				data.put("infs", num ? infs() : "Data is not numeric");
+				data.put("nans", num ? nans() : "Data is not numeric");
+				
+				List<String> names = new ArrayList<String>();
+				for(Parameter p : multiParameter)
+					names.add(p.name());
+				names.add(annotation.name());
+				data.put("row_headers", names);
+				
+				List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+				for(int i : series(values.size()))
+				{
+					Map<String, Object> row = new HashMap<String, Object>();
+					row.put("parameters", Tools.stringList(parameters.get(i)));
+					row.put("values", Arrays.asList(values.get(i).toString()) );
+					rows.add(row);
+				}
+				
+				data.put("rows", rows);
 			}
-			
-			data.put("pairs", pairs);
 			
 			return data;
 		}
+	
 		
-		public List<String> stringList(List<Object> in)
+		/**
+		 * Whether all result values represent a HasResults objects
+		 * @return
+		 */
+		public boolean hasResults()
 		{
-			List<String> out = new ArrayList<String>(in.size());
-			for(Object i : in)
-			{
-				out.add(i.toString());
-			}
-			return out;
+			for(Object value : values)
+				if(! (value instanceof HasResults))
+					return false;
+			return true;
 		}
 		
 		/**
@@ -252,6 +314,7 @@ public class MultiValueExperiment extends MultiExperiment
 			return true;
 		}
 		
+		@Result(name="mean")
 		public double mean()
 		{
 			double sum = 0.0;
@@ -270,6 +333,7 @@ public class MultiValueExperiment extends MultiExperiment
 			return sum/num;
 		}
 		
+		@Result(name="nans")
 		public int nans()
 		{
 			int num = 0;
@@ -284,6 +348,7 @@ public class MultiValueExperiment extends MultiExperiment
 			return num;	
 		}
 		
+		@Result(name="infs")
 		public int infs()
 		{
 			int num = 0;
@@ -298,6 +363,7 @@ public class MultiValueExperiment extends MultiExperiment
 			return num;	
 		}
 		
+		@Result(name="std dev")
 		public double standardDeviation()
 		{
 			double mean = mean();
@@ -320,6 +386,7 @@ public class MultiValueExperiment extends MultiExperiment
 			return Math.sqrt(variance);
 		}
 		
+		@Result(name="median")
 		public double median()
 		{
 			List<Double> vs = new ArrayList<Double>(values.size());
@@ -341,6 +408,7 @@ public class MultiValueExperiment extends MultiExperiment
 			return (vs.get(vs.size()/2 - 1) + vs.get(vs.size()/2)) / 2.0;
 		}
 		
+		@Result(name="mode")
 		public Object mode()
 		{
 			BasicFrequencyModel<Object> model = new BasicFrequencyModel<Object>(values);

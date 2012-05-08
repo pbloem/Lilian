@@ -18,6 +18,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -26,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
+import org.jfree.io.FileUtilities;
+import org.jfree.ui.FilesystemFilter;
 import org.lilian.Global;
 import org.lilian.util.Series;
 
@@ -251,6 +255,18 @@ public abstract class AbstractExperiment implements Experiment
 		File reportDir = new File(dir, "report/");
 		reportDir.mkdirs();
 		
+		URL sourceUrl = this.getClass().getClassLoader().getResource("static/");
+		File source = FileUtils.toFile(sourceUrl);
+		
+		//* Copy static files (css, js, etc)
+		try
+		{
+			FileUtils.copyDirectory(source, reportDir);
+		} catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		
 		Writer out = null; 
 		
 		try
@@ -309,6 +325,30 @@ public abstract class AbstractExperiment implements Experiment
 			} 
 			catch (TemplateException e) { Global.log().warning("Failed to process result-specific template " + tpl + " " + this + ". Exception: " + e.getMessage() + " -  " + Arrays.toString(e.getStackTrace())); }	
 			catch (IOException e) { throw new IllegalStateException("IOException on StringWriter", e); } 
+		} else if(value instanceof List<?>) // * If the result is a list of something
+		{
+			StringWriter out = new StringWriter();
+			List<String> valueStr = Tools.stringList((List<Object>) value);
+			
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("list", valueStr);
+			
+			Template tpl;
+			try
+			{
+				tpl = fmConfig.getTemplate("list.ftl");
+				tpl.process(map, out);
+			} catch (Exception e)
+			{
+				throw new RuntimeException(e);
+			}
+
+			out.flush();
+			
+			resMap.put("value", out.toString());
+			
+			resMap.put("name", anno.name());
+			resMap.put("description", anno.description());
 		} else
 		{
 			resMap.put("value", value.toString());

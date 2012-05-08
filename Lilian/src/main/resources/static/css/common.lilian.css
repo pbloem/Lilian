@@ -1,0 +1,15 @@
+html {
+	margin: 0;
+	padding: 1px 0 0;
+	background: white;
+}
+
+body {
+	margin:30px auto;
+	padding: 7px 30px 30px 30px;
+	
+	width: 860px;
+	background: #f0f0f0;
+	
+	border-radius: 30px;
+}

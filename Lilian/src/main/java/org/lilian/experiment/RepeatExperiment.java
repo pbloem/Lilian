@@ -74,7 +74,7 @@ public class RepeatExperiment extends MultiExperiment
 		return repeats;
 	}
 	
-	private class CollatedResult implements Reporting
+	private class CollatedResult implements Reporting, HasResults
 	{
 		List<Object> values = new ArrayList<Object>();
 		Result annotation;
@@ -143,8 +143,12 @@ public class RepeatExperiment extends MultiExperiment
 			return true;
 		}
 		
+		@Result(name = "mean")
 		public double mean()
 		{
+			if(! isNumeric())
+				return Double.NaN;
+			
 			double sum = 0.0;
 			double num = 0.0;
 			
@@ -161,36 +165,12 @@ public class RepeatExperiment extends MultiExperiment
 			return sum/num;
 		}
 		
-		public int nans()
-		{
-			int num = 0;
-			
-			for(Object value : values)
-			{
-				double v = ((Number) value).doubleValue();
-				if(Double.isNaN(v))
-					num ++;
-			}
-			
-			return num;	
-		}
-		
-		public int infs()
-		{
-			int num = 0;
-			
-			for(Object value : values)
-			{
-				double v = ((Number) value).doubleValue();
-				if(Double.isInfinite(v))
-					num ++;
-			}
-			
-			return num;	
-		}
-		
+		@Result(name = "std dev")
 		public double standardDeviation()
 		{
+			if(! isNumeric())
+				return Double.NaN;
+			
 			double mean = mean();
 			double num = 0.0;
 			
@@ -211,8 +191,12 @@ public class RepeatExperiment extends MultiExperiment
 			return Math.sqrt(variance);
 		}
 		
+		@Result(name = "median")
 		public double median()
 		{
+			if(! isNumeric())
+				return Double.NaN;
+			
 			List<Double> vs = new ArrayList<Double>(values.size());
 			
 			for(Object value : values)
@@ -232,11 +216,49 @@ public class RepeatExperiment extends MultiExperiment
 			return (vs.get(vs.size()/2 - 1) + vs.get(vs.size()/2)) / 2.0;
 		}
 		
+		@Result(name = "mode")
 		public Object mode()
 		{
 			BasicFrequencyModel<Object> model = new BasicFrequencyModel<Object>(values);
 			
 			return model.sorted().get(0);
 		}
+		
+		
+		@Result(name = "nans")
+		public int nans()
+		{
+			if(! isNumeric())
+				return 0;
+			
+			int num = 0;
+			
+			for(Object value : values)
+			{
+				double v = ((Number) value).doubleValue();
+				if(Double.isNaN(v))
+					num ++;
+			}
+			
+			return num;	
+		}
+		
+		@Result(name = "infs")
+		public int infs()
+		{
+			if(! isNumeric())
+				return 0;
+
+			int num = 0;
+			
+			for(Object value : values)
+			{
+				double v = ((Number) value).doubleValue();
+				if(Double.isInfinite(v))
+					num ++;
+			}
+			
+			return num;	
+		}		
 	}
 }

@@ -1,5 +1,14 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-  <title>Welcome!</title>
+
+  <link type="text/css" rel="stylesheet" media="all" href="./css/common.lilian.css" />
+  <link type="text/css" rel="stylesheet" media="screen" href="./css/screen.lilian.css" />
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+  <script src="http://d3js.org/d3.v2.js" type="text/javascript"></script>  
+  
+  <title>Lilian results</title>
 </head>
 <body>
   <h1>Report: ${short_name}</h1>

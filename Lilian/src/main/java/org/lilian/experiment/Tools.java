@@ -12,6 +12,15 @@ import java.util.List;
  */
 public class Tools
 {
+	public static List<String> stringList(List<Object> in)
+	{
+		List<String> out = new ArrayList<String>(in.size());
+		for(Object i : in)
+		{
+			out.add(i.toString());
+		}
+		return out;
+	}
 	
 	/**
 	 * Returns all declared methods, including inherited.
