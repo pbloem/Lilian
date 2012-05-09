@@ -388,13 +388,13 @@ public abstract class AbstractExperiment implements Experiment
 	 */
 	public void copy(String cpDir, File target)
 	{
-		String sourcePath = this.getClass().getClassLoader().getResource(cpDir+"/").getPath();
+		URL sourcePath = this.getClass().getClassLoader().getResource(cpDir);
 		logger.info("Copying static files from path " + sourcePath);
 		
 		//* Copy static files (css, js, etc)
 		try
 		{
-			FileUtils.copyDirectory(new File(sourcePath + "/"), target);
+			copyResources(sourcePath, target);
 		} catch (IOException e)
 		{
 			throw new RuntimeException(e);
@@ -402,10 +402,12 @@ public abstract class AbstractExperiment implements Experiment
 				
 	}
 	
-	public void copyResourcesRecursively(URL originUrl, File destination) 
+	public void copyResources(URL originUrl, File destination) 
 			throws IOException 
 	{
+		
 	    URLConnection urlConnection = originUrl.openConnection();
+	    
 	    if (new File(originUrl.getPath()).exists()) {
 	        FileUtils.copyDirectory(new File(originUrl.getPath()), destination);
 	    } else if (urlConnection instanceof JarURLConnection) {
