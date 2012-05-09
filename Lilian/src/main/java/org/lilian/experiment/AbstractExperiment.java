@@ -254,18 +254,8 @@ public abstract class AbstractExperiment implements Experiment
 		
 		File reportDir = new File(dir, "report/");
 		reportDir.mkdirs();
-		
-		URL sourceUrl = this.getClass().getClassLoader().getResource("static/");
-		File source = FileUtils.toFile(sourceUrl);
-		
-		//* Copy static files (css, js, etc)
-		try
-		{
-			FileUtils.copyDirectory(source, reportDir);
-		} catch (IOException e)
-		{
-			throw new RuntimeException(e);
-		}
+
+		copy("static", reportDir);
 		
 		Writer out = null; 
 		
@@ -380,5 +370,28 @@ public abstract class AbstractExperiment implements Experiment
 	public void setDescription(String description)
 	{
 		this.description = description; 
+	}
+
+	/**
+	 * Copies all firles and directories in the given classpath directory to 
+	 * the given target directory in the filesystem.
+	 * 
+	 * @param cpDir
+	 * @param target
+	 */
+	public void copy(String cpDir, File target)
+	{
+		String sourcePath = this.getClass().getClassLoader().getResource(cpDir+"/").getPath();
+		logger.info("Copying static files from path " + sourcePath);
+		
+		//* Copy static files (css, js, etc)
+		try
+		{
+			FileUtils.copyDirectory(new File(sourcePath), target);
+		} catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+				
 	}
 }
