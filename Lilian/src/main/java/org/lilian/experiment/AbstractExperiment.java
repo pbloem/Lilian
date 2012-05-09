@@ -9,8 +9,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -18,13 +20,18 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.JarURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
@@ -387,11 +394,75 @@ public abstract class AbstractExperiment implements Experiment
 		//* Copy static files (css, js, etc)
 		try
 		{
-			FileUtils.copyDirectory(new File(sourcePath), target);
+			FileUtils.copyDirectory(new File(sourcePath + "/"), target);
 		} catch (IOException e)
 		{
 			throw new RuntimeException(e);
 		}
 				
 	}
+	
+	public void copyResourcesRecursively(URL originUrl, File destination) 
+			throws IOException 
+	{
+	    URLConnection urlConnection = originUrl.openConnection();
+	    if (new File(originUrl.getPath()).exists()) {
+	        FileUtils.copyDirectory(new File(originUrl.getPath()), destination);
+	    } else if (urlConnection instanceof JarURLConnection) {
+	        copyJarResourcesRecursively(destination, (JarURLConnection) urlConnection);
+	    } else {
+	        throw new RuntimeException("URLConnection[" + urlConnection.getClass().getSimpleName() +
+	                "] is not a recognized/implemented connection type.");
+	    }
+	}
+
+	public void copyJarResourcesRecursively(File destination, JarURLConnection jarConnection ) 
+			throws IOException 
+	{
+	    JarFile jarFile = jarConnection.getJarFile();
+	    
+	    Enumeration<JarEntry> entries = jarFile.entries();
+	    
+	    while(entries.hasMoreElements()) {
+	    	JarEntry entry = entries.nextElement();
+	    	
+	        if (entry.getName().startsWith(jarConnection.getEntryName())) 
+	        {
+	            String fileName = removeStart(entry.getName(), jarConnection.getEntryName());
+	            if (! entry.isDirectory())
+	            {
+	                InputStream entryInputStream = null;
+	                entryInputStream = jarFile.getInputStream(entry);
+					copyStream(entryInputStream, new File(destination, fileName));
+	               
+	            } else
+	            {
+	                new File(destination, fileName).mkdirs();
+	            }
+	        }
+	    }
+	}
+
+	private void copyStream(InputStream in, File file) 
+			throws IOException
+	{
+		OutputStream out = new FileOutputStream(file);
+		int bt = in.read();
+		while(bt != -1)
+		{
+			out.write(bt);
+			bt = in.read();
+		}
+		out.flush();
+		out.close();
+	}
+
+	private String removeStart(String string, String prefix)
+	{
+		if(string.indexOf(prefix) != 0)
+			return null;
+		
+		return string.substring(prefix.length());
+	}
+
 }
