@@ -179,6 +179,11 @@ public class Similitude extends AffineMap
 		return new SBuilder(dimension);
 	}
 	
+	public static Similitude identity(int dim)
+	{
+		return new Similitude(1.0, new Point(dim), new Point((dim*dim - dim)/2));
+	}
+	
 	private static class SBuilder implements Builder<Similitude>
 	{
 		private int dimension;
