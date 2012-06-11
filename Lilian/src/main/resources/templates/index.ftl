@@ -2,11 +2,21 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 
+  <link type="text/css" rel="stylesheet" media="screen" href="./css/jquery-ui/jquery-ui-1.8.21.custom.css" />
   <link type="text/css" rel="stylesheet" media="all" href="./css/common.lilian.css" />
   <link type="text/css" rel="stylesheet" media="screen" href="./css/screen.lilian.css" />
+  <link type="text/css" rel="stylesheet" media="screen" href="./css/rickshaw.min.css" />
+  
   
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js" type="text/javascript"></script>
   <script src="http://d3js.org/d3.v2.js" type="text/javascript"></script>  
+  
+  <script src="./javascript/rickshaw.min.js" type="text/javascript"></script>  
+  
+  
+  <script src="./javascript/base.lilian.js" type="text/javascript"></script>  
+  
   
   <title>Lilian results</title>
 </head>
@@ -55,9 +65,9 @@
     <p class="description">
     	${result.description}
     </p>
-    <p class="value">
+    <div class="value">
     	${result.value}
-    </p>
+    </div>
   </#list>
   
   <h2>Reportables</h2>

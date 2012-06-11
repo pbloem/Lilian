@@ -13,3 +13,19 @@ body {
 	
 	border-radius: 30px;
 }
+
+.chart-container {
+	position: relative;
+	padding-left: 40px;
+}
+.chart-container .chart {
+	position: relative;
+}
+
+.chart-container .axis {
+	position: absolute;
+	
+	top: 0;
+    left: 0;
+    width: 40px;
+}

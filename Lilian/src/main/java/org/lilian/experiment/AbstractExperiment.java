@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -38,6 +39,8 @@ import org.apache.commons.io.FileUtils;
 import org.jfree.io.FileUtilities;
 import org.jfree.ui.FilesystemFilter;
 import org.lilian.Global;
+import org.lilian.models.BasicFrequencyModel;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 
 import freemarker.template.Configuration;
@@ -329,6 +332,39 @@ public abstract class AbstractExperiment implements Experiment
 			
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("list", valueStr);
+			
+			boolean isNumeric = Tools.isNumeric((List<Object>)value);
+			map.put("is_numeric", isNumeric);
+			
+			if(isNumeric)
+			{
+				map.put("mean",   Tools.mean((List<? extends Number>)value));
+				map.put("dev",    Tools.standardDeviation((List<? extends Number>)value));
+				map.put("median", Tools.median((List<? extends Number>)value));
+				map.put("mode",   Tools.mode((List<?>)value));
+			}
+			
+			BasicFrequencyModel<Object> model = new BasicFrequencyModel<Object>((List<Object>)value);
+			List<Object> tokens;
+			
+			if(isNumeric)
+			{
+				List<Number> numTokens = new ArrayList<Number>((int)model.distinct());
+				for(Object t : model.tokens())
+					numTokens.add(((Number) t));
+				
+				Collections.sort(numTokens, Functions.numberComparator());
+				tokens = new ArrayList<Object>(numTokens);
+			} else
+				tokens = model.sorted();
+			List<Double> frequencies = new ArrayList<Double>(tokens.size());
+			for(Object token : tokens)
+				frequencies.add(model.frequency(token));
+			
+			List<List<Object>> pairs = new ArrayList<List<Object>>(tokens.size());
+			for(int i : Series.series(tokens.size()))
+				pairs.add(Arrays.asList(tokens.get(i), frequencies.get(i)));
+			map.put("histogram", pairs);
 			
 			Template tpl;
 			try

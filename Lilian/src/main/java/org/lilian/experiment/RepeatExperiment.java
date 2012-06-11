@@ -1,5 +1,6 @@
 package org.lilian.experiment;
 
+import static org.lilian.experiment.Tools.isNumeric;
 import static org.lilian.util.Series.series;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class RepeatExperiment extends MultiExperiment
 	 * properly deterministic, would normally be false)
 	 * @param repeats
 	 */
-	public RepeatExperiment(Constructor<? extends Experiment> structor, int repeats, Object... inputs)
+	public RepeatExperiment(Run.Builder structor, int repeats, Object... inputs)
 	{		
 		super(structor.getDeclaringClass(), false);
 		this.repeats = repeats;
@@ -119,7 +120,7 @@ public class RepeatExperiment extends MultiExperiment
 			Map<String, Object> data = new HashMap<String, Object>();
 			
 			
-			boolean num = isNumeric();
+			boolean num = Tools.isNumeric(values);
 			data.put("mean", num ? mean() : "Data is not numeric");		
 			data.put("std_dev", num ? standardDeviation() : "Data is not numeric");
 			data.put("median", num ? median() : "Data is not numeric");
@@ -131,22 +132,10 @@ public class RepeatExperiment extends MultiExperiment
 			return data;
 		}
 		
-		/**
-		 * Whether all result values represent numbers
-		 * @return
-		 */
-		public boolean isNumeric()
-		{
-			for(Object value : values)
-				if(! (value instanceof Number))
-					return false;
-			return true;
-		}
-		
 		@Result(name = "mean")
 		public double mean()
 		{
-			if(! isNumeric())
+			if(! isNumeric(values))
 				return Double.NaN;
 			
 			double sum = 0.0;
@@ -168,7 +157,7 @@ public class RepeatExperiment extends MultiExperiment
 		@Result(name = "std dev")
 		public double standardDeviation()
 		{
-			if(! isNumeric())
+			if(! isNumeric(values))
 				return Double.NaN;
 			
 			double mean = mean();
@@ -194,7 +183,7 @@ public class RepeatExperiment extends MultiExperiment
 		@Result(name = "median")
 		public double median()
 		{
-			if(! isNumeric())
+			if(! isNumeric(values))
 				return Double.NaN;
 			
 			List<Double> vs = new ArrayList<Double>(values.size());
@@ -228,7 +217,7 @@ public class RepeatExperiment extends MultiExperiment
 		@Result(name = "nans")
 		public int nans()
 		{
-			if(! isNumeric())
+			if(! isNumeric(values))
 				return 0;
 			
 			int num = 0;
@@ -246,7 +235,7 @@ public class RepeatExperiment extends MultiExperiment
 		@Result(name = "infs")
 		public int infs()
 		{
-			if(! isNumeric())
+			if(! isNumeric(values))
 				return 0;
 
 			int num = 0;

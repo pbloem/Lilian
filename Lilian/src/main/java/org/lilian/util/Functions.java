@@ -567,5 +567,18 @@ public class Functions
 		return range + x;
 	}
 	
+	public static Comparator<Number> numberComparator()
+	{
+	 return new NumberComparator();
+	}
+
+	public static class NumberComparator implements Comparator<Number>
+	{
+		@Override
+		public int compare(Number n1, Number n2)
+		{
+			return Double.compare(n1.doubleValue(), n2.doubleValue());
+		}
 	
+	}
 }

@@ -38,7 +38,7 @@ import freemarker.template.Template;
 public class MultiValueExperiment extends MultiExperiment
 {
 	
-	private Constructor<Experiment> structor;
+	private Run.Builder structor;
 
 	// * The parameters for which multiple values where defined
 	private List<Integer> multiParameterIndices = new ArrayList<Integer>();
@@ -54,10 +54,10 @@ public class MultiValueExperiment extends MultiExperiment
 	 * @param sameSeed Whether to start each experiment with the same seed, or to give each a new seed
 	 * @param inputs
 	 */
-	public MultiValueExperiment(Constructor<Experiment> ctr, boolean sameSeed, int repeats, Object... inputs)
+	public MultiValueExperiment(Run.Builder ctr, boolean sameSeed, int repeats, Object... inputs)
 	{
 		
-		super(repeats == 1 ? ctr.getDeclaringClass() : RepeatExperiment.class, sameSeed);
+		super(repeats == 1 ? (Class<? extends Experiment>)ctr.getDeclaringClass() : RepeatExperiment.class, sameSeed);
 		structor = ctr;
 		
 		for(int i : series(inputs.length))

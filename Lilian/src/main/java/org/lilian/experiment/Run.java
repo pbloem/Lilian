@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -68,6 +69,11 @@ public class Run
 	 */
 	public static List<Experiment> experiments = new ArrayList<Experiment>();
 	
+	/**
+	 * Run the experiment defined in the file "init.yaml" in the given directory
+	 * @param dir
+	 * @throws IOException
+	 */
 	public static void run(File dir) throws IOException
 	{
 		// * Read the init file
@@ -81,12 +87,10 @@ public class Run
 			initObject = yaml.load(new FileReader(initFile));
 		} catch (Exception e)
 		{
-			throw new RuntimeException("Problem readin init.yaml.", e);
+			throw new RuntimeException("Problem reading init.yaml.", e);
 		}
 		
 		System.out.println("Read init file" + initObject.getClass());
-
-		// * Perform basic sanity tests
 		
 		// * Parse the file into experiments
 		HashMap<?, ?> map = (LinkedHashMap<?, ?>)initObject;
@@ -114,6 +118,13 @@ public class Run
 	
 	}
 	
+	/**
+	 * Parse an individual experiment from a map to an experiment 
+	 * constructor/factory
+	 * 
+	 * @param in
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public static Experiment parseExperiment(Map<String, ?> in)
 	{
@@ -124,6 +135,7 @@ public class Run
 			throw new IllegalArgumentException("Value of key 'class' was not parsed as a string, but as a " + classNameObj.getClass() + " (try enclosing with quotes).");
 		String className = (String)classNameObj;
 
+		// * Retrieve the class for the experiment
 		Class<Experiment> experimentClass;
 		try
 		{
@@ -135,7 +147,7 @@ public class Run
 		
 		System.out.println("Class found: " + experimentClass);
 		
-		
+		// * If the repeat parameter is set, parse it
 		if(in.containsKey("repeat"))
 		{
 			Object r = in.get("repeat");
@@ -148,13 +160,14 @@ public class Run
 			System.out.println("Found 'repeat' key. Each single experiment will be repeated " + repeats +" times.");
 		}
 		
+		// * Read and set the description of the experiment
 		String description = "";
 		if(in.containsKey("description"))
 			description = in.get("description") + "";
 		
 		List<String> parameters = new ArrayList<String>(in.keySet());
 		
-		// * These are standard key. The rest are passed to the experiment
+		// * These are standard keys. The rest are passed to the experiment
 		parameters.remove("class");
 		parameters.remove("name");
 		parameters.remove("description");
@@ -162,7 +175,10 @@ public class Run
 		
 		System.out.println("parameters: " + parameters);
 		
-		Constructor<?> thisCtor;
+		
+		// * Search for Constructors or Factory methods
+		AccessibleObject thisCtor;
+		
 		Class<Parameter> paramClass;
 		try
 		{
@@ -171,8 +187,8 @@ public class Run
 		{
 			throw new IllegalStateException("class for Parameter annotation not found.", e);
 		}
-		
-		Constructor<?> match = null;
+				
+		Builder match = null;
 		List<String> parametersOrdered = new ArrayList<String>(parameters.size());
 		List<Parameter> pAnnotations = new ArrayList<Parameter>(parameters.size());
 		
@@ -202,17 +218,77 @@ public class Run
 			}
 			
 			if(parametersCopy.isEmpty())
-				match = constructor;
+			{
+				match = new Builder(constructor);
+				break;
+			}
 		}
 		
 		System.out.println(parametersOrdered);
 		System.out.println(match);
 		
 		if(match == null)
-			throw new IllegalArgumentException("Parameters given in init file do not match any of the constructors of the experiment " + classNameObj);
+		{
+			System.out.println("Parameters given in init file do not match any of the constructors of the experiment " + classNameObj);
+			System.out.println("Checking for for factory methods");
+		
+			for(Method factory : experimentClass.getDeclaredMethods())
+			{
+				// * check for @Factory annotation
+				boolean isFactory = false;
+				for(Annotation annotation : factory.getAnnotations())
+					if(annotation instanceof Factory)
+						isFactory = true;
+				
+				if(isFactory)
+				{	
+
+					List<String> parametersCopy = new ArrayList<String>(parameters);
+					parametersOrdered.clear();
+					pAnnotations.clear();
+					
+					for(Annotation[] annotations : factory.getParameterAnnotations())
+					{
+						Parameter pAnnotation = null;
+						for(Annotation annotation : annotations)
+						{
+							if(annotation instanceof Parameter)
+								pAnnotation = (Parameter)annotation;
+						}
+						
+						
+						if(pAnnotation == null) // unannotated constructor argument
+							break;
+						
+						if(! parametersCopy.remove(pAnnotation.name()) )
+							break; // parameter in init file, but not in constructor
+						
+						System.out.println(pAnnotation);
+						
+						parametersOrdered.add(pAnnotation.name());
+						pAnnotations.add(pAnnotation);
+					}
+					
+					if(parametersCopy.isEmpty())
+					{
+						match = new Builder(factory);
+						break;
+					}
+				}
+			}			
+		}
+		
+		// * If match is still null, we've found no @Factory methods of 
+		//   constructors that match the parameters in the init file.
+		if(match == null)
+			throw new IllegalArgumentException("No appropriate constructors or factory methods found.");
+		
+		System.out.println(parametersOrdered);
 		
 		Object[] inputs = new Object[parametersOrdered.size()];
 		Class<?>[] types = match.getParameterTypes();
+		
+		System.out.println(parametersOrdered.size());
 		
 		for(int i : series(parametersOrdered.size()))
 			inputs[i] =	interpretValue(
@@ -227,7 +303,7 @@ public class Run
 		Experiment exp = null;
 		if(runMulti)
 		{
-			MultiExperiment mexp = new MultiValueExperiment((Constructor<Experiment>)match, true, repeats, inputs);
+			MultiExperiment mexp = new MultiValueExperiment(match, true, repeats, inputs);
 			numExperiments += mexp.size();
 			exp = mexp;
 		} else 
@@ -235,12 +311,12 @@ public class Run
 			try
 			{
 				for(Object input : inputs)
-					System.out.println("* " + input.getClass());
+					System.out.println("* " + input.getClass() + " " + input);
 				exp =  (Experiment)match.newInstance(inputs);
 				numExperiments ++;
 				if(repeats > 1)
 				{
-					MultiExperiment mexp = new RepeatExperiment((Constructor<Experiment>)match, repeats, inputs);
+					MultiExperiment mexp = new RepeatExperiment(match, repeats, inputs);
 					numExperiments += mexp.size();
 					exp = mexp;					
 				}
@@ -442,6 +518,59 @@ public class Run
 		public Multi(int initialCapacity)
 		{
 			super(initialCapacity);
+		}
+	}
+	
+
+	
+	public static class Builder
+	{
+		private Constructor<?> structor = null;
+		private Method factory = null;
+		
+		public Builder(Constructor<?> structor)
+		{
+			this.structor = structor;
+		}
+		
+		public Experiment newInstance(Object[] inputs)
+		{
+			try
+			{
+				if(structor != null)
+					return (Experiment) structor.newInstance(inputs);
+
+				return (Experiment)factory.invoke(null, inputs);
+			} catch (Exception e)
+			{
+				throw new RuntimeException("Failed to instantiate experiment");
+			}
+		}
+
+		public Builder(Method factory)
+		{
+			this.factory = factory;
+		}
+		
+		public Class<?>[] getParameterTypes()
+		{
+			if(structor != null)
+				return structor.getParameterTypes();
+			return factory.getParameterTypes();
+		}
+		
+		public Class<? extends Experiment> getDeclaringClass()
+		{
+			if(structor != null)
+				return (Class<? extends Experiment>)structor.getDeclaringClass();
+			return (Class<? extends Experiment>)factory.getDeclaringClass();
+		}
+
+		public Annotation[][] getParameterAnnotations()
+		{
+			if(structor != null)
+				return structor.getParameterAnnotations();
+			return factory.getParameterAnnotations();
 		}
 	}
 }
