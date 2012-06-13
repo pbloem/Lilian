@@ -1,4 +1,4 @@
-<div class="js-tabs">
+<div class="list-section js-tabs">
 	
 	<ul>
 		<li><a href="#tabs-1">Summary</a></li>
@@ -18,24 +18,24 @@
 				<tr>
 					<th>median</th><td>${median}</td>
 				</tr>
+				<tr>
+					<th>mode</th><td>${mode}</td>
+				</tr>
 			</#if>
-			<tr>
-				<th>mode</th><td>${mode}</td>
-			</tr>
 		</table>
 		
 		<#if is_numeric>
 		
 			<h4>progression</h4>
 		
-			<div class="rs-line chart-container" data-source="raw-data">
+			<div class="rs-line chart-container" data-source="raw-data-${id}">
 				<div class="chart"></div>
 				<div class="y-axis axis"></div>
 			</div>
 		
 			<h4>histogram</h4>
 			
-			<div class="rs-line-histogram chart-container" data-source="histogram-data">
+			<div class="rs-histogram chart-container" data-source="histogram-data-${id}">
 				<div class="chart"></div>
 				<div class="y-axis axis"></div>
 			</div>
@@ -45,7 +45,7 @@
 	</div>
 		
 	<div id="tabs-2">
-		<table class="raw-data">
+		<table class="raw-data raw-data-${id}">
 		<#list list as item>
 			<tr><td>${item}</td></tr>
 		</#list>
@@ -54,7 +54,7 @@
 	
 	<div id="tabs-3">
 		
-		<table class="histogram-data">
+		<table class="histogram-data histogram-data-${id}">
 		<tr><th>token</th><th>frequency</th></tr>
 		<#list histogram as pair>
 			<tr><td>${pair[0]}</td><td>${pair[1]}</td></tr>

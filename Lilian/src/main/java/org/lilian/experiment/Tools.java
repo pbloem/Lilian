@@ -150,4 +150,15 @@ public class Tools
 		
 		return model.sorted().get(0);
 	}
+	
+	public static String cssSafe(String in) {
+		String out = in;
+		
+		out = out.toLowerCase().trim(); 
+	    out = out.replaceAll("\\s+", "-");
+	    out = out.replaceAll("[^a-z0-9\\-]", ""); // remove weird characters
+	    
+	    return out;
+	}
+
 }

@@ -332,6 +332,7 @@ public abstract class AbstractExperiment implements Experiment
 			
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("list", valueStr);
+			map.put("id", Tools.cssSafe(anno.name()));
 			
 			boolean isNumeric = Tools.isNumeric((List<Object>)value);
 			map.put("is_numeric", isNumeric);
@@ -357,6 +358,7 @@ public abstract class AbstractExperiment implements Experiment
 				tokens = new ArrayList<Object>(numTokens);
 			} else
 				tokens = model.sorted();
+			
 			List<Double> frequencies = new ArrayList<Double>(tokens.size());
 			for(Object token : tokens)
 				frequencies.add(model.frequency(token));

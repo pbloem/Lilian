@@ -1,56 +1,73 @@
 $(function() {
 	$(".js-tabs").tabs();
 	
-	var time = new Rickshaw.Fixtures.Time();
-	var unit = time.unit('seconds');	
 	
-	data = load($('.raw-data'), ["x", "y"], true);
-			
-	var graph = new Rickshaw.Graph( {
-	    element: document.querySelector(".rs-line .chart"),
-	    renderer:  'line',
-	    width: 760,
-	    height: 100,
-	    series: [{
-	        color: 'steelblue',
-	        data: data
-	    }]
-	});	
-	
-	var y_ticks = new Rickshaw.Graph.Axis.Y( {
-		graph: graph,
-		orientation: 'left',
-        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-        element: document.querySelector(".rs-line .y-axis")
+	$('.rs-line').each(function ()
+	{
+		section = $(this);
+		dataSource = section.attr('data-source');
+		
+		data = load($('.' + dataSource), ["x", "y"], true);
+		
+		var time = new Rickshaw.Fixtures.Time();
+		var unit = time.unit('seconds');		
+		
+		var graph = new Rickshaw.Graph( {
+		    element: section.find('.chart')[0],
+		    renderer:  'line',
+		    width: 760,
+		    height: 100,
+		    series: [{
+		        color: 'steelblue',
+		        data: data
+		    }]
+		});	
+		
+		var y_ticks = new Rickshaw.Graph.Axis.Y( {
+			graph: graph,
+			orientation: 'left',
+	        tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+	        element: document.querySelector(".rs-line .y-axis")
+		});
+		
+		var x_ticks = new Rickshaw.Graph.Axis.Time( {
+			graph: graph,
+			timeUnit: unit
+		});	
+		
+		graph.render();
 	});
 	
-	var x_ticks = new Rickshaw.Graph.Axis.Time( {
-		graph: graph,
-		timeUnit: unit
-	});	
-	
-	graph.render();
-	
-	histoData = load($('.histogram-data'), ["x", "y"]);
-	
-	var histo = new Rickshaw.Graph( {
-	    element: document.querySelector(".rs-line-histogram .chart"),
-	    renderer:  'bar',
-	    width: 760,
-	    height: 100,
-	    series: [{
-	        color: 'steelblue',
-	        data: histoData
-	    }]
-	});	
-	
-	var x_ticks = new Rickshaw.Graph.Axis.Time( {
-		graph: histo,
-		timeUnit: unit
+	$('.rs-histogram').each(function () 
+	{
+		section = $(this);
+		dataSource = section.attr('data-source');
+		
+		histoData = load($('.' + dataSource), ["x", "y"]);
+		
+		var time = new Rickshaw.Fixtures.Time();
+		var unit = time.unit('seconds');		
+		
+		var histo = new Rickshaw.Graph( {
+		    element: section.find('.chart')[0],
+		    renderer: 'bar',
+		    width: 760,
+		    height: 100,
+		    series: [{
+		        color: 'maroon',
+		        data: histoData
+		    }]
+		});	
+		
+		var x_ticks = new Rickshaw.Graph.Axis.Time( {
+			graph: histo,
+			timeUnit: unit
+		});
+		
+		
+		histo.render();
 	});
-	
-	
-	histo.render();
+
 });
 
 /**
@@ -95,14 +112,14 @@ function load(htmlTable, headers, withIndex)
 				{
 					if(index < headers.length + 1)
 					{
-						dataRow[headers[index+1]] = parseInt($(value).html());
+						dataRow[headers[index+1]] = parseFloat($(value).html());
 						
 					}
 				} else 
 				{
 					if(index < headers.length)
 					{
-						dataRow[headers[index]] = parseInt($(value).html());
+						dataRow[headers[index]] = parseFloat($(value).html());
 					}
 				}
 					

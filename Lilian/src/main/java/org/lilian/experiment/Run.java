@@ -543,7 +543,7 @@ public class Run
 				return (Experiment)factory.invoke(null, inputs);
 			} catch (Exception e)
 			{
-				throw new RuntimeException("Failed to instantiate experiment");
+				throw new RuntimeException("Failed to instantiate experiment", e);
 			}
 		}
 
