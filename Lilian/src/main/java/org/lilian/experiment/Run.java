@@ -345,6 +345,9 @@ public class Run
 		if(equals(value.getClass(), type))
 			return value;
 		
+		if (type.isAssignableFrom(value.getClass()))
+			return value;
+		
 		if(value instanceof Collection<?>)
 		{
 			Class<?> typeClass = ((Collection<?>)value).iterator().next().getClass();

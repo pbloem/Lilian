@@ -1,5 +1,6 @@
 package org.lilian.experiment;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -34,6 +35,8 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
 import org.jfree.io.FileUtilities;
@@ -327,51 +330,123 @@ public abstract class AbstractExperiment implements Experiment
 			catch (IOException e) { throw new IllegalStateException("IOException on StringWriter", e); } 
 		} else if(value instanceof List<?>) // * If the result is a list of something
 		{
-			StringWriter out = new StringWriter();
-			List<String> valueStr = Tools.stringList((List<Object>) value);
-			
-			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("list", valueStr);
-			map.put("id", Tools.cssSafe(anno.name()));
-			
-			boolean isNumeric = Tools.isNumeric((List<Object>)value);
-			map.put("is_numeric", isNumeric);
-			
-			if(isNumeric)
+			if(Tools.tabular((List<?>)value)) // for a list of lists
 			{
-				map.put("mean",   Tools.mean((List<? extends Number>)value));
-				map.put("dev",    Tools.standardDeviation((List<? extends Number>)value));
-				map.put("median", Tools.median((List<? extends Number>)value));
-				map.put("mode",   Tools.mode((List<?>)value));
+				int height = ((List<?>) value).size();
+				int width = Tools.tableWidth((List<?>) value);
+				
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("table", value);
+				map.put("id", Tools.cssSafe(anno.name()));
+				map.put("width", width);
+				map.put("height", height);
+				
+				StringWriter out = new StringWriter();
+				Template tpl;
+				try
+				{
+					tpl = fmConfig.getTemplate("table.ftl");
+					tpl.process(map, out);
+				} catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+	
+				out.flush();
+				
+				resMap.put("value", out.toString());
+				
+				resMap.put("name", anno.name());
+				resMap.put("description", anno.description());
+				
+			}  else // for a list of values (possibly numeric)
+			{
+			
+				StringWriter out = new StringWriter();
+				List<String> valueStr = Tools.stringList((List<Object>) value);
+				
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("list", valueStr);
+				map.put("id", Tools.cssSafe(anno.name()));
+				
+				boolean isNumeric = Tools.isNumeric((List<Object>)value);
+				map.put("is_numeric", isNumeric);
+				
+				if(isNumeric)
+				{
+					map.put("mean",   Tools.mean((List<? extends Number>)value));
+					map.put("dev",    Tools.standardDeviation((List<? extends Number>)value));
+					map.put("median", Tools.median((List<? extends Number>)value));
+					map.put("mode",   Tools.mode((List<?>)value));
+				}
+				
+				BasicFrequencyModel<Object> model = new BasicFrequencyModel<Object>((List<Object>)value);
+				List<Object> tokens;
+				
+				if(isNumeric)
+				{
+					List<Number> numTokens = new ArrayList<Number>((int)model.distinct());
+					for(Object t : model.tokens())
+						numTokens.add(((Number) t));
+					
+					Collections.sort(numTokens, Functions.numberComparator());
+					tokens = new ArrayList<Object>(numTokens);
+				} else
+					tokens = model.sorted();
+				
+				List<Double> frequencies = new ArrayList<Double>(tokens.size());
+				for(Object token : tokens)
+					frequencies.add(model.frequency(token));
+				
+				List<List<Object>> pairs = new ArrayList<List<Object>>(tokens.size());
+				for(int i : Series.series(tokens.size()))
+					pairs.add(Arrays.asList(tokens.get(i), frequencies.get(i)));
+				map.put("histogram", pairs);
+				
+				Template tpl;
+				try
+				{
+					tpl = fmConfig.getTemplate("list.ftl");
+					tpl.process(map, out);
+				} catch (Exception e)
+				{
+					throw new RuntimeException(e);
+				}
+	
+				out.flush();
+				
+				resMap.put("value", out.toString());
+				
+				resMap.put("name", anno.name());
+				resMap.put("description", anno.description());
+			}
+		} else if(value instanceof BufferedImage) 
+		{
+			BufferedImage image = (BufferedImage)value;
+			int height = image.getHeight();
+			int width = image.getWidth();
+			
+			File outFile = new File(new File(dir, "images/"), Tools.cssSafe(anno.name()) + ".png");
+			outFile.mkdirs();
+			
+			try
+			{
+				ImageIO.write(image, "PNG", outFile);
+			} catch (IOException e1)
+			{
+				throw new RuntimeException(e1);
 			}
 			
-			BasicFrequencyModel<Object> model = new BasicFrequencyModel<Object>((List<Object>)value);
-			List<Object> tokens;
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("path", outFile.getAbsolutePath());
+			map.put("width", width);
+			map.put("height", height);
 			
-			if(isNumeric)
-			{
-				List<Number> numTokens = new ArrayList<Number>((int)model.distinct());
-				for(Object t : model.tokens())
-					numTokens.add(((Number) t));
-				
-				Collections.sort(numTokens, Functions.numberComparator());
-				tokens = new ArrayList<Object>(numTokens);
-			} else
-				tokens = model.sorted();
-			
-			List<Double> frequencies = new ArrayList<Double>(tokens.size());
-			for(Object token : tokens)
-				frequencies.add(model.frequency(token));
-			
-			List<List<Object>> pairs = new ArrayList<List<Object>>(tokens.size());
-			for(int i : Series.series(tokens.size()))
-				pairs.add(Arrays.asList(tokens.get(i), frequencies.get(i)));
-			map.put("histogram", pairs);
-			
+			StringWriter out = new StringWriter();
 			Template tpl;
 			try
 			{
-				tpl = fmConfig.getTemplate("list.ftl");
+				tpl = fmConfig.getTemplate("image.ftl");
 				tpl.process(map, out);
 			} catch (Exception e)
 			{
@@ -383,7 +458,8 @@ public abstract class AbstractExperiment implements Experiment
 			resMap.put("value", out.toString());
 			
 			resMap.put("name", anno.name());
-			resMap.put("description", anno.description());
+			resMap.put("description", anno.description());				
+		
 		} else
 		{
 			resMap.put("value", value.toString());

@@ -5,6 +5,7 @@ import static org.lilian.experiment.Tools.isNumeric;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -159,6 +160,24 @@ public class Tools
 	    out = out.replaceAll("[^a-z0-9\\-]", ""); // remove weird characters
 	    
 	    return out;
+	}
+
+	public static boolean tabular(List<?> values)
+	{	
+		for(Object value : values)
+			if(! (value instanceof Collection<?>))
+				return false;
+		return true;
+	}
+	
+	public static int tableWidth(List<?> table)
+	{
+		int width = 0; 
+		for(Object row : table)
+			width = Math.max( width, ((Collection<?>)row).size() );
+	
+		return width;
+		
 	}
 
 }
