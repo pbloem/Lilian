@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
@@ -165,6 +166,12 @@ public class Run
 		if(in.containsKey("description"))
 			description = in.get("description") + "";
 		
+		if(in.containsKey("seed"))
+		{
+			long seed = Long.parseLong(in.get("seed").toString());
+			Global.random = new Random(seed);
+		}
+		
 		List<String> parameters = new ArrayList<String>(in.keySet());
 		
 		// * These are standard keys. The rest are passed to the experiment
@@ -172,6 +179,7 @@ public class Run
 		parameters.remove("name");
 		parameters.remove("description");
 		parameters.remove("repeat");
+		parameters.remove("seed");
 		
 		System.out.println("parameters: " + parameters);
 		
@@ -310,8 +318,8 @@ public class Run
 		{
 			try
 			{
-				for(Object input : inputs)
-					System.out.println("* " + input.getClass() + " " + input);
+//				for(Object input : inputs)
+//					System.out.println("* " + input.getClass() + " " + input);
 				exp =  (Experiment)match.newInstance(inputs);
 				numExperiments ++;
 				if(repeats > 1)
@@ -482,6 +490,8 @@ public class Run
 				throw new IllegalStateException("One or more of the parameters of resource '"+resourceName+"' is not annotated.");
 			
 			Object input = par.get(name.value());
+			System.out.println(name + " value-type: " + input.getClass() + " " + input );
+			
 			if(input == null)
 				throw new IllegalArgumentException("Resource description does not define parameter " + name);
 			

@@ -138,6 +138,9 @@ public class Tools
 			}
 		}
 		
+		if(vs.isEmpty())
+			return -1.0;
+		
 		Collections.sort(vs);
 		
 		if(vs.size() % 2 == 1)

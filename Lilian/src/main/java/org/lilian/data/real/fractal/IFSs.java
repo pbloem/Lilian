@@ -206,6 +206,20 @@ public class IFSs
 		return builder.build(params);		
 	}
 	
+	public static IFS<Similitude> randomSimilitude(int d, int k, double stdDev)
+	{
+		// * Create a random IFS model
+		Builder<IFS<Similitude>> builder = IFS.builder(k, Similitude.similitudeBuilder(d));
+		int num = builder.numParameters(); //IFS.numParameters(k, AffineMap.numParameters(d));
+		
+		List<Double> params = new ArrayList<Double>(num);
+		for(int j = 0; j < num; j++)
+				params.add(Global.random.nextGaussian() * stdDev);		
+		
+		return builder.build(params);		
+	}
+		
+	
 	/**
 	 * Returns a slightly perturbed version of an IFS model.
 	 * 

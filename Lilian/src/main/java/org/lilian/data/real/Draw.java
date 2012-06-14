@@ -62,24 +62,26 @@ public class Draw
 											int res,
 											boolean log)
 	{	
+		return draw(data, xrange, yrange, res, res, log, false);
+	}
+	
+	public static BufferedImage draw(List<Point> data, 
+			double[] xrange, 
+			double[] yrange, 
+			int xres,
+			int yres,
+			boolean log, boolean transparent)
+	{
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
 		
-		double maxDelta = Math.max(xDelta, yDelta); 		
-		double minDelta = Math.min(xDelta, yDelta);
-		
-		double step = minDelta/(double) res;
-		
-		int xRes = (int) (xDelta / step);
-		int yRes = (int) (yDelta / step);
-
 		float max = Float.NEGATIVE_INFINITY;
 		float min = 0.0f;		
-		float[][] matrix = new float[yRes][];
-		for(int x = 0; x < xRes; x++)
+		float[][] matrix = new float[xres][];
+		for(int x = 0; x < xres; x++)
 		{
-			matrix[x] = new float[yRes];
-			for(int y = 0; y < yRes; y++)
+			matrix[x] = new float[yres];
+			for(int y = 0; y < yres; y++)
 			{
 				matrix[x][y] = 0.0f;				
 			}
@@ -90,17 +92,18 @@ public class Draw
 		{
 			Point point = data.get(i);
 			
-			xp = toPixel(point.get(0), xRes, xrange[0], xrange[1]); 
-			yp = toPixel(point.get(1), yRes, yrange[0], yrange[1]);
-			if(xp >= 0 && xp < xRes && yp >= 0 && yp < yRes)
+			xp = toPixel(point.get(0), xres, xrange[0], xrange[1]); 
+			yp = toPixel(point.get(1), yres, yrange[0], yrange[1]);
+			if(xp >= 0 && xp < xres && yp >= 0 && yp < yres)
 			{
 				matrix[xp][yp] ++;
 				max = Math.max(matrix[xp][yp], max);
 			}
 		}
 		
-		BufferedImage image = 
-			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage image = transparent ?
+			new BufferedImage(xres, yres, BufferedImage.TYPE_INT_ARGB) :
+			new BufferedImage(xres, yres, BufferedImage.TYPE_INT_RGB);
 		
 		Color color;
 		
@@ -110,8 +113,8 @@ public class Draw
 			max = (float)Math.log(max + 1.0f);
 		}
 		
-		for(int x = 0; x < xRes; x++)
-			for(int y = 0; y < yRes; y++)
+		for(int x = 0; x < xres; x++)
+			for(int y = 0; y < yres; y++)
 			{
 				//float value = matrix[x][yRes - y - 1];
 				float value = matrix[x][y];				
