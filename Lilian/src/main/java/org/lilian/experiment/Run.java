@@ -46,6 +46,9 @@ public class Run
 	private static int numExperiments = 0;
 	
 	public static int repeats = 1;
+	
+	@Reportable
+	public static long seed;
 
 	/**
 	 * @param args
@@ -168,7 +171,14 @@ public class Run
 		
 		if(in.containsKey("seed"))
 		{
-			long seed = Long.parseLong(in.get("seed").toString());
+			Object seedObj = in.get("seed");
+			
+			if(seedObj.toString().trim().toLowerCase().equals("random"))
+				seed = new Random().nextLong();
+			else
+				seed = Long.parseLong(seedObj.toString());
+			
+			Global.log().info("Set seed to " + seed);
 			Global.random = new Random(seed);
 		}
 		

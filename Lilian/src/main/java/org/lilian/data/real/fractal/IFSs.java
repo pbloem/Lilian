@@ -141,17 +141,17 @@ public class IFSs
 	
 	
 	public static IFS<Similitude> koch2Sim()
-	{
-		double 	a = Math.sqrt(13.0/9.0),
-				angle = Math.atan(2.0/3.0),
-				y = - 0.5 * a * Math.sin(angle),
-				x1 = - 1.0 + 0.5 * a * Math.cos(angle),
-				x2 =   1.0 - 0.5 * a * Math.cos(angle);
+	{		
+		double
+			scale = 1.0/Math.sqrt(3.0),
+			a = Math.acos(Math.sqrt(3.0)/2.0),
+			y = Math.sin(a) * scale,
+			x = (1.0 - scale) + (scale - Math.cos(a) * scale);
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				a/2.0, x1,y, -angle - Math.PI, 1.0,
-				a/2.0, x2,y,  angle + Math.PI, 1.0
+				scale, -x, -y, Math.PI + a, 1.0,
+				scale, +x, -y, Math.PI - a, 1.0
 				));
 	}
 	

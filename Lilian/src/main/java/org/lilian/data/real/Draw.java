@@ -158,15 +158,22 @@ public class Draw
 		List<Point> bar = new ArrayList<Point>(2);
 		bar.add(new Point(-0.95, -0.95));
 		bar.add(new Point(-0.95,  0.95));
+		
+		List<Point> middle = new ArrayList<Point>(2);
+		middle.add(new Point( 1.0, .0));
+		middle.add(new Point(-1.0, .0));
 
 		
 		Graphics2D graphics = image.createGraphics();
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		drawFrame(graphics, frame, Color.RED, xrange, yrange, xRes, yRes);
+		drawFrame(graphics, frame, middle, Color.RED, xrange, yrange, xRes, yRes);
 		for(int i : series(ifs.size()))
 		{
-			drawFrame(graphics, ifs.get(i).map(frame), Color.BLUE, xrange, yrange, xRes, yRes); 
+			drawFrame(graphics, 
+					ifs.get(i).map(frame), 
+					ifs.get(i).map(middle),
+					Color.BLUE, xrange, yrange, xRes, yRes); 
 			drawBar(graphics, ifs.get(i).map(bar), ifs.probability(i), xrange, yrange, xRes, yRes);
 		}
 		
@@ -175,7 +182,7 @@ public class Draw
 		return image;
 	}
 	
-	private static void drawFrame(Graphics2D graphics, List<Point> frame, Color color, double[] xrange, double[] yrange, int xres, int yres)
+	private static void drawFrame(Graphics2D graphics, List<Point> frame, List<Point> middle, Color color, double[] xrange, double[] yrange, int xres, int yres)
 	{				
 		graphics.setColor(color);
 		graphics.setStroke(new BasicStroke(2.0f));	
@@ -190,7 +197,19 @@ public class Draw
 			ypoints[i] = toPixel(frame.get(i).get(1), yres, yrange[0], yrange[1]);
 		}
 		
+		int[] xmiddle = new int[middle.size()];
+		int[] ymiddle = new int[middle.size()];
+		
+		for(int i = 0; i < middle.size(); i++)
+		{
+			xmiddle[i] = toPixel(middle.get(i).get(0), xres, xrange[0], xrange[1]);
+			ymiddle[i] = toPixel(middle.get(i).get(1), yres, yrange[0], yrange[1]);
+		}
+			
+		
 		graphics.drawPolygon(xpoints, ypoints, frame.size());
+		graphics.drawLine(xmiddle[0], ymiddle[0], xmiddle[1], ymiddle[1]);
+
 	}
 	
 	private static void drawBar(Graphics2D graphics,List<Point> bar, double prob, double[] xrange, double[] yrange, int xres, int yres)
