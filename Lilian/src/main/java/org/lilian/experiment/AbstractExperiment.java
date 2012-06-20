@@ -462,7 +462,7 @@ public abstract class AbstractExperiment implements Experiment
 		
 		} else
 		{
-			resMap.put("value", value.toString());
+			resMap.put("value", value == null ? "null" : value.toString());
 
 			resMap.put("name", anno.name());
 			resMap.put("description", anno.description());
