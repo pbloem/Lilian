@@ -1,6 +1,7 @@
 package org.lilian.util.graphs.jung;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedGraph;
@@ -20,26 +21,23 @@ public class Measures
 	 */
 	public static <V,E> double assortativity(UndirectedGraph<V, E> graph)
 	{
-		double s1 = 0.0, s2 = 0.0, s3 = 0.0, se = 0.0;
+		double mi;
+		double a = 0.0, b = 0.0, c = 0.0;
 		
+		mi = 1.0/graph.getEdgeCount();
 		for(E edge : graph.getEdges())
 		{
-			Collection<V> vs = graph.getIncidentVertices(edge);
-			double m = 1.0;
-			for(V vert : vs)
-				m *= graph.degree(vert);
-			se += m;
-		}
-		se *= 2.0;
-		
-		for(V vert : graph.getVertices())
-		{
-			int k = graph.degree(vert); 
-			s1 += k;
-			s2 += k * k;
-			s3 += k * k * k;
+			Iterator<V> it = graph.getIncidentVertices(edge).iterator();
+			V vj = it.next();
+			V vk = it.next();
+			
+			int j = graph.degree(vj), k = graph.degree(vk);
+			
+			a += j * k;
+			b += 0.5 * (j + k);
+			c += 0.5 * (j*j + k*k);
 		}
 		
-		return (s1 * se - s2 * s2) / (s1 * s3 - s2 * s2);
+		return (mi*a - (mi*mi * b*b)) / (mi*c - (mi*mi * b*b));
 	}
 }
