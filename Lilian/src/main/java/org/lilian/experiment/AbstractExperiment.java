@@ -101,6 +101,8 @@ public abstract class AbstractExperiment implements Experiment
 		t = t1 - t0;
 		
 		writeReport();
+		
+		tearDown();
 	}
 	
 	/**
@@ -110,6 +112,12 @@ public abstract class AbstractExperiment implements Experiment
 	protected abstract void setup();
 	
 	protected abstract void body();
+	
+	/**
+	 * This method can be used to set certain fields to null so that they can be
+	 * garbage collected (since the runner retains all experiment objects)
+	 */
+	protected void tearDown() {}	
 
 	private List<Field> stateFields()
 	{

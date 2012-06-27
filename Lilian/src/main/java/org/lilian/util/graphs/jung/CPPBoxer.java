@@ -19,34 +19,14 @@ import edu.uci.ics.jung.graph.Graph;
 public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
 {
 	private Graph<V, E> graph;
-	private List<V> vertices;
-	private Map<V, Integer> indices;
 	private int n;
 	
 	private UnweightedShortestPath<V, ?> usp;
-	
-	// * half matrix  for caching the distances between nodes
-	private int[][] distances;
 	
 	public CPPBoxer(Graph<V, E> graph)
 	{
 		this.graph = graph;
 		n = graph.getVertexCount();
-		
-		// * Store the vertices in data structures that allows us to move between 
-		//   V and integer representation easily
-		vertices = new ArrayList<V>(graph.getVertices());
-		
-		indices = new HashMap<V, Integer>();
-		for(int i : series(n))
-			indices.put(vertices.get(i), i);
-		
-		for(int i : series(n))
-		{
-			distances[i] = new int[n-i];
-			for(int j : Series.series(n-i))
-				distances[i][j] = -1;
-		}
 		
 		usp = new UnweightedShortestPath<V, E>(graph);
 	}
@@ -57,8 +37,7 @@ public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
 		List<Set<V>> result = new ArrayList<Set<V>>();
 				
 		Set<V> uncovered = new HashSet<V>();
-		
-		uncovered.addAll(uncovered);
+		uncovered.addAll(graph.getVertices());
 				
 		while(! uncovered.isEmpty())
 		{
@@ -68,7 +47,9 @@ public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
 			{
 				int draw = Global.random.nextInt(candidates.size());
 				V center = candidates.remove(draw);
+				
 				box.add(center);
+				uncovered.remove(center);
 				
 				Iterator<V> it = candidates.iterator();
 				while(it.hasNext())
@@ -87,16 +68,10 @@ public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
 	
 	private int distance(V first, V second)
 	{
-		int fIndex = indices.get(first), sIndex = indices.get(second);
+				
+		Number dNum = usp.getDistance(first, second);
+		int distance = (dNum != null) ? (int)dNum.doubleValue() : Integer.MAX_VALUE;
 		
-		int max = Math.max(fIndex, sIndex),
-		    min = Math.min(fIndex, sIndex);
-		
-		if(distances[max][min] != -1)
-			return distances[max][min];
-		
-		int distance = (int)usp.getDistance(first, second).doubleValue();
-		distances[max][min] = distance;
 		return distance;
 	}
 
