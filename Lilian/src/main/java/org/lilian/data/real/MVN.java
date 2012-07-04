@@ -64,6 +64,22 @@ public class MVN implements Density, Generator<Point>
 		transform = AffineMap.identity(dim);
 		inverse = transform.inverse();
 	}
+	
+	/**
+	 * Centralized MVN with the given variance. The MVN is spherical.
+	 * @param dim
+	 * @param var
+	 */
+	public MVN(int dim, double var)
+	{
+		RealVector s = new ArrayRealVector(dim);
+		s.set(var);
+		
+		RealMatrix matrix = MatrixTools.diag(s);
+		transform = new AffineMap(matrix, new ArrayRealVector(dim));
+
+		inverse = transform.inverse();	
+	}
 
 	public MVN(Point mean)
 	{

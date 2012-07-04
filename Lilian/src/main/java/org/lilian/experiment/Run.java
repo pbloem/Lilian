@@ -538,7 +538,11 @@ public class Run
 	
 	public static String name(Map<String, ?> resource)
 	{
-		return resource.get("name").toString(); 
+		Object name = resource.get("name");
+		if(name == null)
+			throw new RuntimeException("Resource description does not contain 'name' key.");
+		
+		return name.toString();
 	}
 	
 	public static Multi<Object> interpretMulti(Object value, Parameter parameter, Class<?> type)

@@ -134,7 +134,7 @@ public class Resources
 	@Resource(name="mandelbrot-class")
 	public static Classified<Point> mandelbrotClass(@Name("size") int size)
 	{
-		List<Point> points = new MVN(2).generate(size);
+		List<Point> points = new MVN(2, 3.0).generate(size);
 		List<Integer> classes = Classifiers.mandelbrot().classify(points);
 		
 		return Classification.combine(points, classes);
@@ -154,7 +154,7 @@ public class Resources
 	{
 		List<Point> points = new ArrayList<Point>(size);
 		
-		Generator<Point> gen = new MVN(2);
+		Generator<Point> gen = new MVN(2, 3.0);
 		Classifier cls = Classifiers.newton();
 		for(int i : Series.series(size))
 		{
