@@ -19,20 +19,18 @@ import edu.uci.ics.jung.graph.Graph;
 public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
 {
 	private Graph<V, E> graph;
-	private int n;
 	
 	private UnweightedShortestPath<V, ?> usp;
 	
 	public CPPBoxer(Graph<V, E> graph)
 	{
 		this.graph = graph;
-		n = graph.getVertexCount();
 		
 		usp = new UnweightedShortestPath<V, E>(graph);
 	}
 
 	@Override
-	public List<Set<V>> box(int l)
+	public Boxing<V, E> box(int l)
 	{
 		List<Set<V>> result = new ArrayList<Set<V>>();
 				
@@ -63,7 +61,7 @@ public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
 			result.add(box);
 		}
 		
-		return result;
+		return new Boxing<V, E>(result, graph);
 	}
 	
 	private int distance(V first, V second)

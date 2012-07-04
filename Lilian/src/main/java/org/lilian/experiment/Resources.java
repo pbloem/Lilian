@@ -1,9 +1,15 @@
 package org.lilian.experiment;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.data2semantics.tools.graphs.Edge;
+import org.data2semantics.tools.graphs.GML;
+import org.data2semantics.tools.graphs.Vertex;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Generator;
@@ -17,6 +23,11 @@ import org.lilian.data.real.classification.Classifiers;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.search.Builder;
+import org.lilian.util.Series;
+import org.lilian.util.graphs.jung.Graphs;
+
+import edu.uci.ics.jung.graph.DirectedGraph;
+import edu.uci.ics.jung.graph.Graph;
 
 /**
  * These functions manage the resources embedded in the Lilian library. 
@@ -128,4 +139,87 @@ public class Resources
 		
 		return Classification.combine(points, classes);
 	}		
-}
+	
+	@Resource(name="newton")
+	public static Classified<Point> newton(@Name("size") int size)
+	{
+		List<Point> points = new MVN(2).generate(size);
+		List<Integer> classes = Classifiers.newton().classify(points);
+		
+		return Classification.combine(points, classes);
+	}	
+	
+	@Resource(name="newton-points")
+	public static List<Point> newtonPoints(@Name("size") int size)
+	{
+		List<Point> points = new ArrayList<Point>(size);
+		
+		Generator<Point> gen = new MVN(2);
+		Classifier cls = Classifiers.newton();
+		for(int i : Series.series(size))
+		{
+			int c;
+			Point p;
+			do {
+				p = gen.generate();
+				c = cls.classify(p);
+			} while(c != 0);
+			
+			points.add(p);
+		}
+				
+		return points;
+	}
+	
+	@Resource(name="rdf graph")
+	public static DirectedGraph<Vertex<String>, Edge<String>> rdfGraph(
+			@Name("file") File file, 
+			@Name("vertex whitelist") List<String> vertexWhiteList, 
+			@Name("edge whitelist") List<String> edgeWhiteList)
+	{
+		return org.data2semantics.tools.graphs.Graphs.graphFromRDF(file);
+	}
+	
+	@Resource(name="gml graph")
+	public static Graph<GML.LVertex, Edge<String>> gmlGraph(@Name("file") File file) 
+		throws IOException
+	{
+		return org.data2semantics.tools.graphs.GML.read(file);	
+	}
+	
+	@Resource(name="text graph")
+	public static Graph<Vertex<String>, Edge<String>> txtGraph(
+			@Name("file") File file, 
+			@Name("directed") boolean directed) 
+		throws IOException
+	{
+		return org.data2semantics.tools.graphs.Graphs.graphFromTSV(file);	
+	}
+
+	@Resource(name="integer graph") 
+	public static Graph<Vertex<Integer>, Edge<Integer>> txtIntegerGraph(
+			@Name("file") File file, 
+			@Name("directed")boolean directed) 
+		throws IOException
+	{
+		return org.data2semantics.tools.graphs.Graphs.intDirectedGraphFromTSV(file);	
+	}
+	
+	@Resource(name="random graph")
+	public static Graph<Integer, Integer> random(
+		@Name("number of nodes") int nodes,
+		@Name("edge probability") double edgeProb)
+	{
+		return Graphs.random(nodes, edgeProb);
+	}
+	
+	@Resource(name="ba random graph")
+	public static Graph<Integer, Integer> abRandom(
+		@Name("number of nodes") int nodes,
+		@Name("number to attach") int toAttach)
+	{
+		return Graphs.abRandom(nodes, 3, toAttach);
+			
+	}
+			
+ }

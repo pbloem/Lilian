@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List; 
 
+import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Point;
@@ -31,29 +32,33 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 {
 
 	private static final long serialVersionUID = -5452654582429802283L;
+	
 	protected List<IFS<Similitude>> models = new ArrayList<IFS<Similitude>>();
 	protected List<Double> priors = new ArrayList<Double>();
 	protected double priorSum = 0.0;
+	protected List<AffineMap> preMaps = new ArrayList<AffineMap>();
 	
 	protected Distance<Point> distance = new SquaredEuclideanDistance();
 	public List<Store> stores = new ArrayList<Store>();
 	protected int depth;
 	
-	public IFSClassifier(IFS<Similitude> firstModel, double firstPrior, int depth)
+	public IFSClassifier(IFS<Similitude> firstModel, double firstPrior, AffineMap map, int depth)
 	{
 		super(firstModel.dimension(), 0);
 		this.depth = depth;
 		
-		add(firstModel, firstPrior);
+		add(firstModel, firstPrior, map);
 		
 		checkStore();		
 	}
 	
-	public void add(IFS<Similitude> model, double prior)
+	public void add(IFS<Similitude> model, double prior, AffineMap map)
 	{
 		models.add(model);
 		priors.add(prior);
 		priorSum += prior;
+		
+		preMaps.add(map);
 		
 		super.numClasses++;
 		
@@ -108,7 +113,10 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 	 * This method doesn't return a true density (for reasons of speed and 
 	 * stability), but for the purposes of classification, it's good enough).
 	 */
-	protected double[] density(Point point, int index) {
+	protected double[] density(Point point, int index) 
+	{
+		point = preMaps.get(index).map(point);
+		
 		int size = (int)Math.ceil(Math.pow(models.get(index).size(), depth));
 
 		Store store = stores.get(index);
@@ -228,8 +236,11 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		
 		for(int i : Series.series(models.size()))
 		{
+			params.addAll(models.get(i).parameters());	
+			params.addAll(preMaps.get(i).parameters());	
+			
 			params.add(priors.get(i));
-			params.addAll(models.get(i).parameters());			
+
 		}
 		
 		return params;
@@ -240,29 +251,34 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		return models.get(i);
 	}
 	
-	public static Builder<IFSClassifier> builder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder)
+	public static Builder<IFSClassifier> builder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder, Builder<AffineMap> mapBuilder)
 	{
-		return new IFSClassifierBuilder(size, depth, ifsBuilder);
+		return new IFSClassifierBuilder(size, depth, ifsBuilder, mapBuilder);
 	}
 	
 	protected static class IFSClassifierBuilder implements Builder<IFSClassifier>
 	{
 		private static final long serialVersionUID = 6666857793341545956L;
 		private Builder<IFS<Similitude>> ifsBuilder;
+		private Builder<AffineMap> mapBuilder;
 		private int size;
 		private int depth;
 
-		public IFSClassifierBuilder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder) 
+		public IFSClassifierBuilder(
+				int size, int depth, 
+				Builder<IFS<Similitude>> ifsBuilder,
+				Builder<AffineMap> mapBuilder) 
 		{
 			this.size = size;
 			this.ifsBuilder = ifsBuilder;
+			this.mapBuilder = mapBuilder;
 			this.depth = depth;
 		}
 
 		@Override
 		public IFSClassifier build(List<Double> parameters) 
 		{
-			return IFSClassifier.build(parameters, ifsBuilder, depth);
+			return IFSClassifier.build(parameters, ifsBuilder, mapBuilder, depth);
 		}
 
 		@Override
@@ -272,25 +288,41 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		}
 	}
 	
-	public static IFSClassifier build(List<Double> parameters, Builder<IFS<Similitude>> builder, int depth)
+	public static IFSClassifier build(
+			List<Double> parameters, 
+			Builder<IFS<Similitude>> builder, 
+			Builder<AffineMap> mapBuilder,
+			int depth)
 	{
-		int n = builder.numParameters(),  s = parameters.size();
+		
+		/****** NOTE: Untested code *********/
+		
+		int 
+			nComp = builder.numParameters(),
+			nMap = builder.numParameters(),
+			s = parameters.size();
 				
-		if( s % (n+1)  != 0)
-			throw new IllegalArgumentException("Number of parameters ("+s+") should be divisible by the number of parameters per component ("+n+") plus one");
+		if( s % (nComp + nMap +1)  != 0)
+			throw new IllegalArgumentException("Number of parameters ("+s+") should be divisible by the number of parameters per component ("+nComp+") plus the number of parameters for an affine map ("+nMap+") plus 1");
 		
 		IFSClassifier model = null;
-		for(int from = 0; from + n < s; from += n + 1)
+		for(int from = 0; from + nComp + nMap < s; from += nComp + nMap + 1)
 		{
-			int to = from + n;
-			List<Double> ifsParams = parameters.subList(from, to);
-			double weight = Math.abs(parameters.get(to));
+			int to = from + nComp;
 			
-			IFS<Similitude> map = builder.build(ifsParams);
+
+			List<Double> ifsParams = parameters.subList(from, from + nComp);
+			IFS<Similitude> ifs = builder.build(ifsParams);
+			
+			List<Double> mapParams = parameters.subList(from + nComp, from + nComp + nMap);
+			AffineMap map = mapBuilder.build(mapParams);
+			
+			double weight = Math.abs(parameters.get(to));
+
 			if(model == null)
-				model = new IFSClassifier(map, weight, depth);
+				model = new IFSClassifier(ifs, weight, map, depth);
 			else
-				model.add(map, weight);
+				model.add(ifs, weight, map);
 		}	
 		
 		return model;

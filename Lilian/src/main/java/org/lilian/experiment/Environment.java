@@ -76,7 +76,32 @@ public class Environment
 	 */
 	public Environment child()
 	{
-		return null;
+		File childDir = new File(dir, children.size() + "/");
+		childDir.mkdirs();
+		long childSeed = Global.random.nextLong();
+		
+		children.add(new Environment(childDir, childSeed));
+		
+		return children.get(children.size()-1);
+	}
+	
+	/**
+	 * Runs an experiment in a child environment of the current environment.
+	 * 
+	 * This only works in a strictly serial (non-parallel) environment.
+	 * 
+	 * @param e
+	 * @return
+	 */
+	public void child(Experiment e)
+	{
+		Environment childEnvironment = child();
+		Environment current = Environment.current;
+		
+		Environment.current = childEnvironment;
+		e.run();
+		
+		Environment.current = current;
 	}
 	
 	/**

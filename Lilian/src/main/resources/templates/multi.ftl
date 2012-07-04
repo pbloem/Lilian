@@ -1,4 +1,8 @@
-<table>
+<div class="rs-line chart-container" data-source=" data-${id}" data-use-index="false">
+</div>
+
+
+<table class="data-${id}">
   <tr>
 	<#list row_headers as header>
 		<th>${header}</th>

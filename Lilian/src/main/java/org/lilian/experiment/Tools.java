@@ -18,7 +18,7 @@ import org.lilian.models.BasicFrequencyModel;
  */
 public class Tools
 {
-	public static List<String> stringList(List<Object> in)
+	public static <T> List<String> stringList(List<T> in)
 	{
 		List<String> out = new ArrayList<String>(in.size());
 		for(Object i : in)

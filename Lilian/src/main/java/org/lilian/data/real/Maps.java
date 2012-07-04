@@ -1,5 +1,8 @@
 package org.lilian.data.real;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +16,7 @@ import org.apache.commons.math.linear.RealVector;
 import org.apache.commons.math.linear.SingularValueDecomposition;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Series;
 
 public class Maps
 {
@@ -217,4 +221,48 @@ public class Maps
 			return Double.compare(this.error, other.error);
 		}
 	}
+	
+	/**
+	 * Returns a map that centers the data at zero and scales it to fit the 
+	 * bi-unit square exactly
+	 * @param data
+	 * @return
+	 */
+	public static AffineMap centered(List<Point> data)
+	{
+		int dim = data.get(0).dimensionality();
+		
+		double min[]   = new double[dim],
+		       max[]   = new double[dim],
+		       scale[] = new double[dim];
+		
+		for(int i : Series.series(dim))
+		{
+			min[i] = Double.MAX_VALUE;
+			max[i] = Double.MIN_VALUE;
+		}
+		
+		for(Point p : data)
+			for(int i : Series.series(dim))
+			{
+				min[i] = min(min[i], p.get(i));
+				max[i] = max(max[i], p.get(i));
+			}
+		
+		for(int i : Series.series(dim))
+			scale[i] = 1.0/(max[i] - min[i]);
+		
+		RealVector t = new ArrayRealVector(min);
+		t = t.mapMultiply(-1.0);
+		
+		RealVector s = new ArrayRealVector(scale);
+		s = s.mapMultiply(2.0);
+		RealMatrix rot = MatrixTools.diag(s);
+		
+		t = rot.operate(t);
+		t = t.mapAdd(-1.0);
+		
+		return new AffineMap(rot, t);
+	}
+
 }

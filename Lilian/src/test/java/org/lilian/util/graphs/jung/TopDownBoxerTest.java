@@ -10,12 +10,13 @@ import org.junit.Test;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
-public class CPPBoxerTest
+public class TopDownBoxerTest
 {
 
 	@Test
 	public void testBox()
 	{
+		int l = 2;
 		Graph<String, String> graph = new UndirectedSparseGraph<String, String>();
 		
 		graph.addEdge("0", "a", "b");
@@ -24,9 +25,9 @@ public class CPPBoxerTest
 		graph.addEdge("3", "d", "e");
 		graph.addEdge("4", "e", "a");
 		
-		CPPBoxer<String, String> boxer = new CPPBoxer<String, String>(graph);
+		TopDownBoxer<String, String> boxer = new TopDownBoxer<String, String>(graph);
 		
-		Boxing<String, String> boxing = boxer.box(2);
+		Boxing<String, String> boxing = boxer.box(l);
 		System.out.println(boxing);
 		System.out.println(boxing.size());
 		
@@ -38,17 +39,22 @@ public class CPPBoxerTest
 	@Test
 	public void testBox2()
 	{
+		int l = 3;
+
 		Graph<Integer, Integer> graph = Graphs.abRandom(700, 5, 3);
 		
-		CPPBoxer<Integer, Integer> boxer = new CPPBoxer<Integer, Integer>(graph);
+		TopDownBoxer<Integer, Integer> boxer = new TopDownBoxer<Integer, Integer>(graph);
 		
-		Boxing<Integer, Integer> boxing = boxer.box(2);
+		Boxing<Integer, Integer> boxing = boxer.box(l);
 		System.out.println(boxing);
 		System.out.println(boxing.size());
 		
 		assertEquals(0, boxing.uncovered().size());
 		
 		assertEquals(0, boxing.overCovered().size());
+		
+		System.out.println(boxing.maxSize());
+		assertTrue(boxing.maxDistance() <= l);
 
 	}
 

@@ -122,37 +122,11 @@ public abstract class MultiExperiment extends AbstractExperiment
 				}
 			}
 			
-			try
-			{
-				writeResults();
-			} catch (IOException e)
-			{
-				throw new RuntimeException("Problem writing results", e);
-			}
-			
 			// * Save the state
 			lastFinished ++;
 			save();
 		}
 		Environment.current = main;
-	}
-
-	private void writeResults() throws IOException
-	{
-		File outFile = new File(dir, "results.all.csv");
-		
-		CSVWriter out = new CSVWriter(new BufferedWriter(new FileWriter(outFile)));
-		
-		for(List<Object> line : results)
-		{
-			String[] strings = new String[line.size()];
-			for(int i : Series.series(line.size()))
-					strings[i] = line.get(i).toString();
-			out.writeNext(strings);
-		}
-		
-		out.flush();
-		out.close();
 	}
 
 	@Override

@@ -14,18 +14,24 @@ body {
 	border-radius: 30px;
 }
 
-.chart-container {
+.chart-container .plot{
+	width: 800px;
+	height: 200px;
 	position: relative;
 	padding-left: 40px;
 }
-.chart-container .chart {
-	position: relative;
+
+.hidden {
+	display: none;
 }
 
-.chart-container .axis {
-	position: absolute;
+.log-filter-message {
+	display: none;
+}
+
+.log .log-filter-message {
+	display: inline-block;
+	font-style: italic;
+	float: right;
 	
-	top: 0;
-    left: 0;
-    width: 40px;
 }

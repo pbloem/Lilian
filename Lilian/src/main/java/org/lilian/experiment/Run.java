@@ -118,6 +118,8 @@ public class Run
 			System.out.println(numExperiments + " experiment(s) found. Running.");
 			Environment.current = new Environment(dir, Global.RANDOM_SEED);
 			experiments.get(0).run();
+			
+			Global.log().info("Finished");
 		}
 	
 	}
@@ -192,8 +194,7 @@ public class Run
 		parameters.remove("seed");
 		
 		System.out.println("parameters: " + parameters);
-		
-		
+
 		// * Search for Constructors or Factory methods
 		AccessibleObject thisCtor;
 		
@@ -304,6 +305,7 @@ public class Run
 		System.out.println(parametersOrdered);
 		
 		Object[] inputs = new Object[parametersOrdered.size()];
+		
 		Class<?>[] types = match.getParameterTypes();
 		
 		System.out.println(parametersOrdered.size());
@@ -366,12 +368,16 @@ public class Run
 		if (type.isAssignableFrom(value.getClass()))
 			return value;
 		
-		if(value instanceof Collection<?>)
+		if(value instanceof Collection<?> && !((Collection<?>)value).isEmpty() )
 		{
-			Class<?> typeClass = ((Collection<?>)value).iterator().next().getClass();
-			if( !((Collection<?>)value).isEmpty() &&
-					equals(typeClass, type))
+			Object first = ((Collection<?>)value).iterator().next();
+			Class<?> typeClass = first.getClass();
+			
+			if(equals(typeClass, type))
 				return interpretMulti(value, parameter, type);
+			
+			if(first instanceof Map<?, ?>)
+				return interpretMultiResource(value, parameter, type);
 		}
 		
 		throw new IllegalArgumentException("Error on value '"+value+"' of type '"+value.getClass()+"' for parameter '"+parameter+"'. Object of type '"+type+"' was expected or a collection of such objects, or a description that can be parsed into such an object.");
@@ -441,6 +447,15 @@ public class Run
 		return image;
 	}	
 	
+	/**
+	 * Match a @Resource method to the Map of values and call the 
+	 * method with the declared values
+	 * 
+	 * @param value
+	 * @param parameter
+	 * @param type
+	 * @return
+	 */
 	public static Object interpretResource(Object value, Parameter parameter, Class<?> type)
 	{
 		System.out.println(value);
@@ -459,20 +474,17 @@ public class Run
 		
 		Method match = null;
 		for(Method method : resources.getDeclaredMethods())
-		{
 			for(Annotation annotation : method.getAnnotations())
 				if(annotation instanceof Resource)
 					if( ((Resource)annotation).name().equals(resourceName))
-					{
 						match = method;
-					}
-		}
+
 		
 		if(match == null)
 			throw new IllegalArgumentException("Resource '"+resourceName+"' not found in class resources.");
 		
 		System.out.println(match);
-		int n  = match.getParameterTypes().length;
+		int n = match.getParameterTypes().length;
 		if(n == 0)
 			try
 			{
@@ -488,6 +500,9 @@ public class Run
 		
 		Object[] inputs = new Object[n];
 		Annotation[][] annoss = match.getParameterAnnotations();
+		Class<?>[] types = match.getParameterTypes();
+		System.out.println(Arrays.toString(types));
+		
 		for(int i : series(annoss.length))
 		{
 			Annotation[] annos = annoss[i];
@@ -500,11 +515,14 @@ public class Run
 				throw new IllegalStateException("One or more of the parameters of resource '"+resourceName+"' is not annotated.");
 			
 			Object input = par.get(name.value());
-			System.out.println(name + " value-type: " + input.getClass() + " " + input );
+			// * Strings match when files are requested
+			if(File.class.equals(types[i]) && input instanceof String)
+				input = new File((String)input);
 			
 			if(input == null)
 				throw new IllegalArgumentException("Resource description does not define parameter " + name);
-			
+
+			System.out.println(name + " value-type: " + input.getClass() + " " + input );		
 			inputs[i] = input;
 		}
 		
@@ -518,15 +536,42 @@ public class Run
 		return resource;
 	}
 	
+	public static String name(Map<String, ?> resource)
+	{
+		return resource.get("name").toString(); 
+	}
+	
 	public static Multi<Object> interpretMulti(Object value, Parameter parameter, Class<?> type)
 	{
 		Multi<Object> m = new Multi<Object>((Collection<?>) value);
 		return m;
 	}
 
-	public static class Multi<T> extends ArrayList<T>
+	private static Object interpretMultiResource(Object value,
+			Parameter parameter, Class<?> type)
 	{
+		Multi<Object> m = new Multi<Object>();
+		
+		int i = 0;
+		for(Object object : (Collection<?>) value)
+		{
+			m.add(interpretResource(object, parameter, type));
+			m.setName(i, name((Map<String, ?>)object));
+			i++;
+		}
+		
+		return m;
+	}
+
+	/**
+	 * This  is a light warpper around an arraylist, to indicate later on that 
+	 * the list is meant as a parameter sweep rather than a single parameter value. 
+	 */
+	public static class Multi<T> extends ArrayList<T>
+	{	
 		private static final long serialVersionUID = 2956329843595902841L;
+		
+		private List<String> names = new ArrayList<String>();
 
 		public Multi()
 		{
@@ -542,10 +587,34 @@ public class Run
 		{
 			super(initialCapacity);
 		}
+		
+		public void setName(int i, String name)
+		{
+			while(names.size() < i + 1)
+				names.add(null);
+			
+			names.set(i, name);
+		}
+		
+		public String name(int i)
+		{
+			if(names.size() <= i)
+				return get(i).toString();
+			if(names.get(i) == null)
+				return get(i).toString();
+			
+			return names.get(i);
+		}
 	}
 	
 
-	
+	/**
+	 * This object represents something callable that returns an experiment. 
+	 * Either a constructor or a factory method annotated with @Factory.
+	 * 
+	 * @author Peter
+	 *
+	 */
 	public static class Builder
 	{
 		private Constructor<?> structor = null;

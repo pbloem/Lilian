@@ -28,16 +28,12 @@
 		
 			<h4>progression</h4>
 		
-			<div class="rs-line chart-container" data-source="raw-data-${id}">
-				<div class="chart"></div>
-				<div class="y-axis axis"></div>
+			<div class="rs-line chart-container" data-source="raw-data-${id}" data-use-index="true">
 			</div>
 		
 			<h4>histogram</h4>
 			
-			<div class="rs-histogram chart-container" data-source="histogram-data-${id}">
-				<div class="chart"></div>
-				<div class="y-axis axis"></div>
+			<div class="rs-histogram chart-container" data-source="histogram-data-${id}" data-use-index="true">
 			</div>
 			
 		</#if>

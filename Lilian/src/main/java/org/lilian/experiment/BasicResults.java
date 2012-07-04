@@ -1,5 +1,6 @@
 package org.lilian.experiment;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,5 +38,30 @@ public class BasicResults implements Results
 		values.add(value);
 		annotations.add(annotation);
 	}
-
+	
+	/**
+	 * Adds all results from the given experiment to this BasicResults object.
+	 * 
+	 * @param experiment
+	 */
+	public void  addAll(Experiment experiment)
+	{	
+		for(Method method : Tools.allMethods(experiment.getClass(), Result.class))
+		{
+			Result anno = method.getAnnotation(Result.class);
+			
+			try
+			{
+				this.add(method.invoke(experiment), anno);
+			} catch(Exception e) {
+				throw new RuntimeException("Error invoking.", e); // TODO Make nicer
+			}
+		}
+	}
+	
+	public String toString()
+	{
+		return "BasicResults, size:" + size() + ", " + values;
+	
+	}
 }

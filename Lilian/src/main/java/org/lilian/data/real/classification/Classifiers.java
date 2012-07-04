@@ -255,12 +255,12 @@ public class Classifiers
 		
 		BufferedImage current = null;
 		
-		// graphics.setComposite(AlphaComposite.SrcAtop);
+		graphics.setComposite(AlphaComposite.SrcAtop);
 		
 		for(int i = 0; i < data.numClasses(); i++)
 		{
 			System.out.println(i + ":" + data.points(i).size());
-			current = Draw.draw(data.points(i), xrange, yrange, res, log);
+			current = Draw.draw(data.points(i), xrange, yrange, res, res, log, true);
 			
 			// * Colorize
 			current = Draw.colorize(componentColors.get(i)).filter(current, null);

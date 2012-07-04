@@ -103,6 +103,8 @@ public abstract class AbstractExperiment implements Experiment
 		writeReport();
 		
 		tearDown();
+		
+		logger.info("Run finished");
 	}
 	
 	/**
@@ -296,6 +298,8 @@ public abstract class AbstractExperiment implements Experiment
 			Global.log().warning("Failed to process report template. Continuing without writing report. IOException: " + e.getMessage() + " -  " + Arrays.toString(e.getStackTrace()));
 			return;			
 		}
+		
+		logger.info("Report written");
 	}
 	
 	private void processResult(List<Map<String, Object>> rs, Object value, Result anno)
@@ -521,7 +525,7 @@ public abstract class AbstractExperiment implements Experiment
 		{
 			throw new RuntimeException(e);
 		}
-				
+		logger.info("Finished copying");				
 	}
 	
 	public void copyResources(URL originUrl, File destination) 

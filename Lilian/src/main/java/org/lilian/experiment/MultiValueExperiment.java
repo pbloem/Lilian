@@ -38,12 +38,14 @@ import freemarker.template.Template;
 public class MultiValueExperiment extends MultiExperiment
 {
 	
+	private static final int MAX_LENGTH = 30;
+
 	private Run.Builder structor;
 
 	// * The parameters for which multiple values where defined
 	private List<Integer> multiParameterIndices = new ArrayList<Integer>();
 	private List<Parameter> multiParameter = new ArrayList<Parameter>();
-	private List<List<Object>> paramTuples = new ArrayList<List<Object>>();
+	private List<List<String>> paramTuples = new ArrayList<List<String>>();
 	
 	public @State int repeats = 1;
 
@@ -54,7 +56,7 @@ public class MultiValueExperiment extends MultiExperiment
 	 * @param sameSeed Whether to start each experiment with the same seed, or to give each a new seed
 	 * @param inputs
 	 */
-	public MultiValueExperiment(Run.Builder ctr, boolean sameSeed, int repeats, Object... inputs)
+	public MultiValueExperiment(Run.Builder ctr, boolean sameSeed, int repeats, Object[] inputs)
 	{
 		
 		super(repeats == 1 ? (Class<? extends Experiment>)ctr.getDeclaringClass() : RepeatExperiment.class, sameSeed);
@@ -68,16 +70,27 @@ public class MultiValueExperiment extends MultiExperiment
 				for(Annotation annotation : ctr.getParameterAnnotations()[i])
 					if(annotation instanceof Parameter)
 						multiParameter.add((Parameter) annotation);
-			}
+			} 
 		}
 		
-		createExperiments(inputs, new Object[inputs.length], 0, 0, repeats, new ArrayList<Object>());
+		createExperiments(inputs, new Object[inputs.length], 0, 0, repeats, new ArrayList<String>());
 		
 		this.repeats = repeats;
 		this.sameSeed = sameSeed;
 	}
 	
-	private void createExperiments(Object[] master, Object[] current, int i, int multis, int repeats, List<Object> tuple)
+	private String name(Object input)
+	{
+		if(input instanceof Map<?, ?>)
+			return "" + ((Map<String, ?>)input).get("name");
+			
+		if(input.toString().length() > MAX_LENGTH)
+			return input.toString().substring(0, MAX_LENGTH - 4) + "...";
+		
+		return input.toString();
+	}
+	
+	private void createExperiments(Object[] master, Object[] current, int i, int multis, int repeats, List<String> tuple)
 	{
 		if(master.length == i)
 		{
@@ -89,6 +102,7 @@ public class MultiValueExperiment extends MultiExperiment
 					experiments.add(new RepeatExperiment(structor, repeats, current));
 				
 				paramTuples.add(tuple);
+					
 			} catch (Exception e)
 			{
 				throw new RuntimeException("Failed to create experiment", e);
@@ -99,15 +113,17 @@ public class MultiValueExperiment extends MultiExperiment
 			createExperiments(master, current, i + 1, multis, repeats, tuple);
 		} else 
 		{
+			int j = 0;
 			for(Object value : ((Run.Multi<?>) master[i]))
 			{
 				Object[] newCurrent = Arrays.copyOf(current, current.length);
 				newCurrent[i] = value;
 				
-				List<Object> newTuple = new ArrayList<Object>(tuple);
-				newTuple.add(value);
+				List<String> newTuple = new ArrayList<String>(tuple);
+				newTuple.add(((Run.Multi<?>)master[i]).name(j));
 				
 				createExperiments(master, newCurrent, i+1, multis + 1, repeats, newTuple);
+				j++;
 			}
 		}
 	}
@@ -126,25 +142,35 @@ public class MultiValueExperiment extends MultiExperiment
 	
 	private void addResult(Method method, BasicResults results) throws IllegalAccessException, InvocationTargetException
 	{
+		// If method returns a Results object
 		if(Results.class.isAssignableFrom(method.getReturnType()))
 		{
-			Results example = (Results) method.invoke(experiments.get(0));
-			for(int i = 0; i < example.size(); i++)
+			Map<Result, CollatedResult> collatedResults = new HashMap<Result, CollatedResult>();
+			for(int j : series(experiments.size()))
 			{	
-				Result anno = example.annotation(i);
-				CollatedResult cres = new CollatedResult(anno);
 				
-				for(int j : series(experiments.size()))
+				Experiment experiment = experiments.get(j);
+				List<String> tuple = paramTuples.get(j);
+				
+				Results res = (Results) method.invoke(experiment);
+
+				for(int i : Series.series(res.size()))
 				{
-					Results res = (Results) method.invoke(experiments.get(j));
-					List<Object> tuple = paramTuples.get(j);
-					cres.add(tuple, res.value(i));
+					Result anno = res.annotation(i);
+					Object value = res.value(i);
+					
+					if(! collatedResults.containsKey(anno))
+						collatedResults.put(anno, new CollatedResult(anno));
+					
+					collatedResults.get(anno).add(tuple, res.value(i));
 				}
-	
-				results.add(cres, anno);					
 			}
 			
-		} else
+			for(Result anno : collatedResults.keySet())
+				results.add(collatedResults.get(anno), anno);
+	
+			
+		} else // If method returns a regular value
 		{
 				
 			Result anno = method.getAnnotation(Result.class);
@@ -153,12 +179,11 @@ public class MultiValueExperiment extends MultiExperiment
 			for(int i : series(experiments.size()))
 			{
 				Experiment experiment = experiments.get(i);
-				List<Object> tuple = paramTuples.get(i);
+				List<String> tuple = paramTuples.get(i);
 				cres.add(tuple, method.invoke(experiment));
 			}
 
-			results.add(cres, anno);		
-			
+			results.add(cres, anno);
 		}
 	}
 	
@@ -166,7 +191,6 @@ public class MultiValueExperiment extends MultiExperiment
 	 * For every @Result of the base experiment, we create one CollatedResult 
 	 * containing the results for all the different parameters and various 
 	 * methods for handling them
-	 * 
 	 * 
 	 * TODO: remove code replication between this class and the analogous in 
 	 * RepeatExperiment
@@ -177,7 +201,7 @@ public class MultiValueExperiment extends MultiExperiment
 	private class CollatedResult implements Reporting, HasResults
 	{
 		List<Object> values = new ArrayList<Object>();
-		List<List<Object>> parameters = new ArrayList<List<Object>>();
+		List<List<String>> parameters = new ArrayList<List<String>>();
 		Result annotation;
 		
 		public CollatedResult(Result annotation)
@@ -185,7 +209,7 @@ public class MultiValueExperiment extends MultiExperiment
 			this.annotation = annotation;
 		}
 		
-		public void add(List<Object> params, Object value)
+		public void add(List<String> params, Object value)
 		{
 			parameters.add(params);
 			
@@ -241,8 +265,8 @@ public class MultiValueExperiment extends MultiExperiment
 				for(int i : series(values.size()))
 				{
 					Map<String, Object> row = new HashMap<String, Object>();
-					row.put("parameters", Tools.stringList(parameters.get(i)));
-					
+					row.put("parameters", parameters.get(i));
+										
 					// * Find all @Result methods in the HasResults object
 					List<Object> outputs = new ArrayList<Object>();
 					for(Method method : Tools.allMethods(resClass, Result.class))
@@ -278,12 +302,16 @@ public class MultiValueExperiment extends MultiExperiment
 				for(int i : series(values.size()))
 				{
 					Map<String, Object> row = new HashMap<String, Object>();
-					row.put("parameters", Tools.stringList(parameters.get(i)));
-					row.put("values", Arrays.asList(values.get(i).toString()) );
+					row.put("parameters", parameters.get(i));
+
+					String vStr = values.get(i).toString();
+					row.put("values", Arrays.asList(vStr.length() > MAX_LENGTH ? vStr.substring(0, MAX_LENGTH-4) + "..." : vStr));
 					rows.add(row);
 				}
 				
 				data.put("rows", rows);
+				
+				data.put("id", Tools.cssSafe(name()));
 			}
 			
 			return data;

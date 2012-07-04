@@ -19,7 +19,7 @@ public class Measures
 	 * @param graph
 	 * @return
 	 */
-	public static <V,E> double assortativity(UndirectedGraph<V, E> graph)
+	public static <V,E> double assortativity(Graph<V, E> graph)
 	{
 		double mi;
 		double a = 0.0, b = 0.0, c = 0.0;

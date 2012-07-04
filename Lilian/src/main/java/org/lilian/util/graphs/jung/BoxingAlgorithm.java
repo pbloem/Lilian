@@ -22,6 +22,6 @@ public interface BoxingAlgorithm<V, E>
 	 * of boxes). 
 	 * @return
 	 */
-	public List<Set<V>> box(int l);
+	public Boxing<V, E> box(int l);
 
 }

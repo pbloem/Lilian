@@ -16,6 +16,9 @@
 					<th>width</th><td>${width}</td>
 				</tr>
 		</table>
+		
+		
+		<div class="rs-line chart-container" data-source="raw-data-${id}" data-use-index="false"> </div>
 	</div>
 		
 	<div id="tabs-2">
