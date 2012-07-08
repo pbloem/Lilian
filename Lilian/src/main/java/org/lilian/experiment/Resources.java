@@ -196,6 +196,14 @@ public class Resources
 		return org.data2semantics.tools.graphs.Graphs.graphFromTSV(file);	
 	}
 
+	@Resource(name="line graph")
+	public static Graph<Integer, Integer> lineGraph(
+			@Name("file") File file) 
+		throws IOException
+	{
+		return org.data2semantics.tools.graphs.Graphs.singLine(file);
+	}
+	
 	@Resource(name="integer graph") 
 	public static Graph<Vertex<Integer>, Edge<Integer>> txtIntegerGraph(
 			@Name("file") File file, 
@@ -219,7 +227,6 @@ public class Resources
 		@Name("number to attach") int toAttach)
 	{
 		return Graphs.abRandom(nodes, 3, toAttach);
-			
 	}
 			
  }

@@ -16,13 +16,13 @@ import org.lilian.util.Series;
 import edu.uci.ics.jung.algorithms.shortestpath.UnweightedShortestPath;
 import edu.uci.ics.jung.graph.Graph;
 
-public class CPPBoxer<V, E> implements BoxingAlgorithm<V, E>
+public class CBBBoxer<V, E> implements BoxingAlgorithm<V, E>
 {
 	private Graph<V, E> graph;
 	
 	private UnweightedShortestPath<V, ?> usp;
 	
-	public CPPBoxer(Graph<V, E> graph)
+	public CBBBoxer(Graph<V, E> graph)
 	{
 		this.graph = graph;
 		
