@@ -1,11 +1,14 @@
 package org.lilian.util.graphs.jung;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections15.Factory;
 import org.lilian.Global;
+import org.lilian.util.BitString;
 import org.lilian.util.Series;
 
 import edu.uci.ics.jung.algorithms.generators.EvolvingGraphGenerator;
@@ -105,4 +108,31 @@ public class Graphs
 			return i-1;
 		}
 	}
+	
+	/**
+	 * Returns the flattened lower half of the adjacency matrix as a bitstring
+	 * @return
+	 */
+	public static <V, E> BitString toBits(Graph<V, E> graph)
+	{
+		return toBits(graph, new ArrayList<V>(graph.getVertices()));
+	}
+	
+	/**
+	 * Returns the flattened lower half of the adjacency matrix as a bitstring
+	 * for the given ordering of vertices
+	 * @return
+	 */
+	public static <V, E> BitString toBits(Graph<V, E> graph, List<V> list)
+	{
+		int n = graph.getVertexCount();
+		
+		BitString res = new BitString((n*n - n) / 2);
+		
+		for(int i : Series.series(n))
+			for(int j : Series.series(i+1, n))
+					res.add(graph.isNeighbor(list.get(i), list.get(j)));
+			
+		return res;
+	}	
 }
