@@ -42,7 +42,7 @@ public class CBBBoxer<V, E> implements BoxingAlgorithm<V, E>
 				
 		while(! uncovered.isEmpty())
 		{
-			Global.log().info("uncovered size: " +  uncovered.size());
+// 			Global.log().info("uncovered size: " +  uncovered.size());
 			List<V> candidates = new ArrayList<V>(uncovered);
 			Set<V> box = new HashSet<V>();
 			while(! candidates.isEmpty())
