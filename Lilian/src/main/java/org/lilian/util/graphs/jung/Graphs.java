@@ -125,12 +125,12 @@ public class Graphs
 	 */
 	public static <V, E> BitString toBits(Graph<V, E> graph, List<V> list)
 	{
-		int n = graph.getVertexCount();
+		long n = graph.getVertexCount();
 		
-		BitString res = new BitString((n*n - n) / 2);
+		BitString res = new BitString((int)(n*n - n) / 2);
 		
-		for(int i : Series.series(n))
-			for(int j : Series.series(i+1, n))
+		for(int i : Series.series((int)n))
+			for(int j : Series.series(i+1, (int)n))
 					res.add(graph.isNeighbor(list.get(i), list.get(j)));
 			
 		return res;
