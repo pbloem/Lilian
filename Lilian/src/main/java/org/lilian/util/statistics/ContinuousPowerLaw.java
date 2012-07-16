@@ -6,22 +6,24 @@ import org.lilian.Global;
 import org.lilian.data.real.AbstractGenerator;
 import org.lilian.data.real.Generator;
 
-public class PowerLawGenerator extends AbstractGenerator<Double>
+public class ContinuousPowerLaw extends AbstractGenerator<Double>
 {
 	private double cutoff, exponent;
 	
-	public PowerLawGenerator(double cutoff, double exponent)
+	public ContinuousPowerLaw(double min, double exponent)
 	{
-		super();
-		this.cutoff = cutoff;
+		this.cutoff = min;
 		this.exponent = exponent;
+		
 	}
 
 	@Override
 	public Double generate()
 	{
 		double source = Global.random.nextDouble();
-		return null;
+		
+		double p = - 1.0 / (exponent - 1.0);
+		return cutoff * Math.pow(1.0 - source, p);
 	}
 
 }
