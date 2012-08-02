@@ -59,14 +59,12 @@ public class MexGraph<T> implements Serializable
 	
 	public MexGraph(SequenceCorpus<T> corpus)
 	{
-		
-		SequenceIterator<T> si = corpus.iterator();
-		
-		//create the paths
+		// * Create the paths
 	
 		Path path = new Path();
 		path.add(startToken);
 		
+		SequenceIterator<T> si = corpus.iterator();
 		Token token;
 		T value;
 		while(si.hasNext())
@@ -83,7 +81,8 @@ public class MexGraph<T> implements Serializable
 
 			path.add(token);
 			
-			if(si.atSequenceEnd()){
+			if(si.atSequenceEnd())
+			{
 				path.add(endToken);
 				paths.add(path);
 				
@@ -104,6 +103,7 @@ public class MexGraph<T> implements Serializable
 	
 	/**
 	 * Returns the number of sentences in this MexGraph.
+	 * 
 	 * @return the number of sentences in this MexGraph
 	 */
 	public int numberOfSentences()
@@ -112,7 +112,7 @@ public class MexGraph<T> implements Serializable
 	}
 	
 	/**
-	 * FIXME: This method usually doesn't work
+	 * TODO, FIXME: This method usually doesn't work
 	 */
 	public void save(File directory, String base)
 	throws IOException
@@ -138,13 +138,14 @@ public class MexGraph<T> implements Serializable
 		return new GraphCorpus();
 	}	
 		
-	protected Motif getLeadingMotif(	List<Position> sequence, 
-												double dropThreshold, 
-												double significanceThreshold)
+	protected Motif getLeadingMotif(	
+			List<Position> sequence, 
+			double dropThreshold, 
+			double significanceThreshold)
 	{
-		// fill the matrices used to find the motifs
-		// if something goes wrong (ie. no paths match the sequence)
-		// we return null
+		// * Fill the matrices used to find the motifs
+		//   if something goes wrong (ie. no paths match the sequence)
+		//   we return null
 		if(! fillMatrices(sequence, dropThreshold, significanceThreshold))
 			return null;
 
@@ -155,7 +156,7 @@ public class MexGraph<T> implements Serializable
 		Segment cForward, cBackward;
 		double cScore;
 
-//		this could probably be implemented more efficiently
+		// * This could probably be implemented more efficiently
 		Iterator<Segment> itf;
 		Iterator<Segment> itb;
 
@@ -171,17 +172,19 @@ public class MexGraph<T> implements Serializable
 		score = 100000.0;
 
 		f = 0;
-//		forall forward segments
-		while(itf.hasNext()){
+		// * Forall forward segments
+		while(itf.hasNext())
+		{
 			itb = db.iterator();
 			cForward = itf.next();
 
 			b = 0;
-//			forall backward segments
-			while(itb.hasNext()){
+			// * Forall backward segments
+			while(itb.hasNext())
+			{
 				cBackward = itb.next();
 
-				// check if they overlap correctly
+				// * Check if they overlap correctly
 				if( 	cBackward.getStart()   >= cForward.getStart()
 						&& cForward.getStart()  > cBackward.getEnd()
 						&& cBackward.getStart() < cForward.getEnd()
@@ -234,9 +237,9 @@ public class MexGraph<T> implements Serializable
 			df.remove(forwardIndex);
 			db.remove(backwardIndex);
 
-			// first token of the motif
+			// * First token of the motif
 			int mStart = backward.getEnd() + 1;
-			// last token of the motif
+			// * Last token of the motif
 			int mEnd = forward.getEnd() - 1;
 
 			List<Position> subsequence = new Vector<Position>(sequence.subList(mStart, mEnd + 1));
@@ -271,7 +274,7 @@ public class MexGraph<T> implements Serializable
 		out.flush();
 		out.close();
 		
-		// write the retokenized corpus
+		// * Write the retokenized corpus
 		out = new BufferedWriter(new FileWriter(new File(directory, base + ".re_corpus.csv")));
 		
 		Iterator<Path> pathIt = paths.iterator();
@@ -330,7 +333,10 @@ public class MexGraph<T> implements Serializable
 		return g;
 	}
 	
-	public int topHeight(){ return topHeight;};
+	public int topHeight()
+	{
+		return topHeight;
+	}
 	
 	/**
 	 * Add this token to this grammar as a rule.
@@ -429,8 +435,8 @@ public class MexGraph<T> implements Serializable
 			position = posIt.next();
 			token = position.getToken();
 			
-// TODO think this through:
-			// if the slot has no tokens at its position
+			// TODO think this through:
+			// If the slot has no tokens at its position
 			// abandon the pattern
 			if(token == null)
 			{
@@ -445,16 +451,14 @@ public class MexGraph<T> implements Serializable
 		SerialToken stoken = new SerialToken(pattern);
 		addToken(stoken);
 
-// System.out.println("Adding " + stoken);		
-		
 		ListIterator<Position> patternIt;
 		
-		// rewire the graph ...
+		// * Rewire the graph ...
 		Position firstPosition = sequence.get(0);
 		Collection<Node> nodes = firstPosition.nodes(true);
 		
-		// follow all nodes to see if the path they belong to 
-		// follows our pattern
+		// * Follow all nodes to see if the path they belong to 
+		//   follows our pattern
 		Iterator<Node> nodeIt = nodes.iterator();
 		Node node, firstNode;
 		Path path;
@@ -477,7 +481,8 @@ public class MexGraph<T> implements Serializable
 				control = patternIt.next();
 			
 			while(true)
-			{ //follow the path
+			{ 
+				// * Follow the path
 				
 				// break if the path we're following deviates from pattern
 				if(! control.fits(node.getToken()))
@@ -503,8 +508,8 @@ public class MexGraph<T> implements Serializable
 			}			
 			if(matches && contextSensitive)
 			{ 
-			// in context sensitive mode, we only add the parallelnode if
-			// the pattern is significant on this path.
+				// * In context sensitive mode, we only add the parallelnode if
+				//   the pattern is significant on this path.
 				path  = firstNode.getPath();
 				first = path.indexOf(firstNode);
 								
@@ -519,13 +524,11 @@ public class MexGraph<T> implements Serializable
 			}
 		}
 		
-//		System.out.println(pathsRewired);		
-		
 		modCount++;
 	}
 	
 	/**
-	 * Adds this token to the lists of tokens that are oficially part 
+	 * Adds this token to the lists of tokens that are officially part 
 	 * of the graph 
 	 */
 	private void addToken(Token t)
@@ -546,8 +549,8 @@ public class MexGraph<T> implements Serializable
 			if(! ptokens.contains(p))
 				ptokens.add(p);
 			
-			// add the paralleltoken to pTokenMap, so we can look up 
-			// ptokens by members
+			// * Add the paralleltoken to pTokenMap, so we can look up 
+			//   ptokens by members
 			Iterator<Token> it = p.getMembers().iterator();
 			Token token;
 			Set<ParallelToken> map;
@@ -566,7 +569,7 @@ public class MexGraph<T> implements Serializable
 			}
 		}
 		
-		// add the token to the heightmap, so we can retrieve tokens by height
+		// * Add the token to the heightmap, so we can retrieve tokens by height
 		Set<Token> tMap;
 		int height = t.height();
 		if(heightMap.containsKey( new Integer(height) ))
@@ -578,7 +581,8 @@ public class MexGraph<T> implements Serializable
 			heightMap.put( new Integer(height) , tMap);
 		}
 		tMap.add(t);
-		// check if this is the highest node yet.
+		
+		// * Check if this is the highest node yet.
 		topHeight = Math.max(topHeight, height);
 	}	
 	
@@ -629,16 +633,13 @@ public class MexGraph<T> implements Serializable
 	/**
 	 * Fill the matrices required to extract motifs for this sequence 
 	 */
-	protected boolean fillMatrices(	List<Position> sequence,
-									double dropThreshold, 
-									double significanceThreshold)
+	protected boolean fillMatrices(	
+			List<Position> sequence,
+			double dropThreshold, 
+			double significanceThreshold)
 	{
 		boolean result;
 		result = fillN(sequence);
-		
-// System.out.println(sequence);
-// System.out.println(Functions.matrixToString(n));
-// System.out.println();
 		
 		fillM();
 		calculateDrops(dropThreshold, significanceThreshold);
@@ -646,9 +647,10 @@ public class MexGraph<T> implements Serializable
 	}	
 	
 	/**
-	 * fill the matrix of sentence frequencies. Note: if the slot is at index
-	 * 0 or sequence.size()-1 (ie. the first or the last index), the results 
-	 * are not reliable. 
+	 * Fill the matrix of sentence frequencies. 
+	 * 
+	 * Note: if the slot is at index 0 or sequence.size()-1 (ie. the first
+	 * or the last index), the results are not reliable. 
 	 * 
 	 * the sequence from a to b (incl. a and b) has n[b][a] paths along it
 	 * 
@@ -709,8 +711,8 @@ public class MexGraph<T> implements Serializable
 				// follow currentNode's path until it deviates from the control
 				while(true)
 				{
-					// if itInner is done, the candidate path has followed the control 
-					// all the way to the end.
+					// * If itInner is done, the candidate path has followed the control 
+					//   all the way to the end.
 					if(!itInner.hasNext())
 						break;
 					
@@ -843,19 +845,21 @@ public class MexGraph<T> implements Serializable
 	protected void fillM()
 	{
 		int length = n.length;
-		// -- create the probability matrix m based on the matrix of path lengths n --
+		
+		// * Create the probability matrix m based on the matrix of path lengths n --
 		
 		m = new double[length][];
 
 		for(int row = 0; row < length; row++){
 			m[row] = new double[length];
-			for(int column = 0; column < length; column++){
+			for(int column = 0; column < length; column++)
+			{
 				if(row > column)
-					m[row][column] = (double)n[row][column] / (double)n[row-1][column];
+					m[row][column] = n[row][column] / (double)n[row-1][column];
 				else if(row < column)
-					m[row][column] = (double)n[row][column] / (double)n[row+1][column];
+					m[row][column] = n[row][column] / (double)n[row+1][column];
 				else
-					m[row][column] = (double)n[row][column] / (double)totalNodes;
+					m[row][column] = n[row][column] / (double)totalNodes;
 			}
 		}
 	}
@@ -867,14 +871,12 @@ public class MexGraph<T> implements Serializable
 	{
 		int length = m.length;
 		
-		// -- calculate drops --
-
 		df = new Vector<Segment>();
 		db = new Vector<Segment>();
 
 		double sig, strength;
-		// set the forward drops (only check the lower half of the
-		// matrix (i >= j)).
+		// * Set the forward drops (only check the lower half of the
+		//   matrix (i >= j)).
 		for(int i = 0; i < length-1; i++){
 			for(int j = 0; j <= i; j++){
 				strength = m[i + 1][j] / m[i][j];
@@ -887,8 +889,8 @@ public class MexGraph<T> implements Serializable
 			}
 		}
 
-		// set the backward drops (only check the upper half of the
-		// matrix (i <= j))
+		// * Set the backward drops (only check the upper half of the
+		//   matrix (i <= j))
 		for(int i = 1; i < length ; i++){
 			for(int j = i; j < length; j++){
 				strength = m[i-1][j] / m[i][j];

@@ -18,7 +18,7 @@ import org.lilian.util.*;
  * 
  * TODO:
  *  - Give constructGenPath an extra parameter n that tells it to 
- *    diregard paths that differ in n or more positions from the context
+ *    disregard paths that differ in n or more positions from the context
  *    window. 
  *
  * @param <T>
@@ -37,22 +37,26 @@ public class Adios<T> extends MexGraph<T>
 	/**
 	 * Iterates once over all paths in the graph
 	 * 
-	 *  @whether any new motifs were found
+	 *  @return Whether any new motifs were found
 	 */
-	public boolean patternDistillation(double dropThreshold, double significanceThreshold, boolean contextSensitive)
+	public boolean patternDistillation(
+			double dropThreshold, double significanceThreshold, 
+			boolean contextSensitive)
 	{
-		Iterator<Path> it = paths.iterator();
-		Path path;
-		Motif motif;
 		boolean motifFound = false;
-		while(it.hasNext())
+		
+		for(Path path : paths)
 		{
-			path = it.next();
-			motif = pathRunDistillation(path, dropThreshold, significanceThreshold, contextSensitive);
+			Motif motif = pathRunDistillation(
+					path, dropThreshold, 
+					significanceThreshold, contextSensitive);
+			System.out.print(":");
 			if(motif != null)
 			{
 				motifFound = true;
-				super.addSerialToken(motif, contextSensitive, significanceThreshold, dropThreshold);
+				super.addSerialToken(
+						motif, contextSensitive, 
+						significanceThreshold, dropThreshold);
 			}
 			System.out.print("_");
 		}
@@ -177,7 +181,7 @@ public class Adios<T> extends MexGraph<T>
 							dropThreshold, 
 							significanceThreshold);
 					noMotifs = 0;
-				}else
+				} else
 				{
 					noMotifs++;
 				}				
@@ -195,18 +199,19 @@ public class Adios<T> extends MexGraph<T>
 			boolean contextSensitive)
 	{
 		Motif motif = null;
-		boolean motifFound = false;
 		
 		// the copy of the path with Positions instead of Tokens
 		List<Position> genPath = new Vector<Position>(path.size());
-		Iterator<Token> it = path.iterator();
-		while(it.hasNext())
-			genPath.add(new RegularPosition(it.next()));
+		for(Token t : path)
+			genPath.add(new RegularPosition(t));
 		
 		if(path.size() > minPathLength)
 		{
-			motif = this.getLeadingMotif(genPath, dropThreshold, significanceThreshold);
+			System.out.print("(");
+			motif = getLeadingMotif(genPath, dropThreshold, significanceThreshold);
+			System.out.print(")");
 		}
+
 		return motif;
 	}
 
@@ -219,7 +224,7 @@ public class Adios<T> extends MexGraph<T>
 	 * @param windowLength
 	 * @return True if a leading path was found, false otherwise.
 	 *
-	 *  NB: This code needs some thorough testing
+	 * NB: This code needs some thorough testing
 	 */
 	public Motif pathRun(	List<Token> path, 
 							double dropThreshold, 
