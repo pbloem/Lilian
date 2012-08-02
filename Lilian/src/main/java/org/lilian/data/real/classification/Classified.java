@@ -9,7 +9,7 @@ import java.util.List;
  * The normal functions for adding items become unsupported and are replaced with 
  * versions that include a class parameter.</p><p>
  * 
- * See {Classifiers.combine()} for the standard way of creating this type of data.</p>
+ * See {Classification.combine()} for the standard way of creating this type of data.</p>
  * 
  * @author Peter
  *
@@ -48,6 +48,27 @@ public interface Classified<P> extends List<P>
 	
 	public Classified<P> subClassified(int from, int to);
 	
-	
+	/**
+	 * Returns all Ps in this classified list with the given class
+	 * 
+	 * @param cls
+	 * @return
+	 */
 	public List<P> points(int cls);
+	
+	/**
+	 * Sets the maximum class to the given value. This function is useful when 
+	 * a classified set is required which contains no occurences of a class that
+	 * should nevertheless be considered.
+	 * 
+	 * For instance, when a dataset with few instance for a given class is split 
+	 * into a test and training set, it's conceivable that one contains no 
+	 * instances of the class.
+	 * 
+	 * If the given value is lower than the current max class, an exception is 
+	 * thrown.
+	 * 
+	 * @param max
+	 */
+	public void setMaxClass(int max);
 }

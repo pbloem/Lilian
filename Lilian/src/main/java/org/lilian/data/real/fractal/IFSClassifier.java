@@ -251,6 +251,14 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		return models.get(i);
 	}
 	
+	/**
+	 * 
+	 * @param size The number of classes
+	 * @param depth the depth to which to evaluate the IFS models
+	 * @param ifsBuilder
+	 * @param mapBuilder
+	 * @return
+	 */
 	public static Builder<IFSClassifier> builder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder, Builder<AffineMap> mapBuilder)
 	{
 		return new IFSClassifierBuilder(size, depth, ifsBuilder, mapBuilder);
@@ -284,7 +292,7 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		@Override
 		public int numParameters() 
 		{
-			return size * (1 + ifsBuilder.numParameters());
+			return size * (1 + ifsBuilder.numParameters() + mapBuilder.numParameters());
 		}
 	}
 	
@@ -299,11 +307,11 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		
 		int 
 			nComp = builder.numParameters(),
-			nMap = builder.numParameters(),
+			nMap = mapBuilder.numParameters(),
 			s = parameters.size();
 				
 		if( s % (nComp + nMap +1)  != 0)
-			throw new IllegalArgumentException("Number of parameters ("+s+") should be divisible by the number of parameters per component ("+nComp+") plus the number of parameters for an affine map ("+nMap+") plus 1");
+			throw new IllegalArgumentException("Number of parameters ("+s+") should be divisible by the number of parameters per ifs component ("+nComp+") plus the number of parameters for an affine map ("+nMap+") plus 1");
 		
 		IFSClassifier model = null;
 		for(int from = 0; from + nComp + nMap < s; from += nComp + nMap + 1)
