@@ -17,6 +17,7 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Point;
+import org.lilian.util.Functions;
 
 public class Classifiers
 {
@@ -371,140 +372,142 @@ public class Classifiers
 		}
 	}
 	
-//
-//	/**
-//	 * A classifier for the magnet fractal.
-//	 * 
-//	 * The magnet fractal is a simulation of a simple physical system consisting
-//	 * of a metal pendulum suspended over three magnets. The initial states 
-//	 * (points in the plane) are colored by which magnet the pendulum halts 
-//	 * over, when released from that state.
-//	 * 
-//	 * @return
-//	 */
-//	public static Classifier magnet() {
-//		return new MagnetClassifier();
-//	}
-//	
-//	
-//	private static class MagnetClassifier extends AbstractClassifier
-//	{
-//		
-//		private static ArrayList<Vector> sources = new ArrayList<Vector>();
-//		
-//		private int maxSteps = 20000;
-//		private int minSteps = 500;		
-//		private double stopDist     = 0.01;
-//		private double stopVelocity = 0.01;
-//		private double frictConst	= 0.00125;
-//		private double magnConst	= 0.000002;
-//		private double pendheight	= 0.02;		
-//		private double dt = 1.0;
-//		
-//		static 
-//		{
-//			// sets the three sources at the vertices of an equilateral triangle
-//			double 	a = 0.25,
-//					y = a * Math.sin((30.0/360.0) * (2 * Math.PI)),
-//					x = a * Math.cos((30.0/360.0) * (2 * Math.PI));
-//			
-//			for(int i = 0; i < 3; i++)
-//				sources.add(new DenseVector(2));
-//			
-//			sources.get(0).set(0, 0);
-//			sources.get(0).set(1, a);
-//			
-//			sources.get(1).set(0, x);
-//			sources.get(1).set(1,-y);			
-//
-//			sources.get(2).set(0,-x);
-//			sources.get(2).set(1,-y);
-//		}
-//		
-//		public MagnetClassifier()
-//		{
-//			super(2, 3);
-//		}
-//
-//		public int classify(List<Double> point) 
-//		{
-//			RealVector velocity         = new ArrayRealVector(2);
-//			RealVector acceleration     = new ArrayRealVector(2);
-//			RealVector accelerationNew  = new ArrayRealVector(2);
-//			RealVector accelerationPrev = new ArrayRealVector(2);
-//			
-//			RealVector dist = new ArrayRealVector(2);
-//			
-//			RealVector position = new ArrayRealVector(2);
-//			position.setEntry(0, point.get(0));
-//			position.setEntry(1, point.get(1));
-//			
-//			for(int i = 0; i < maxSteps; i++)
-//			{
-////System.out.println(Functions.toString(position) + " " + Functions.toString(velocity));				
-//				
-//				position.add( dt, velocity);
-//				position.add( sq(dt) * (2.0/3.0), acceleration);
-//				position.add(-sq(dt) * (1.0/6.0), accelerationPrev);
-//				
-//				for(int s = 0; s < sources.size(); s++)
-//				{
-//					Vector source = sources.get(s);
-//					dist.set(position);
-//					dist.add(-1.0, source);
-//
-//					double sourceDist = dist.norm(Vector.Norm.Two);
-//					double norm = 0.0;
-//					for(int k = 0; k < dist.size(); k++)
-//						norm += sq(dist.get(k)); 
-//					norm = Math.sqrt(norm + sq(pendheight));
-//					
-//					dist.scale(1.0/(norm*norm*norm));
-//					
-//					accelerationNew.add(-magnConst, dist);
-//					
-////System.out.println(velocity.norm(Vector.Norm.Two) + "\t" + sourceDist + "\t" + Functions.toString(source));
-//
-//					if(i > minSteps && sourceDist < stopDist && velocity.norm(Vector.Norm.Two) < stopVelocity)
-//					{
-////						System.out.println(".");
-//						return s;
-//					}
-//				}
-//				
-//				accelerationNew.add(-frictConst, velocity);
-//				
-//				velocity.add( dt*(1.0/3.0), accelerationNew);
-//				velocity.add( dt*(5.0/6.0), acceleration);
-//				velocity.add(-dt*(1.0/6.0), accelerationPrev);
-//				
-//				Vector tmp = accelerationPrev;
-//				accelerationPrev = acceleration;
-//				acceleration  = accelerationNew;
-//				accelerationNew = tmp;
-//				accelerationNew.zero();
-//			}
-//						
-//			return -1;
-//		}
-//		
-//		private static double sq(double in)
-//		{
-//			return in*in;
-//		}
-//
-//		@Override
-//		public int dimension()
-//		{
-//			return 2;
-//		}
-//
-//		@Override
-//		public int size()
-//		{
-//			return 3;
-//		}
-//	}	
+
+	/**
+	 * A classifier for the magnet fractal.
+	 * 
+	 * The magnet fractal is a simulation of a simple physical system consisting
+	 * of a metal pendulum suspended over three magnets. The initial states 
+	 * (points in the plane) are colored by which magnet the pendulum halts 
+	 * over, when released from that state.
+	 * 
+	 * @return
+	 */
+	public static Classifier magnet() {
+		return new MagnetClassifier();
+	}
+	
+	
+	private static class MagnetClassifier extends AbstractClassifier
+	{
+		
+		private static ArrayList<RealVector> sources = new ArrayList<RealVector>();
+		
+		private int maxSteps = 20000;
+		private int minSteps = 500;		
+		private double stopDist     = 0.01;
+		private double stopVelocity = 0.01;
+		private double frictConst	= 0.00125;
+		private double magnConst	= 0.000002;
+		private double pendheight	= 0.02;		
+		private double dt = 1.0;
+		
+		static 
+		{
+			// sets the three sources at the vertices of an equilateral triangle
+			double 	a = 0.25,
+					y = a * Math.sin((30.0/360.0) * (2 * Math.PI)),
+					x = a * Math.cos((30.0/360.0) * (2 * Math.PI));
+			
+			for(int i = 0; i < 3; i++)
+				sources.add(new ArrayRealVector(2));
+			
+			sources.get(0).setEntry(0, 0);
+			sources.get(0).setEntry(1, a);
+			
+			sources.get(1).setEntry(0, x);
+			sources.get(1).setEntry(1,-y);			
+
+			sources.get(2).setEntry(0,-x);
+			sources.get(2).setEntry(1,-y);
+		}
+		
+		public MagnetClassifier()
+		{
+			super(2, 3);
+		}
+
+		public int classify(Point point) 
+		{
+			RealVector velocity         = new ArrayRealVector(2);
+			RealVector acceleration     = new ArrayRealVector(2);
+			RealVector accelerationNew  = new ArrayRealVector(2);
+			RealVector accelerationPrev = new ArrayRealVector(2);
+			
+			RealVector dist = new ArrayRealVector(2);
+			
+			RealVector position = new ArrayRealVector(2);
+			position.setEntry(0, point.get(0));
+			position.setEntry(1, point.get(1));
+			
+			for(int i = 0; i < maxSteps; i++)
+			{
+// System.out.println(position + " " + velocity);				
+				
+				position = position.add(velocity.mapMultiply(dt));
+				position = position.add(acceleration.mapMultiply(sq(dt) * (2.0/3.0)));
+				position = position.add(accelerationPrev.mapMultiply(-sq(dt) * (1.0/6.0)));
+				
+				for(int s = 0; s < sources.size(); s++)
+				{
+					RealVector source = sources.get(s);
+					
+					// dist = position - source
+					dist.setSubVector(0, position);
+					dist = dist.add(source.mapMultiply(-1.0));
+
+					double sourceDist = dist.getNorm();
+					double norm = 0.0;
+					for(int k = 0; k < dist.getDimension(); k++)
+						norm += sq(dist.getEntry(k)); 
+					norm = Math.sqrt(norm + sq(pendheight));
+					
+					dist.mapMultiplyToSelf(1.0/(norm*norm*norm));
+					
+					accelerationNew = accelerationNew.add(dist.mapMultiply(-magnConst));
+					
+// System.out.println(velocity.getNorm() + "\t" + sourceDist + "\t" + source);
+// System.out.println(i);
+					if(i > minSteps && sourceDist < stopDist && velocity.getNorm() < stopVelocity)
+					{
+						return s;
+					}
+				}
+				
+				accelerationNew = accelerationNew.add(velocity.mapMultiply(-frictConst));
+				
+				velocity = velocity.add(accelerationNew  .mapMultiply( dt*(1.0/3.0)));
+				velocity = velocity.add(acceleration     .mapMultiply( dt*(5.0/6.0)));
+				velocity = velocity.add(accelerationPrev .mapMultiply(-dt*(1.0/6.0)));
+				
+				RealVector tmp = accelerationPrev;
+				accelerationPrev = acceleration;
+				acceleration  = accelerationNew;
+				accelerationNew = tmp;
+				accelerationNew.set(0.0);
+			}
+			System.out.println("?");
+						
+			return -1;
+		}
+		
+		private static double sq(double in)
+		{
+			return in*in;
+		}
+
+		@Override
+		public int dimension()
+		{
+			return 2;
+		}
+
+		@Override
+		public int size()
+		{
+			return 3;
+		}
+	}	
 	
 	/**
 	 * A classifier for the game of nim

@@ -149,6 +149,15 @@ public class Resources
 		return Classification.combine(points, classes);
 	}	
 	
+	@Resource(name="magnet")
+	public static Classified<Point> magnet(@Name("size") int size)
+	{
+		List<Point> points = new MVN(2).generate(size);
+		List<Integer> classes = Classifiers.magnet().classify(points);
+		
+		return Classification.combine(points, classes);
+	}	
+	
 	@Resource(name="newton-points")
 	public static List<Point> newtonPoints(@Name("size") int size)
 	{
@@ -228,5 +237,11 @@ public class Resources
 	{
 		return Graphs.abRandom(nodes, 3, toAttach);
 	}
-			
+	
+	@Resource(name="csv file")
+	public static List<Point> csvFile(@Name("file") File file) 
+		throws IOException
+	{
+		return Datasets.readCSV(file);
+	}
  }

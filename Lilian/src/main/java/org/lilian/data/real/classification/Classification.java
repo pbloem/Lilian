@@ -3,6 +3,9 @@ package org.lilian.data.real.classification;
 import static java.lang.Math.max;
 import static org.lilian.util.Series.series;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +15,8 @@ import java.util.ListIterator;
 
 import org.lilian.Global;
 import org.lilian.data.real.Point;
+
+import au.com.bytecode.opencsv.CSVReader;
 
 /**
  * Static utility methods for the task of classification.
@@ -314,4 +319,27 @@ public class Classification
 		return combine(resData, resCls);
 	}
 	
+	/**
+	 * Reads a CSV file containing numerical values into a list of points.
+	 * 
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<Point> readCSV(File file) throws IOException
+	{
+		List<Point> data = new ArrayList<Point>();
+		
+	    CSVReader reader = new CSVReader(new FileReader(file));
+	    String [] nextLine;
+	    while ((nextLine = reader.readNext()) != null) 
+	    {
+	    	double[] values = new double[nextLine.length];
+	    	for(int i = 0; i < nextLine.length; i++)
+	    		values[i] = Double.parseDouble(nextLine[i]);
+	    	data.add(new Point(values));
+	    }
+	    
+	    return data;
+	}
 }

@@ -141,7 +141,8 @@ function load(htmlTable, withIndex)
 
 			$(this).find('td').each(function(index, value)
 			{
-				dataRow[withIndex ? index + 1 : index] = parseFloat($(value).html());
+				dataRow[withIndex ? index + 1 : index] = parseFloat(
+						$(value).html().replace(/,/g,''));
 			})
 			
 			data.push(dataRow);
