@@ -141,17 +141,25 @@ public class Takens extends AbstractGenerator<Double>
 	
 	public double significance(List<Double> distances, int n)
 	{
+		return significance(distances, n, -1);
+	}
+	
+	public double significance(List<Double> distances, int n, int samples)
+	{
 		double threshold = ksTest(distances, false);
 	
 		int above = 0;
 		for(int i : Series.series(n))
 		{
-			if(i % 500 == 0 && i != 0)
-				Global.log().info("* finished " + i + " trials of "+n+".");
+			if(i % 1 == 0)
+				Global.log().info("* Finished " + i + " trials of "+n+".");
 			
 			List<Double> generated = generate(distances, distances.size());
 		
-			Takens generatedPL = Takens.fit(generated).fit();
+			Takens generatedPL = 
+					samples == -1 ?
+					Takens.fit(generated).fit() :
+					Takens.fit(generated).fitSampled(samples);
 			
 			if(generatedPL.ksTest(generated, false) >= threshold)
 				above ++;
@@ -162,7 +170,12 @@ public class Takens extends AbstractGenerator<Double>
 
 	public double significance(List<Double> distances, double epsilon)
 	{
-		return significance(distances, (int)(0.25 * Math.pow(epsilon, -2.0)));
+		return significance(distances, epsilon, -1);
+	}	
+	
+	public double significance(List<Double> distances, double epsilon, int samples)
+	{
+		return significance(distances, (int)(0.25 * Math.pow(epsilon, -2.0)), samples);
 	}	
 
 	public static <P> Fit fit(List<P> data, Distance<? super P> metric)
