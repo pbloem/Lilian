@@ -26,13 +26,28 @@ public class WesternCorpus
 {
 	private int bufferSize = 15;
 	private File sourceFile;
-	private boolean caseSensitive; 
+	private boolean caseSensitive;
+	private boolean alphaNumOnly;
 	
 	public WesternCorpus(File sourceFile, boolean caseSensitive)
 	{
 		this.sourceFile = sourceFile;
 		this.caseSensitive = caseSensitive;
+		this.alphaNumOnly = false;
 	}
+	
+	/**
+	 * 
+	 * @param sourceFile
+	 * @param caseSensitive
+	 * @param alphaNumOnly Whether to reject any character that are not alphanumeric 
+	 */
+	public WesternCorpus(File sourceFile, boolean caseSensitive, boolean alphaNumOnly)
+	{
+		this.sourceFile = sourceFile;
+		this.caseSensitive = caseSensitive;
+		this.alphaNumOnly = alphaNumOnly;		
+	}	
 
 	@Override
 	public SequenceIterator<String> iterator() {
@@ -131,7 +146,7 @@ public class WesternCorpus
 				// tokenize and add to the buffer
 				StringTokenizer st = new StringTokenizer(line);
 				while(st.hasMoreTokens())
-					buffer.add(new Token(st.nextToken()));
+						buffer.add(new Token(st.nextToken()));						
 				
 				// check for and interpret sentence delimiters and other 
 				// non-word characters
@@ -144,8 +159,6 @@ public class WesternCorpus
 				{
 					token = buffer.get(i);
 					value = token.getValue();
-					
-	//System.out.print('!' + value + '!');
 					
 					if(value.length() == 1 && !Character.isLetterOrDigit(value.charAt(0)))
 					{	
@@ -175,12 +188,26 @@ public class WesternCorpus
 								token.setLastInSentence(true);
 						}
 						
-						//trim any non
+						// Trim any empty tokens 
 						value = trim(value);
 						token.setValue(value);
 						
 						if(value.length() < 1)
+						{
 							buffer.remove(i);
+						} else
+						{
+							if(alphaNumOnly)
+							{
+								if(! containsAlphaNum(value))
+									buffer.remove(i);
+								else
+								{
+									value = clean(value);
+									token.setValue(value);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -198,6 +225,25 @@ public class WesternCorpus
 			}			
 		}
 		
+		private String clean(String tok) 
+		{
+			StringBuffer bf = new StringBuffer();
+			for(int i = 0; i < tok.length(); i++)
+				if(Character.isLetterOrDigit(tok.charAt(i)))
+					bf.append(tok.charAt(i));
+			
+			return bf.toString();			
+		}
+
+		private boolean containsAlphaNum(String tok) 
+		{
+			for(int i = 0; i < tok.length(); i++)
+				if(Character.isLetterOrDigit(tok.charAt(i)))
+					return true;
+			
+			return false;
+		}
+
 		/**
 		 * Trims a string of its whitespace and non-alphanumeric characters
 		 */

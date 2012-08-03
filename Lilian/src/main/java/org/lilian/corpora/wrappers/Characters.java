@@ -25,6 +25,9 @@ public class Characters
 	private final boolean useWordEnds;
 	
 	/**
+	 * Creastes a character wrapper. No characters will be inserted between 
+	 * words. 
+	 * 
 	 * @param master The string corpus to base this corpus on
 	 * @param useWordEnds If this is true, this corpus will report sentence ends 
 	 * 		where the words from the master corpus ends (each sentence in this 
