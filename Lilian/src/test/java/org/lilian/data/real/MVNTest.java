@@ -6,6 +6,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Series;
 
 public class MVNTest
 {
@@ -48,5 +49,47 @@ public class MVNTest
 		
 		assertTrue(Math.abs(mvn4.density(x4) - t4) < 0.00001);		
 	}
+	
+	@Test
+	public void findSphericalTest()
+	{
+		MVN source = new MVN(new Point(5.0, 1.0), MatrixTools.identity(2).scalarMultiply(0.1));
+		
+		MVN rec = MVN.findSpherical(source.generate(300));
+		System.out.println(rec);
+	}
+	
+	@Test
+	public void mapTest()
+	{
+		int dim = 2;
+		MVN mvn = new MVN(new Point(-0.5, -0.5), 0.1);
+		
+		System.out.println(mvn.map());
+		
+		MVN mvn2 = MVN.find(mvn.generate(1000));
+		
+		System.out.println(mvn2.map());
+		
+		for(int i : Series.series(AffineMap.numParameters(dim)))
+			assertEquals(mvn.map().parameters().get(i), mvn2.map().parameters().get(i), 0.02);
+	}
 
+	@Test
+	public void mapTest2()
+	{
+		int dim = 2;
+		Generator<Point> gen = Datasets.three();
+		
+		MVN mvnFrom = MVN.find(gen.generate(3000));
+		MVN mvnTo = MVN.find(new MVN(new Point(-0.5, -0.5), 0.01).generate(1000));
+		
+		System.out.println(mvnFrom.map());
+		System.out.println(mvnTo.map());
+		
+		
+//		for(int i : Series.series(AffineMap.numParameters(dim)))
+//			assertEquals(mvn.map().parameters().get(i), mvn2.map().parameters().get(i), 0.02);
+	}	
+	
 }

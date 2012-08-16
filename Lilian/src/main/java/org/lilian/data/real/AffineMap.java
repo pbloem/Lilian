@@ -149,11 +149,10 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 	{
 		if(inverse == null)
 		{
-			RealMatrix invTransform = transformation.inverse();
+			RealMatrix invTransform = MatrixTools.inverse(transformation);
 			
 			RealVector invTranslate = invTransform.operate(translation);
-					//invTransform.multiply(translation);
-			invTranslate.mapMultiply(-1.0);
+			invTranslate = invTranslate.mapMultiply(-1.0);
 			
 			inverse = new AffineMap();
 			inverse.transformation = invTransform;

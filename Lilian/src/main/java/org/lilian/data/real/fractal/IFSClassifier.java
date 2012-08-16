@@ -40,6 +40,7 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 	
 	protected Distance<Point> distance = new SquaredEuclideanDistance();
 	public List<Store> stores = new ArrayList<Store>();
+	
 	protected int depth;
 	
 	public IFSClassifier(IFS<Similitude> firstModel, double firstPrior, AffineMap map, int depth)
@@ -112,11 +113,18 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 	/**
 	 * This method doesn't return a true density (for reasons of speed and 
 	 * stability), but for the purposes of classification, it's good enough).
+	 * 
+	 * It attempts to get a real (log) probability density from the model. If 
+	 * the point is too far off the support of all IFSs these will all be zero. 
+	 * It will then use the backup value, which is e^d * prior where d is the 
+	 * distance to the closest endpoint. 
 	 */
 	protected double[] density(Point point, int index) 
 	{
+		
 		point = preMaps.get(index).map(point);
 		
+		// * The number of end points in each model
 		int size = (int)Math.ceil(Math.pow(models.get(index).size(), depth));
 
 		Store store = stores.get(index);
@@ -135,15 +143,21 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 			prod =  Math.pow(scale, -dimension());
 			prod *= Math.exp(-(1.0/(2.0 * scale * scale) * sqDist));
 			prod *= store.priors.get(i);
-			
+						
 			// This value is used when the prob density is zero for all points
 			backup += Math.exp(sqDist) * store.priors.get(i);
 			sum += prod;
-		}		
+		}
 		
-		return new double[] {sum, backup};
+		System.out.println(point + " sum:" + sum + " density:" + IFS.density(models.get(index), point, depth));
+		
+		return new double[] {IFS.density(models.get(index), point, depth), backup};
 	}
 	
+	/**
+	 * Recalculate the 'stores', ie. the precomputed parameters of each 
+	 * distribution.
+	 */
 	private void checkStore()
 	{
 		while(stores.size() < numClasses)
@@ -170,7 +184,15 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		}
 	}
 	
-	
+	/**
+	 * A Store holds precomputed values for all the end point distributions of 
+	 * each component IFS. For each end point the store holds the mean scale and 
+	 * prior. The IFS (evaluated to the given depth) is the sum of all the MVNs
+	 * defined by these parameters. 
+	 * 
+	 * @author Peter
+	 *
+	 */
 	public class Store implements Serializable 
 	{
 		private static final long serialVersionUID = 5997041299265837943L;
@@ -194,6 +216,16 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		}
 	}
 	
+	/**
+	 * Calculate the endpoint distributions for the given model to the given depth.
+	 * Each endpoint is a non-skewed IFS determined by a mean, a scale and a prior.
+	 * 
+	 * @param model
+	 * @param depth
+	 * @param points
+	 * @param weights
+	 * @param scales
+	 */
 	public void endPoints(IFS<Similitude> model, int depth, 
 			List<Point> points, List<Double> weights, List<Double> scales)
 	{
@@ -249,6 +281,11 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 	public IFS<Similitude> model(int i)
 	{
 		return models.get(i);
+	}
+	
+	public AffineMap preMap(int i)
+	{
+		return preMaps.get(i);
 	}
 	
 	public static Builder<IFSClassifier> builder(int size, int depth, Builder<IFS<Similitude>> ifsBuilder, Builder<AffineMap> mapBuilder)

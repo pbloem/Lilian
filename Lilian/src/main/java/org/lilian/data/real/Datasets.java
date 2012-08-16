@@ -106,6 +106,35 @@ public class Datasets
 	}
 	
 	/**
+	 * Three small MVN's in R^2
+	 */
+	public static Generator<Point> three()
+	{
+		return new Three();
+	}
+	
+	private static class Three extends AbstractGenerator<Point>
+	{		
+		List<MVN> mvns = new ArrayList<MVN>();
+		
+		public Three()
+		{
+			
+			mvns.add(new MVN(new Point(-0.5, -0.5), 0.1));
+			mvns.add(new MVN(new Point(-0.5,  0.5), 0.1));
+			mvns.add(new MVN(new Point( 0.0,  0.5), 0.1));
+			
+		}
+
+		public Point generate()
+		{
+			int i = Global.random.nextInt(3);
+	
+			return mvns.get(i).generate();
+		}
+	}
+	
+	/**
 	 * Creates a generator for random points on a sphere of the given dimension 
 	 * with radius 1.0
 	 */

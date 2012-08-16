@@ -18,6 +18,7 @@ import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.Point;
+import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.Functions;
@@ -151,5 +152,61 @@ public class IFSTest
 			assertEquals(code, IFS.code(ifs, m.map(new Point(2)), code.size()));
 		}
 	}
+	
+	// @Test
+	public void testCode2() throws IOException
+	{
+		int depth = 5;
+		double[] xrange = new double[]{-3.0, 3.0};
+		double[] yrange = new double[]{-3.0, 3.0};
+		
+		Functions.tic();		
+		
+		BufferedImage image = null;
+
+		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-again");
+		dir.mkdirs();
+
+		IFS<Similitude> ifs = IFSs.sierpinskiOffSim();
+		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
+		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
+		
+		image = Draw.drawCodes(ifs, xrange, yrange, 200, depth, -1);
+		ImageIO.write(image, "PNG", new File(dir, "codes-again.png") );
+
+		
+		System.out.println("codes-again: " + Functions.toc() + " seconds");
+	}
+	
+	@Test
+	public void testDensities() throws IOException
+	{
+		Global.random = new Random();
+		int depth = 9;
+		double[] xrange = new double[]{-2.0, 2.0};
+		double[] yrange = new double[]{-2.0, 2.0};
+		
+		Functions.tic();		
+		
+		BufferedImage image = null;
+
+		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-densities");
+		dir.mkdirs();
+
+		IFS<Similitude> ifs = IFSs.randomSimilitude(2, 2, 0.5);
+		
+		image = Draw.draw(ifs.generator(depth), 1000000, 1000, false); 
+		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );	
+		
+		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, false);
+		ImageIO.write(image, "PNG", new File(dir, "densities.png") );
+		
+		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, true);
+		ImageIO.write(image, "PNG", new File(dir, "approximations.png") );
+
+		
+		System.out.println("codes-again: " + Functions.toc() + " seconds");
+	}	
+	
 	
 }

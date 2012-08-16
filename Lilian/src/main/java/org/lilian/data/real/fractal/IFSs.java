@@ -69,7 +69,7 @@ public class IFSs
 	}
 	
 	/**
-	 * Generates a sierpinski gasket with non-uniform component weights
+	 * Generates a sierpinski gasket
 	 * 
 	 * @return
 	 */
@@ -83,7 +83,24 @@ public class IFSs
 				0.5,  0.5,-0.5, 0.0, 1.0, 
 				0.5, -0.5,-0.5, 0.0, 1.0
 				));
-	}	
+	}
+	
+	/**
+	 * Generates a sierpinski gasket with non-uniform component weights
+	 * 
+	 * @return
+	 */
+	public static IFS<Similitude> sierpinskiOffSim()
+	{	
+	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.0, 0.5, 0.0, 1.0, 
+				0.5,  0.5,-0.5, 0.0, 1.5, 
+				0.5, -0.5,-0.5, 0.0, 1.5
+				));
+	}		
 	
 	/**
 	 * Generates a sierpinski gasket with non-uniform component weights
@@ -154,6 +171,22 @@ public class IFSs
 				scale, +x, -y, Math.PI - a, 1.0
 				));
 	}
+	
+	public static IFS<Similitude> koch2SimOff()
+	{		
+		double
+			scale = 1.0/Math.sqrt(3.0),
+			a = Math.acos(Math.sqrt(3.0)/2.0),
+			y = Math.sin(a) * scale,
+			x = (1.0 - scale) + (scale - Math.cos(a) * scale);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -x, -y, Math.PI + a, 1.0,
+				scale, +x, -y, Math.PI - a, 2.0
+				));
+	}
+	
 	
 	public static IFS<Similitude> koch2DownSim()
 	{

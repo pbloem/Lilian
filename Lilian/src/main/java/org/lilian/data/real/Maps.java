@@ -260,7 +260,58 @@ public class Maps
 		RealMatrix rot = MatrixTools.diag(s);
 		
 		t = rot.operate(t);
-		t = t.mapAdd(-1.0);
+		t = t.mapAdd(-1.0); // * subtract 1 to move [0, 2] to [-1, 1]
+		
+		return new AffineMap(rot, t);
+	}
+	
+	/**
+	 * Returns a map that centers the center of mass of the dataset at the 
+	 * origin and scales everything to fit in the bi-unit cube.
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public static AffineMap centeredWeighted(List<Point> data)
+	{
+		int dim = data.get(0).dimensionality();
+		
+		double[] mean = new double[dim];
+		
+		double min[]   = new double[dim],
+		       max[]   = new double[dim],
+		       scale[] = new double[dim];
+		
+		for(int i : Series.series(dim))
+		{
+			mean[i] = 0.0;
+			min[i] = Double.MAX_VALUE;
+			max[i] = Double.MIN_VALUE;
+		}
+		
+		for(Point p : data)
+			for(int i : Series.series(dim))
+			{
+				mean[i] += p.get(i);
+				min[i] = min(min[i], p.get(i));
+				max[i] = max(max[i], p.get(i));
+			}
+		
+		for(int i : Series.series(dim))
+			mean[i] /= (double) data.size();
+		
+		for(int i : Series.series(dim))
+			scale[i] = 1.0 / Math.max(Math.abs(min[i] - mean[i]), Math.abs(max[i] - mean[i]));
+		
+		// * Subtract the mean
+		RealVector t = new ArrayRealVector(mean);
+		t = t.mapMultiply(-1.0);
+		
+		// * Scale to [-1, 1] 
+		RealVector s = new ArrayRealVector(scale);
+		RealMatrix rot = MatrixTools.diag(s);
+		
+		t = rot.operate(t);
 		
 		return new AffineMap(rot, t);
 	}

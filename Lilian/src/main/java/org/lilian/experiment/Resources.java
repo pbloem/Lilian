@@ -84,6 +84,14 @@ public class Resources
 		return data;
 	}
 	
+	@Resource(name="three")
+	public static List<Point> ball(@Name("size") int size)
+	{
+		List<Point> data = Datasets.three().generate(size);
+		
+		return data;
+	}	
+	
 	@Resource(name="random-ifs")
 	public static List<Point> randomIFS(@Name("dim") int dim, @Name("components") int components, @Name("size") int size, @Name("var") double var)
 	{
@@ -134,7 +142,7 @@ public class Resources
 	@Resource(name="mandelbrot-class")
 	public static Classified<Point> mandelbrotClass(@Name("size") int size)
 	{
-		List<Point> points = new MVN(2, 3.0).generate(size);
+		List<Point> points = new MVN(2, 10.0).generate(size);
 		List<Integer> classes = Classifiers.mandelbrot().classify(points);
 		
 		return Classification.combine(points, classes);
@@ -156,7 +164,34 @@ public class Resources
 		List<Integer> classes = Classifiers.magnet().classify(points);
 		
 		return Classification.combine(points, classes);
+	}
+	
+	@Resource(name="square")
+	public static Classified<Point> square(@Name("size") int size, @Name("dim")int dim, @Name("r")double r)
+	{
+		List<Point> points = Datasets.cube(dim).generate(size);
+		List<Integer> classes = Classifiers.square(dim, r).classify(points);
+		
+		return Classification.combine(points, classes);
 	}	
+	
+	@Resource(name="line")
+	public static Classified<Point> line(@Name("size") int size, @Name("dim")int dim)
+	{
+		List<Point> points = new MVN(dim, 1.0).generate(size);
+		List<Integer> classes = Classifiers.line(dim).classify(points);
+		
+		return Classification.combine(points, classes);
+	}
+	
+	@Resource(name="sine")
+	public static Classified<Point> sine(@Name("size") int size)
+	{
+		List<Point> points = new MVN(2, 0.2).generate(size);
+		List<Integer> classes = Classifiers.sine().classify(points);
+		
+		return Classification.combine(points, classes);
+	}			
 	
 	@Resource(name="newton-points")
 	public static List<Point> newtonPoints(@Name("size") int size)
