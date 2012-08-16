@@ -391,6 +391,9 @@ public class Run
 			if(equals(typeClass, type))
 				return interpretMulti(value, parameter, type);
 			
+			if(String.class.equals(typeClass) && File.class.equals(type))
+				return interpretMultiFile(value, parameter, type);
+				
 			if(first instanceof Map<?, ?>)
 				return interpretMultiResource(value, parameter, type);
 		}
@@ -566,6 +569,16 @@ public class Run
 		return m;
 	}
 
+	public static Multi<Object> interpretMultiFile(Object value, Parameter parameter, Class<?> type)
+	{
+		Multi<Object> m = new Multi<Object>();
+		
+		for(String v :(Collection<String>) value)
+			m.add(new File(v));
+		
+		return m;
+	}	
+	
 	private static Object interpretMultiResource(Object value,
 			Parameter parameter, Class<?> type)
 	{

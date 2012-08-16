@@ -11,7 +11,7 @@ import org.lilian.corpora.*;
 import JSci.maths.statistics.NormalDistribution;
 
 /**
- * This model implements the statistical techniques deascirbed in the paper
+ * This model implements the statistical techniques described in the paper
  * <i> Level statistics of words: finding keywords in literary texts and 
  * 	   symbolic sequences
  * </i> (P Carpena et al. 2009)

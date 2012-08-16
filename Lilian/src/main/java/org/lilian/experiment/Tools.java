@@ -183,4 +183,18 @@ public class Tools
 		
 	}
 
+	public static double min(List<? extends Number> values)
+	{
+	
+		double min = Double.POSITIVE_INFINITY;
+		
+		for(Object value : values)
+		{
+			double v = ((Number) value).doubleValue();
+			if(!(Double.isNaN(v) || Double.isNaN(v)))
+				min = Math.min(min, v);
+		}
+		
+		return min;
+	}
 }
