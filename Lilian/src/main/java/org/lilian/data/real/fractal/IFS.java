@@ -14,6 +14,7 @@ import org.lilian.data.real.MVN;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Point;
+import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
@@ -63,6 +64,23 @@ public class IFS<M extends Map & Parametrizable >
 		return new IFSGenerator();
 	}
 		
+
+	/**
+	 * Returns a generator which generates points to a fixed depth. It's a 
+	 * little slower than the chaos game (about a factor of depth). 
+	 * 
+	 * @return
+	 */
+	public Generator<Point> generator(int depth)
+	{
+		return new IFSFixedDepthGenerator(depth);
+	}
+	
+	public Generator<Point> generator(int depth, Generator<Point> basis)
+	{
+		return new IFSFixedDepthGenerator(depth, basis);
+	}
+	
 	private class IFSGenerator extends AbstractGenerator<Point>
 	{
 		Point p = basis.generate();
@@ -80,6 +98,36 @@ public class IFS<M extends Map & Parametrizable >
 			return p;
 		}
 	}
+	
+	private class IFSFixedDepthGenerator extends AbstractGenerator<Point>
+	{
+		Generator<Point> basis;
+		int depth;
+	
+		public IFSFixedDepthGenerator(int depth, Generator<Point> basis)
+		{
+			this.basis = basis;
+			this.depth = depth;
+		}
+		
+		public IFSFixedDepthGenerator(int depth)
+		{
+			basis = new MVN(dimension());
+			this.depth = depth;
+		}
+		
+		@Override
+		public Point generate()
+		{
+			Point p = basis.generate();
+			
+			for(int i = 0; i < depth; i++)
+				p = random().map(p);
+			
+			return p;
+		}
+	}
+	
 
 	/**
 	 * Returns the composition of the maps indicated by the list of integers.
@@ -175,6 +223,45 @@ public class IFS<M extends Map & Parametrizable >
 		return ifs;
 	}
 	
+	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, int depth)
+	{
+		return density(ifs, point, depth, new MVN(ifs.dimension()));
+	}
+	
+	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, int depth, MVN basis)
+	{
+		SearchResultImpl result = new SearchResultImpl();
+		search(ifs, point, depth, result, new ArrayList<Integer>(), 0.0,
+			basis.map().getTransformation(), basis.map().getTranslation());
+		
+		return result.probSum();
+	}
+	
+	/** 
+	 * The endpoints of an IFS are the means of the distributions mapped to a 
+	 * given depth. This method returns the endpoint of the distribution whose 
+	 * code is assigned to this point by code(...).
+	 * 
+	 * @param ifs
+	 * @param point
+	 * @param depth
+	 * @return
+	 */
+	public static Point endpoint(IFS<Similitude> ifs, Point point, int depth)
+	{
+		return endpoint(ifs, point, depth, new MVN(ifs.dimension()));
+	}
+	
+	public static Point endpoint(IFS<Similitude> ifs, Point point, int depth,
+			MVN basis)
+	{
+		SearchResultImpl result = new SearchResultImpl();
+		search(ifs, point, depth, result, new ArrayList<Integer>(), 0.0,
+			basis.map().getTransformation(), basis.map().getTranslation());
+		
+		return result.mean();
+	}
+	
 	/**
 	 * Finds the transformation of the initial distribution that is most likely 
 	 * to generate the given point. Transformations considered are all d length
@@ -187,33 +274,56 @@ public class IFS<M extends Map & Parametrizable >
 	public static <M extends AffineMap> List<Integer> code(
 			IFS<M> ifs, Point point, int depth)
 	{
-		Result res = code(
-				ifs, point, depth, new Result(),
+		return code(ifs, point, depth, new MVN(ifs.dimension()));
+	}
+		
+	public static <M extends AffineMap> List<Integer> code(
+			IFS<M> ifs, Point point, int depth, MVN basis)
+	{		
+		SearchResult res = search(
+				ifs, point, depth, new SearchResultImpl(),
 				new ArrayList<Integer>(depth), 0.0, 
-				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()));
+				basis.map().getTransformation(), basis.map().getTranslation());
 		return res.code();
 	}
 	
-	private static <M extends AffineMap> Result code(
+	public static <M extends AffineMap> SearchResult search(
+			IFS<M> ifs, Point point, int depth)
+	{
+		return search(ifs, point, depth, new MVN(ifs.dimension()));
+	}
+	
+	public static <M extends AffineMap> SearchResult search(
+			IFS<M> ifs, Point point, int depth, MVN basis)
+	{
+		SearchResult res = search(
+				ifs, point, depth, new SearchResultImpl(),
+				new ArrayList<Integer>(depth), 0.0, 
+				basis.map().getTransformation(), basis.map().getTranslation());
+		return res;
+	}
+	
+	private static <M extends AffineMap> SearchResult search(
 			IFS<M> ifs, Point point, int depth, 
-			Result result, List<Integer> current, 
-			double prior, RealMatrix transform, RealVector translate)	
+			SearchResultImpl result, List<Integer> current, 
+			double logPrior, RealMatrix transform, RealVector translate)	
 	{
 		if(current.size() == depth)
 		{
-			double prob;
+			double logProb;
 			
 			AffineMap map = new AffineMap(transform, translate);
 			if(map.invertible())
 			{
 				MVN mvn = new MVN(new AffineMap(transform, translate));
-				prob = prior + Math.log(mvn.density(point));
-			} else prob = 
-					Double.NEGATIVE_INFINITY;
+				logProb = logPrior + Math.log(mvn.density(point));
+			} else { 
+				logProb = Double.NEGATIVE_INFINITY;
+			}
 			
 			double dist = dist(point, translate);
 			
-			result.show(prob, new ArrayList<Integer>(current), dist);
+			result.show(logProb, new ArrayList<Integer>(current), dist, new Point(translate), logPrior);
 			return result;
 		}
 		
@@ -225,8 +335,8 @@ public class IFS<M extends Map & Parametrizable >
 			RealVector ct = transform.operate(ifs.get(i).getTranslation());
 			ct = ct.add(translate);
 			
-			code(ifs, point, depth, result, current, 
-					prior + Math.log(ifs.probability(i)), cr, ct);
+			search(ifs, point, depth, result, current, 
+					logPrior + Math.log(ifs.probability(i)), cr, ct);
 			
 			current.remove(current.size() - 1);
 		}
@@ -235,36 +345,115 @@ public class IFS<M extends Map & Parametrizable >
 		
 	}
 	
-	private static class Result 
+	/** 
+	 * The result of a search through all endpoint distributions
+	 * @author Peter
+	 *
+	 */
+	public static interface SearchResult
 	{
-		private double prob = Double.NEGATIVE_INFINITY;
-		private double distance = Double.POSITIVE_INFINITY;
+		public double logProb();
+		
+		public List<Integer> code();
+		
+		public Point mean();
+		
+		/**
+		 * The sum of all the probability densities. This is an estimate for the
+		 * probability density of the point.
+		 * @return
+		 */
+		public double probSum();
+		
+		/**
+		 * This value works as an approximation to the probability density. This 
+		 * can be used if probSum() returns zero for all points under 
+		 * investigation.
+		 * 
+		 *   
+		 * Should only be used to compare different values (ie. the point with 
+		 * the highest approximate value probably has highest density).
+		 * @return
+		 */
+		
+		public double approximation();
+	}
+	
+	private static class SearchResultImpl implements SearchResult
+	{
+		private double logProb = Double.NEGATIVE_INFINITY;
+		private double codeApprox = Double.NEGATIVE_INFINITY;
+		
 		private List<Integer> code = null;
 		private List<Integer> codeFallback = null;
 		
-		public void show(double prob, List<Integer> code, double distance)
+		private Point mean = null;
+		private Point meanFallback = null;
+		
+		private double probSum = 0.0;
+		private double densityApprox = 0.0;
+		private int daTotal = 0;
+		
+		public void show(double logProb, List<Integer> code, double distance, Point mean, double logPrior)
 		{
-			if(prob > this.prob && !Double.isNaN(prob) && !Double.isInfinite(prob))
-			{	
-				this.prob = prob;
-				this.code = code;
+			if(!Double.isNaN(logProb) && !Double.isInfinite(logProb))
+			{
+				probSum += Math.exp(logProb);
 			}
 			
-			if(distance < this.distance && !Double.isNaN(distance) && !Double.isInfinite(distance))
+			if(!Double.isNaN(distance) && !Double.isInfinite(distance))
 			{
-				this.distance = distance;
+				// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
+				double approx = Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
+				densityApprox = Math.max(densityApprox, approx);
+			}			
+			
+			if(logProb > this.logProb && !Double.isNaN(logProb) && !Double.isInfinite(logProb))
+			{	
+				this.logProb = logProb;
+				this.code = code;
+				this.mean = mean;
+			}
+			
+			double app = - distance;
+			if(app > this.codeApprox && !Double.isNaN(distance) && !Double.isInfinite(distance))
+			{
+				this.codeApprox = app;
 				this.codeFallback = code;
+				this.meanFallback = mean;
 			}
 		}
 		
-		public double prob()
+		public double logProb()
 		{
-			return prob;
+			return logProb;
 		}
 		
 		public List<Integer> code()
 		{
 			return code != null ? code : codeFallback;
+		}
+		
+		public Point mean()
+		{
+			return mean != null ? mean : meanFallback;
+		}
+		
+		/**
+		 * The sum of all the probability densities. This is an estimate for the
+		 * probability density of the point.
+		 * @return
+		 */
+		public double probSum()
+		{
+			return probSum;
+		}
+
+		@Override
+		public double approximation()
+		{
+			// return Math.exp(0.5 * codeApprox);
+			return densityApprox;
 		}
 	}	
 	

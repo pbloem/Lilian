@@ -576,49 +576,37 @@ public class Classifiers
 	}	
 	
 	/**
-	 * Returns a classifier that classifies 2d points according to the bi-unit 
-	 * square. 
+	 * Returns a classifier that classifies points according to the bi-unit 
+	 * square or high dimensional analog
 	 * 
 	 * @return
 	 */
-	public static Classifier square()
+	public static Classifier square(int n, double r)
 	{
-		return new SquareClassifier();
+		return new SquareClassifier(n , r);
 	}
-	public static Classifier square(double r)
-	{
-		return new SquareClassifier(r);
-	}
-	
-	/**
-	 * A simple three-class classifier 
-	 * @return
-	 */
-	public static Classifier square3()
-	{
-		return new SquareClassifier3();
-	}	
 	
 	private static class SquareClassifier extends AbstractClassifier
 	{
 		private double r = 0.5;
 		
-		public SquareClassifier()
+		public SquareClassifier(int n)
 		{
-			super(2, 2);
+			super(n, 2);
 		}
-		public SquareClassifier(double r)
+		public SquareClassifier(int n, double r)
 		{
-			super(2, 2);
+			super(n, 2);
 			this.r = r;			
 		}
 
-		public int classify(List<Double> point) {
-			double x = point.get(0), y = point.get(1);
-			if(x < r && x > -r && y < r && y > -r)
-				return 1;
+		public int classify(Point point) 
+		{
+			for(double x : point)
+				if(x > r || x < -r)
+					return 0;
 			
-			return 0;
+			return 1;
 		}
 
 		public void learn(List<? extends List<Double>> data, List<Integer> classes) {
@@ -626,29 +614,52 @@ public class Classifiers
 		}
 	}	
 	
-	private static class SquareClassifier3 extends AbstractClassifier
+
+	public static Classifier line(int dim)
 	{
-		private double r = 0.5;
-		
-		public SquareClassifier3()
+		return new LineClassifier(dim);
+	}
+
+	private static class LineClassifier extends AbstractClassifier
+	{		
+		public LineClassifier(int n)
 		{
-			super(2, 2);
-		}
-		public SquareClassifier3(double r)
-		{
-			super(2, 2);
-			this.r = r;			
+			super(n, 2);
 		}
 
-		public int classify(List<Double> point) {
-			double x = point.get(0), y = point.get(1);
-			if((x > r || x < -r) || (y > r || y < -r))
+		public int classify(Point point) 
+		{
+			if(point.get(0) > 0 )
 				return 0;
 			
-			if(x > 0.0)
-				return 1;
+			return 1;
+		}
+
+		public void learn(List<? extends List<Double>> data, List<Integer> classes) {
+			throw new UnsupportedOperationException("The Square classifier doesn't learn");			
+		}
+	}	
+	
+	public static Classifier sine()
+	{
+		return new SineClassifier();
+	}
+	
+	private static class SineClassifier extends AbstractClassifier
+	{		
+		public SineClassifier()
+		{
+			super(2, 2);
+		}
+
+		public int classify(Point point) 
+		{
+			double x = point.get(0);
 			
-			return 2;
+			if(point.get(1) > Math.sin(x*6.0)/2.0)
+				return 0;
+			
+			return 1;
 		}
 
 		public void learn(List<? extends List<Double>> data, List<Integer> classes) {

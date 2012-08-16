@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.Test;
 import org.lilian.search.Builder;
 import org.lilian.search.Parameters;
+import org.lilian.util.Series;
 
 public class AffineMapTest 
 {
@@ -32,6 +33,20 @@ public class AffineMapTest
 		
 		assertFalse(map.invertible());		
 	}
+	
+	@Test
+	public void testInverse() 
+	{
+		AffineMap m = random(3);
+		
+		for(Point p : new MVN(3).generate(20))
+		{
+			Point q = m.inverse().map(m.map(p));
+			for(int i : Series.series(3))
+				assertEquals(p.get(i), q.get(i), 0.00000001);
+		}
+		
+	}	
 
 	@Test
 	public void testDimension() 

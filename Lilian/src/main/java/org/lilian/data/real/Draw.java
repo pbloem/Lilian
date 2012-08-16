@@ -143,9 +143,19 @@ public class Draw
 		return draw(generator, samples, range, range, res, res, log);
 	}
 	
-	public static <M extends Map & Parametrizable> BufferedImage draw(IFS<M> ifs, int samples, double[] xrange, double[] yrange, int xRes, int yRes, boolean log)
+	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
+			int xRes, int yRes, boolean log)
 	{
-		BufferedImage image = draw(ifs.generator(), samples, xrange, yrange, xRes, yRes, log);
+		return draw(ifs, samples, xrange, yrange, xRes, yRes, log, -1, null);
+	}
+	
+	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
+			int xRes, int yRes, boolean log, int depth, Generator<Point> basis)
+	{
+		BufferedImage image = draw(
+				depth == -1 ? ifs.generator() : ifs.generator(depth, basis), samples, xrange, yrange, xRes, yRes, log);
 			
 		List<Point> frame = new ArrayList<Point>(6);
 		frame.add(new Point(-1.0, -1.0));
@@ -244,7 +254,22 @@ public class Draw
 											int yRes,											
 											boolean log)
 	{
-
+		return draw(generator, samples, xrange, yrange, xRes, yRes, log, null);
+	}
+	
+	public static BufferedImage draw(Generator<Point> generator,
+				int samples,
+				double[] xrange, 
+				double[] yrange, 
+				int xRes,
+				int yRes,											
+				boolean log,
+				AffineMap preMap)
+	{
+		
+		AffineMap inverse = (preMap != null) ? preMap.inverse() : null;
+		System.out.println(inverse);
+		
 		// * size of the image in coordinates
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
@@ -270,6 +295,9 @@ public class Draw
 		for(int i = 0; i < samples; i++)
 		{
 			Point point = generator.generate();
+			
+			if(preMap != null)
+				point = inverse.map(point);
 			
 			xp = toPixel(point.get(0), xRes, xrange[0], xrange[1]); 
 			yp = toPixel(point.get(1), yRes, yrange[0], yrange[1]);
@@ -352,7 +380,6 @@ public class Draw
 											double[] yrange, 
 											int res, int depth,
 											int beamWidth)
-		throws IOException
 	{
 		if(ifs.size() > 3)
 			throw new IllegalArgumentException("IFS must have three components or less (had "+ifs.size()+").");
@@ -417,7 +444,81 @@ public class Draw
 		return image;
 	}
 		
+	public static <M extends AffineMap> BufferedImage drawDensities(
+			IFS<M> ifs,
+			double[] xrange, 
+			double[] yrange, 
+			int res,
+			int depth,
+			boolean useApproximation)
+	{		
+		double 	xDelta = xrange[1] - xrange[0],
+				yDelta = yrange[1] - yrange[0];
+		
+		double maxDelta = Math.max(xDelta, yDelta); 		
+		double minDelta = Math.min(xDelta, yDelta);
+		
+		double step = minDelta/(double) res;
+		
+		int xRes = (int) (xDelta / step);
+		int yRes = (int) (yDelta / step);
+		
+		BufferedImage image = 
+			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_RGB);		
+		
+		double x, y;
+		Point p;
+		
+		float max = Float.NEGATIVE_INFINITY,
+		      min = Float.POSITIVE_INFINITY;
+		
+		float[][] values = new float[xRes][];
+		for(int i = 0; i < xRes; i++)
+		{
+			values[i] = new float[yRes];
+			for(int j = 0; j < yRes; j++)
+				values[i][j] = 0.0f;
+		}
+				
+		
+		for(int i = 0; i < xRes; i++)
+		{
+			x =  xrange[0] + step*0.5 + step * i;
+			for(int j = 0; j < yRes; j++)				
+			{
+				y = yrange[0] + step*0.5 + step * j;
+				
+				p = new Point(x, y);
+				float density = (float) (
+						useApproximation ?
+						IFS.search(ifs, p, depth).approximation():
+						IFS.search(ifs, p, depth).probSum());
+				
+				values[i][j] =density;
+						
+				max = Math.max(density, max);
+				min = Math.min(density, min);
+			}
+		}
+		
+		for(int i = 0; i < xRes; i++)
+			for(int j = 0; j < yRes; j++)				
+			{
+				float density = values[i][j];
+				
+				Color color = null;
+				
+				float gray = (density - min) / (max - min);
 
+				color = new Color(gray, gray, gray);
+				
+				image.setRGB(i, j, color.getRGB());			
+			}
+
+		return image;
+	}
+	
+	
 //	/**
 //	 * Draws multidimensional classed data.
 //	 * 

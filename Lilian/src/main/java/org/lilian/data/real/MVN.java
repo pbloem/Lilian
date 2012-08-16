@@ -80,6 +80,22 @@ public class MVN implements Density, Generator<Point>
 
 		inverse = transform.inverse();	
 	}
+	
+	/**
+	 * Centralized MVN with the given variance. The MVN is spherical.
+	 * @param dim
+	 * @param var
+	 */
+	public MVN(Point mean, double var)
+	{
+		RealVector s = new ArrayRealVector(mean.dimensionality());
+		s.set(var);
+		
+		RealMatrix matrix = MatrixTools.diag(s);
+		transform = new AffineMap(matrix, mean.getVector());
+
+		inverse = transform.inverse();	
+	}	
 
 	public MVN(Point mean)
 	{
@@ -96,7 +112,7 @@ public class MVN implements Density, Generator<Point>
 			decomp = new CholeskyDecompositionImpl(covariance, THRESHOLD, THRESHOLD);
 		} catch (MathException e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException("Could not perform Cholesky decomposition on matrix " + covariance, e);
 		}
 		
 		transform = new AffineMap(decomp.getL(), mean.getVector());
@@ -214,19 +230,22 @@ public class MVN implements Density, Generator<Point>
 		return new MVN(dim);
 	}
 	
+	
+	
+	@Override
+	public String toString()
+	{
+		return "[covariance=" + covariance() + ", mean=" + mean() + "]";
+	}
+
 	/**
-	 * Takes a list of points of the same diomensionality and estimates a 
+	 * Takes a list of points of the same dimensionality and estimates a 
 	 * multivariate normal distribution for them.
 	 * 
 	 * The MVN is estimated as the sample mean and sample covariance matrix.
 	 * 
 	 * @return
 	 */
-	public static MVN fromPoints(List<Point> points)
-	{
-		return null;
-	}
-
 	public static MVN find(List<Point> points)
 	{
 		int dim = points.get(0).dimensionality();
@@ -254,4 +273,41 @@ public class MVN implements Density, Generator<Point>
 		
 		return new MVN(new Point(mean), cov);
 	}
+	
+	
+	/**
+	 * Takes a list of points of the same dimensionality and estimates a 
+	 * spherical multivariate normal distribution for them.
+	 * 
+	 * A sphreical MVN is defined by a mean and a scalar s such that sI is 
+	 * the covariance matrix  
+	 * 
+	 * @return
+	 */
+	public static MVN findSpherical(List<Point> points)
+	{
+		int dim = points.get(0).dimensionality();
+		int size = points.size();
+		
+		// * Calculate the mean
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector mean = new ArrayRealVector(dim);
+		for(Point x : points)
+			mean = mean.add(x.getBackingData());
+		mean.mapMultiplyToSelf(1.0/size);
+	
+		// * Calculate s
+		RealVector difference;
+		double sumQuadrance = 0.0;
+		
+		for(Point x : points)
+		{
+			difference = x.getVector().subtract(mean);
+			sumQuadrance += difference.dotProduct(difference);
+		}
+		
+		double s = sumQuadrance / (size * dim);
+		
+		return new MVN(new Point(mean), MatrixTools.identity(dim).scalarMultiply(s));
+	}	
 }
