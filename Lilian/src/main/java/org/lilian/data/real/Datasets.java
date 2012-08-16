@@ -106,7 +106,45 @@ public class Datasets
 	}
 	
 	/**
-	 * Three small MVN's in R^2
+	 * The swiss roll: Four MVNs in 2D mapped to 3d with a smooth spiralling 
+	 * function
+	 * 
+	 * From this description: http://people.cs.uchicago.edu/~dinoj/manifold/swissroll.html
+	 */
+	public static Generator<Point> swiss()
+	{
+		return new Swiss();
+	}
+	
+	private static class Swiss extends AbstractGenerator<Point>
+	{		
+		List<MVN> mvns = new ArrayList<MVN>();
+		
+		public Swiss()
+		{
+			
+			mvns.add(new MVN(new Point( 7.5,   7.5), 1.0));
+			mvns.add(new MVN(new Point( 7.5,  12.5), 1.0));
+			mvns.add(new MVN(new Point(12.5,   7.5), 1.0));
+			mvns.add(new MVN(new Point(12.5,  12.5), 1.0));
+			
+		}
+
+		public Point generate()
+		{
+			int i = Global.random.nextInt(mvns.size());
+	
+			// * 2D point
+			Point p = mvns.get(i).generate();
+			return new Point(
+				p.get(0) * Math.cos(p.get(0)),
+				p.get(1),
+				p.get(0) * Math.cos(p.get(0)));
+		}
+	}	
+	
+	/**
+	 * Three small MVNs in R^2
 	 */
 	public static Generator<Point> three()
 	{

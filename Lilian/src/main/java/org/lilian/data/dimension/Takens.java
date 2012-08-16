@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.lilian.Global;
 import org.lilian.data.real.AbstractGenerator;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 import org.lilian.util.distance.Distance;
 
@@ -50,7 +51,7 @@ public class Takens extends AbstractGenerator<Double>
 	public double ksTest(List<Double> distances, boolean sorted)
 	{
 		int n = distances.size();
-		List<Double> tail = new ArrayList<Double>((n*n-n)/2);
+		List<Double> tail = new ArrayList<Double>(n);
 		
 		for(double distance : distances)
 			if(distance < maxDistance)
@@ -246,12 +247,13 @@ public class Takens extends AbstractGenerator<Double>
 			Takens best = null;
 			double bestKS = Double.POSITIVE_INFINITY;		
 			
-			int i = 0;
-			for(double distance : distances)
+			Functions.tic();
+			
+			// * We walk through the distances backwards because the 
+			// last values will take the longest.
+			for(int i : series(distances.size()-1, -1))
 			{
-				i++;
-				
-				Takens current = fit(distance);
+				Takens current = fit(distances.get(i));
 				double ksValue = current.ksTest(this.distances, true);
 				
 				if(ksValue < bestKS)
@@ -261,7 +263,7 @@ public class Takens extends AbstractGenerator<Double>
 				}
 				
 				if(i%200 == 0)
-					Global.log().info("Iteration " + i + " of " + distances.size() + " finished.");
+					Global.log().info("Iteration " + i + " of " + distances.size() + " finished. ("+((100 * i)/distances.size()) +"% after "+Functions.toc()+" seconds)");
 			}
 
 			return best;

@@ -129,6 +129,12 @@ public class Resources
 		
 		return data;
 	}	
+	
+	@Resource(name="swiss")
+	public static List<Point> swiss(@Name("size") int size)
+	{
+		return Datasets.swiss().generate(size);
+	}
 
 	@Resource(name="mvn")
 	public static List<Point> mvn(@Name("dim") int dim,  @Name("size") int size)
