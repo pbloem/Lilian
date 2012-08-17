@@ -364,9 +364,12 @@ public class Datasets
 	 * @return
 	 * @throws IOException 
 	 */
-	public Point readImage(File imageFile, boolean gray) throws IOException
+	public static Point readImage(File imageFile, boolean gray) throws IOException
 	{
 		BufferedImage image = ImageIO.read(imageFile);
+		if(image == null)
+			throw new IOException("Failed to read image from file: " + imageFile);
+		
 		int width = image.getWidth();
 		int height = image.getHeight();
 
@@ -412,5 +415,30 @@ public class Datasets
 		}
 		
 		return Point.fromRaw(values);
+	}
+	
+	/**
+	 * Reads a directory of images into a list of points.
+	 * 
+	 * The images are not resized, so if they have different dimensions then the 
+	 * points in the returned list will have different dimensionality.
+	 * @param dir
+	 * @param gray
+	 * @return
+	 */
+	public static List<Point> readImages(File dir, boolean gray)
+		throws IOException
+	{
+		File[] files = dir.listFiles();
+		if(files == null)
+			throw new IllegalArgumentException("Argument (+"+dir+"+) is not a directory.");
+		
+		List<Point> dataset = new ArrayList<Point>(files.length);
+		
+		for(File file : files)
+			if(!file.isDirectory() && !file.isHidden())
+				dataset.add(readImage(file, gray));
+		
+		return dataset;
 	}
 }

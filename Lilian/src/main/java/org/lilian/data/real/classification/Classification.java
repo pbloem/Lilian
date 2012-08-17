@@ -45,6 +45,11 @@ public class Classification
 		return new Combination<P>();		
 	}
 	
+	public static <P> Classified<P> empty(int capacity)
+	{
+		return new Combination<P>(capacity);
+	}	
+	
 	public static <P> Classified<P> combine(List<P> data, List<Integer> classes)
 	{
 		return new Combination<P>(data, classes);
@@ -61,6 +66,12 @@ public class Classification
 		{
 			this.data = new ArrayList<P>();
 			this.classes = new ArrayList<Integer>();
+		}
+		
+		public Combination(int capacity) 
+		{
+			this.data = new ArrayList<P>(capacity);
+			this.classes = new ArrayList<Integer>(capacity);
 		}
 		
 		public Combination(List<P> data, List<Integer> classes)
@@ -392,19 +403,6 @@ public class Classification
 	    }
 	    
 	    return combine(points, classes);
-	}
-	
-	public static <M> Classified<M> empty()
-	{
-		return empty(16);
-	}
-	
-	public static <M> Classified<M> empty(int capacity)
-	{
-		List<M> instances = new ArrayList<M>(capacity);
-		List<Integer> classes = new ArrayList<Integer>(capacity);
-		
-		return combine(instances, classes);
 	}
 	
 	public static <M> Classified<M> copy(Classified<M> classified)

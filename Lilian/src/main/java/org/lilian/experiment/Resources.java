@@ -299,4 +299,11 @@ public class Resources
 	{
 		return Classification.readCSV(file).points(clss);
 	}	
+	
+	@Resource(name="read images")
+	public static List<Point> readImages(@Name("dir") File dir, @Name("gray") boolean gray)
+		throws IOException
+	{
+		return Datasets.readImages(dir, gray);
+	}
  }
