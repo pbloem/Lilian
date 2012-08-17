@@ -15,6 +15,8 @@ import java.util.ListIterator;
 
 import org.lilian.Global;
 import org.lilian.data.real.Point;
+import org.lilian.util.Pair;
+import org.lilian.util.Series;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -320,6 +322,31 @@ public class Classification
 	}
 	
 	/**
+	 * Returns a random split of the dataset. The first dataset in the 
+	 * returned pair contains the ratio of instances indicated by the split 
+	 * parameter.
+	 * 
+	 * @param dataset
+	 * @param split
+	 * @return
+	 */
+	public static <M> Pair<Classified<M>, Classified<M>> split(
+			Classified<M> dataset, double split)
+	{
+		dataset = copy(dataset);
+		
+		int nFirst = (int)(dataset.size() * split);
+		nFirst += (int)(0.2 * nFirst);
+		
+		Classified<M> first = Classification.empty(max(16, nFirst));
+		
+		for(int i : Series.series((int)(dataset.size() * split)))
+			first.add(dataset.remove(Global.random.nextInt(dataset.size())));
+		
+		return new Pair<Classified<M>, Classified<M>>(first, dataset);
+	}
+	
+	/**
 	 * Reads a CSV file containing numerical values into a list of points.
 	 * 
 	 * @param file
@@ -341,5 +368,29 @@ public class Classification
 	    }
 	    
 	    return data;
+	}
+	
+	public static <M> Classified<M> empty()
+	{
+		return empty(16);
+	}
+	
+	public static <M> Classified<M> empty(int capacity)
+	{
+		List<M> instances = new ArrayList<M>(capacity);
+		List<Integer> classes = new ArrayList<Integer>(capacity);
+		
+		return combine(instances, classes);
+	}
+	
+	public static <M> Classified<M> copy(Classified<M> classified)
+	{
+		List<M> instances = new ArrayList<M>(classified);
+		List<Integer> classes = new ArrayList<Integer>(classified.size());
+		
+		for(int i : series(classified.size()))
+			classes.add(classified.cls(i));
+		
+		return combine(instances, classes);
 	}
 }

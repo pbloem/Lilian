@@ -2,12 +2,18 @@ package org.lilian.data.real;
 
 import static org.lilian.util.Series.series;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import org.lilian.Global;
 import org.lilian.util.Series;
@@ -348,5 +354,63 @@ public class Datasets
 	    }
 	    
 	    return data;
+	}
+	
+	/**
+	 * Reads an image file and flattens it into a vector of double values
+	 * @param imageFile
+	 * @param gray Whether to flatten any color values to a single gray (true)
+	 *  or to concatenate the three separate channel images into a single vector
+	 * @return
+	 * @throws IOException 
+	 */
+	public Point readImage(File imageFile, boolean gray) throws IOException
+	{
+		BufferedImage image = ImageIO.read(imageFile);
+		int width = image.getWidth();
+		int height = image.getHeight();
+
+		
+		double[] values;
+		
+		if(gray) {
+			values = new double[width * height];
+			
+			int h = 0;
+			for(int i = 0; i < width; i++)
+				for(int j = 0; j < height; j++)
+				{
+
+					Color color = new Color(image.getRGB(i, j));
+					double value = color.getRed() + color.getGreen() + color.getBlue();
+					value = value / (255.0 * 3.0);
+					values[h] = value; 
+					
+					h++;
+				}
+		} else 
+		{
+			values = new double[width * height * 3];
+			
+			int h = 0;
+			for(int c = 0; c < 3; c++)
+			{
+				for(int i = 0; i < width; i++)
+					for(int j = 0; j < height; j++)
+					{
+						Color color = new Color(image.getRGB(i, j));
+						if(c == 0)
+							values[h] = color.getRed() / 255.0;
+						if(c == 1)
+							values[h] = color.getBlue() / 255.0;
+						if(c == 2)
+							values[h] = color.getGreen() / 255.0;
+						
+						h ++;
+					}
+			}
+		}
+		
+		return Point.fromRaw(values);
 	}
 }

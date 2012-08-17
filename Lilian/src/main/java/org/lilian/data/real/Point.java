@@ -22,6 +22,10 @@ public class Point
 	
 	private double[] values; 
 
+	private Point()
+	{
+	}
+	
 	/**
 	 * Creates a Point of the given dimensionality, with all zero values. 
 	 * 
@@ -101,7 +105,7 @@ public class Point
 	/**
 	 * Returns this Point represented as an array of double values.
 	 * 
-	 * The point is backed by this array, so this method should be user with 
+	 * The point is backed by this array, so this method should be used with 
 	 * extreme care, only in situation where optimization is important  
 	 */
 	public double[] getBackingData()
@@ -181,4 +185,19 @@ public class Point
 		return new Point(in);
 	}
 	
+	/**
+	 * Creates a point with the given data as backing data. This will reduces
+	 * memory use/increase speed in many cases, but at the risk of introducing 
+	 * nasty bugs. Use with caution. 
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public static Point fromRaw(double[] data)
+	{
+		Point p = new Point();
+		p.values = data;
+		
+		return p;
+	}
 }
