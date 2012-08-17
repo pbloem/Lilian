@@ -146,9 +146,9 @@ public class BaselineParser<T> implements Parser<T>
 	{
 		BaselineParser<String> b = new BaselineParser<String>(Mode.RANDOM, "Y");  
 		
-		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().getFirst());
-		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().getFirst());
-		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().getFirst());
-		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().getFirst());		
+		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().first());
+		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().first());
+		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().first());
+		System.out.println(b.parse(Functions.sentence("A B C D")).bestParse().first());		
 	}
 }

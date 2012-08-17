@@ -795,7 +795,7 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 			Collections.sort(result0, new TreeDoubleComparator());
 
 			for(Pair<Tree<T>, Double> pair : result0)
-				result.add(pair.getFirst());
+				result.add(pair.first());
 			
 			return result;
 		}
@@ -964,7 +964,7 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 
 			for(Pair<Tree<T>, Double> pair : v) 
 			{
-				out.write(pair.getFirst() + ",\t" + pair.getSecond() + "\n");
+				out.write(pair.first() + ",\t" + pair.second() + "\n");
 			}
 
 			out.flush();
@@ -1157,12 +1157,12 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 		{
 			public int compare(Pair<Tree<T>, Double> p1, Pair<Tree<T>, Double> p2)
 			{
-				Double p1Prob = p1.getSecond();
-				Double p2Prob = p2.getSecond();
+				Double p1Prob = p1.second();
+				Double p2Prob = p2.second();
 				
-				if(rootSymbols.contains(p1.getFirst().getRoot().getValue()))
+				if(rootSymbols.contains(p1.first().getRoot().getValue()))
 					p1Prob += 1.0;
-				if(rootSymbols.contains(p2.getFirst().getRoot().getValue()))
+				if(rootSymbols.contains(p2.first().getRoot().getValue()))
 					p2Prob += 1.0;
 				
 				int c = p1Prob.compareTo(p2Prob);
@@ -1205,7 +1205,7 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 		Collection<Pair<Tree<String>, Double>> trees = p.allParses(); 
 		
 		for(Pair<Tree<String>, Double> pair : trees)
-			System.out.println(pair.getFirst());
+			System.out.println(pair.first());
 	}
 
 	// TODO: implement these (see PCFGrammar)

@@ -148,12 +148,12 @@ public class GreedyBoxer<V, E> implements BoxingAlgorithm<V, E>
 			{
 				Iterator<Pair<Integer, Integer>> it = neighbours.iterator();
 				while(it.hasNext())
-					if(it.next().getSecond() < l + 1)
+					if(it.next().second() < l + 1)
 						it.remove();
 								
 				nColors.clear();
 				for(Pair<Integer, Integer> pair : neighbours)
-					nColors.add(colors[pair.getFirst()][l]);
+					nColors.add(colors[pair.first()][l]);
 				
 				colors[i][l] = smallestException(nColors);
 			}

@@ -146,19 +146,19 @@ public class Classification
 		@Override
 		public boolean add(P item)
 		{
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("Items can only be added together with a class");
 		}
 
 		@Override
 		public void add(int i, P item)
 		{
-			throw new UnsupportedOperationException();			
+			throw new UnsupportedOperationException("Items can only be added together with a class");			
 		}
 
 		@Override
 		public boolean addAll(Collection<? extends P> arg0)
 		{
-			throw new UnsupportedOperationException();			
+			throw new UnsupportedOperationException("Items can only be added together with classes");			
 		}
 
 		@Override
@@ -364,6 +364,7 @@ public class Classification
 	public static <M> Pair<Classified<M>, Classified<M>> split(
 			Classified<M> dataset, double split)
 	{
+		int max = dataset.numClasses();
 		dataset = copy(dataset);
 		
 		int nFirst = (int)(dataset.size() * split);
@@ -372,8 +373,14 @@ public class Classification
 		Classified<M> first = Classification.empty(max(16, nFirst));
 		
 		for(int i : Series.series((int)(dataset.size() * split)))
-			first.add(dataset.remove(Global.random.nextInt(dataset.size())));
+		{
+			int draw = Global.random.nextInt(dataset.size());
+			first.add(dataset.get(draw), dataset.cls(draw));
+			dataset.remove(draw);
+		}
 		
+		first.setMaxClass(max - 1);
+
 		return new Pair<Classified<M>, Classified<M>>(first, dataset);
 	}
 	
@@ -407,12 +414,17 @@ public class Classification
 	
 	public static <M> Classified<M> copy(Classified<M> classified)
 	{
+		int max = classified.numClasses();
+		
 		List<M> instances = new ArrayList<M>(classified);
 		List<Integer> classes = new ArrayList<Integer>(classified.size());
 		
 		for(int i : series(classified.size()))
 			classes.add(classified.cls(i));
 		
-		return combine(instances, classes);
+		
+		Classified<M> copy = combine(instances, classes);
+		copy.setMaxClass(max - 1);
+		return copy;
 	}
 }

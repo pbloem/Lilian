@@ -294,7 +294,7 @@ public class Resources
 	}
 	
 	@Resource(name="csv classification filtered")
-	public static List<Point> csvClassificationFiletered(@Name("file") File file, @Name("class") int clss) 
+	public static List<Point> csvClassificationFiltered(@Name("file") File file, @Name("class") int clss) 
 		throws IOException
 	{
 		return Classification.readCSV(file).points(clss);

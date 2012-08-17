@@ -17,12 +17,12 @@ public class Pair<A, B>
 		this.two = two;
 	}
 
-	public A getFirst()
+	public A first()
 	{
 		return one;
 	}
 
-	public B getSecond()
+	public B second()
 	{
 		return two;
 	}

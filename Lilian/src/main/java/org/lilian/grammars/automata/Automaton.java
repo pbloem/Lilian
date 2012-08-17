@@ -688,7 +688,7 @@ public class Automaton<T>
 	{
 		public int compare(Pair<Automaton<T>, Double> p0, Pair<Automaton<T>, Double> p1)
 		{
-			return p0.getSecond().compareTo(p1.getSecond());
+			return p0.second().compareTo(p1.second());
 		}
 	}
 
@@ -759,8 +759,8 @@ public class Automaton<T>
 	
 		for(Pair<Automaton<T>.State, Automaton<T>.State> pair : pairs)
 		{
-			state1 = pair.getFirst();
-			state2 = pair.getSecond();
+			state1 = pair.first();
+			state2 = pair.second();
 	
 			newAutomaton = new Automaton<T>(a);
 			newAutomaton.merge(state1.getId(), state2.getId());
@@ -836,8 +836,8 @@ public class Automaton<T>
 			
 			
 			// * Get the next automaton
-			current = queue.get(0).getFirst();
-			currentComplexity = queue.get(0).getSecond();
+			current = queue.get(0).first();
+			currentComplexity = queue.get(0).second();
 			queue.remove(0);
 			
 			// * If this is better than the current best, it becomes the current best
@@ -877,7 +877,7 @@ public class Automaton<T>
 			}
 			
 			Collections.sort(queue, comp);
-			top = queue.get(0).getFirst();
+			top = queue.get(0).first();
 			
 		}
 		

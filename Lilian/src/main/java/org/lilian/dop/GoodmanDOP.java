@@ -430,8 +430,8 @@ public class GoodmanDOP<T> implements Parser<T>
 			
 			for(Pair<Tree<Constituent>, Double> pair : derivations)
 				result.add(new Pair<Tree<T>, Double>(
-						ToCNF.reconstruct(reconstruct(pair.getFirst())), 
-						pair.getSecond()));
+						ToCNF.reconstruct(reconstruct(pair.first())), 
+						pair.second()));
 
 			return result;
 		}
@@ -507,7 +507,7 @@ public class GoodmanDOP<T> implements Parser<T>
 			Collection<Pair<Tree<T>, Double>> v = allParses();
 
 			for(Pair<Tree<T>, Double> pair : v) 
-				out.write(pair.getFirst() + ",\t" + pair.getSecond() + "\n");
+				out.write(pair.first() + ",\t" + pair.second() + "\n");
 
 			out.flush();
 			out.close();
@@ -531,8 +531,8 @@ public class GoodmanDOP<T> implements Parser<T>
 			
 			Pair<Tree<T>, Double> result = 
 				new Pair<Tree<T>, Double>(
-						ToCNF.reconstruct( reconstruct(in.getFirst())), 
-						in.getSecond()); 
+						ToCNF.reconstruct( reconstruct(in.first())), 
+						in.second()); 
 	
 			return result;			
 		}
@@ -545,7 +545,7 @@ public class GoodmanDOP<T> implements Parser<T>
 			derivations = new ArrayList<Pair<Tree<Constituent>, Double>>();
 
 			for(Pair<Tree<Constituent>, Double> pair : parent.allParses())
-				if(isGoodmanDerivation(pair.getFirst()))
+				if(isGoodmanDerivation(pair.first()))
 					derivations.add(pair);
 		}
 		
@@ -563,16 +563,16 @@ public class GoodmanDOP<T> implements Parser<T>
 			
 			for(Pair<Tree<Constituent>, Double> pair : derivations)
 			{
-				if(isGoodmanDerivation(pair.getFirst()))
+				if(isGoodmanDerivation(pair.first()))
 				{
 					reconstructedTree = ToCNF.reconstruct(
-							reconstruct(pair.getFirst()));
+							reconstruct(pair.first()));
 					
 					if(parsesMap.containsKey(reconstructedTree))
-						parsesMap.get(reconstructedTree).increment(pair.getSecond());
+						parsesMap.get(reconstructedTree).increment(pair.second());
 					else
 						parsesMap.put(reconstructedTree, 
-								new MDouble(pair.getSecond()));
+								new MDouble(pair.second()));
 				}
 			}
 			
@@ -594,7 +594,7 @@ public class GoodmanDOP<T> implements Parser<T>
 			public int compare(Pair<Tree<T>, Double> arg0,
 					Pair<Tree<T>, Double> arg1)
 			{
-				return Double.compare(arg0.getSecond(),arg1.getSecond());  
+				return Double.compare(arg0.second(),arg1.second());  
 			}
 		}
 	}

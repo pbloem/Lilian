@@ -92,6 +92,12 @@
   		<artifactId>powerlaws</artifactId>
   		<version>0.0.1-SNAPSHOT</version>
   	</dependency>
+    <dependency>
+        <groupId>javax.media.jai</groupId>
+        <artifactId>com.springsource.javax.media.jai.core</artifactId>
+        <version>1.1.3</version>
+    </dependency>
+  	
   </dependencies>
    <repositories>
     <repository>
@@ -109,7 +115,13 @@
     <repository>
       <id>peterbloem.nl</id>
       <url>http://peterbloem.nl/maven2/</url>
-    </repository>    
+    </repository>  
+    <repository>
+        <id>com.springsource.repository.bundles.external</id>
+        <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+        <url>http://repository.springsource.com/maven/bundles/external</url>
+    </repository>
+      
   </repositories>
   <build>
 	  <resources>

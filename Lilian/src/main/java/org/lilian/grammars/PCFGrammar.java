@@ -1521,7 +1521,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 			Collections.sort(result0, new TreeDoubleComparator());
 
 			for(Pair<Tree<T>, Double> pair : result0)
-				result.add(pair.getFirst());
+				result.add(pair.first());
 			
 			return result0;
 		}
@@ -1577,7 +1577,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 			Collections.sort(result0, new TreeDoubleComparator());
 
 			for(Pair<Tree<T>, Double> pair : result0)
-				result.add(pair.getFirst());
+				result.add(pair.first());
 			
 			return result;
 		}
@@ -1749,7 +1749,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 
 			for(Pair<Tree<T>, Double> pair : v)
 			{
-				out.write(pair.getFirst() + ",\t" + pair.getSecond() + "\n");
+				out.write(pair.first() + ",\t" + pair.second() + "\n");
 			}
 
 			out.flush();
@@ -1903,7 +1903,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 		{
 			public int compare(Pair<Tree<T>, Double> p1, Pair<Tree<T>, Double> p2)
 			{
-				int c = p1.getSecond().compareTo(p2.getSecond());
+				int c = p1.second().compareTo(p2.second());
 
 				return -c;
 			}

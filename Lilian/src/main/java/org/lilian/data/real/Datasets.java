@@ -6,18 +6,31 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.media.jai.PlanarImage;
 
 import org.lilian.Global;
 import org.lilian.util.Series;
 import org.lilian.util.distance.SquaredEuclideanDistance;
+
+import com.sun.media.jai.codec.ByteArraySeekableStream;
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageDecoder;
+import com.sun.media.jai.codec.SeekableStream;
 
 import au.com.bytecode.opencsv.CSVParser;
 import au.com.bytecode.opencsv.CSVReader;
@@ -366,10 +379,8 @@ public class Datasets
 	 */
 	public static Point readImage(File imageFile, boolean gray) throws IOException
 	{
-		BufferedImage image = ImageIO.read(imageFile);
-		if(image == null)
-			throw new IOException("Failed to read image from file: " + imageFile);
-		
+		BufferedImage image = read(imageFile);
+	
 		int width = image.getWidth();
 		int height = image.getHeight();
 
@@ -415,6 +426,60 @@ public class Datasets
 		}
 		
 		return Point.fromRaw(values);
+	}
+	
+	private static BufferedImage read(File file) throws IOException
+	{
+		if(file.getName().toLowerCase().endsWith(".tiff") || file.getName().toLowerCase().endsWith(".tif"))
+		{
+			 RenderedImage image = null;
+			 
+			 FileInputStream in = new FileInputStream(file);
+			 FileChannel channel = in.getChannel();
+			 ByteBuffer buffer = ByteBuffer.allocate((int)channel.size());
+			 channel.read(buffer);
+			 
+			 SeekableStream stream = new ByteArraySeekableStream(buffer.array());
+			 String[] names = ImageCodec.getDecoderNames(stream);
+			 ImageDecoder dec = 
+					 ImageCodec.createImageDecoder(names[0], stream, null);
+			 RenderedImage im = dec.decodeAsRenderedImage();
+			 image = PlanarImage.wrapRenderedImage(im).getAsBufferedImage();
+			 return convertRenderedImage(image);
+		}
+		
+		BufferedImage image = ImageIO.read(file);
+		if(image == null)
+			throw new IOException("Failed to read image from file: " + file);
+		return image;
+	}
+	
+	/**
+	 * From http://www.jguru.com/faq/view.jsp?EID=114602
+	 * 
+	 * @param img
+	 * @return
+	 */
+	private static BufferedImage convertRenderedImage(RenderedImage img) 
+	{
+		if (img instanceof BufferedImage) {
+			return (BufferedImage)img;	
+		}	
+		ColorModel cm = img.getColorModel();
+		int width = img.getWidth();
+		int height = img.getHeight();
+		WritableRaster raster = cm.createCompatibleWritableRaster(width, height);
+		boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+		Hashtable properties = new Hashtable();
+		String[] keys = img.getPropertyNames();
+		if (keys!=null) {
+			for (int i = 0; i < keys.length; i++) {
+				properties.put(keys[i], img.getProperty(keys[i]));
+			}
+		}
+		BufferedImage result = new BufferedImage(cm, raster, isAlphaPremultiplied, properties);
+		img.copyData(raster);
+		return result;
 	}
 	
 	/**
