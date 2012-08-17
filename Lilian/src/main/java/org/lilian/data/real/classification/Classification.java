@@ -15,6 +15,7 @@ import java.util.ListIterator;
 
 import org.lilian.Global;
 import org.lilian.data.real.Point;
+import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
@@ -409,7 +410,16 @@ public class Classification
 	    	classes.add(clss);
 	    }
 	    
-	    return combine(points, classes);
+	    // * Ensure classes are contiguous (no empty classes)
+	    BasicFrequencyModel<Integer> bfm = new BasicFrequencyModel<Integer>(classes); 
+	    List<Integer> classNumbers = new ArrayList<Integer>(bfm.tokens());
+	    List<Integer> newClasses = new ArrayList<Integer>(classes.size());
+	    for(int i : classes)
+	    {
+	    	newClasses.add(classNumbers.indexOf(i));
+	    }
+	    
+	    return combine(points, newClasses);
 	}
 	
 	public static <M> Classified<M> copy(Classified<M> classified)

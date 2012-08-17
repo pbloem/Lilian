@@ -219,6 +219,7 @@ public class Takens extends AbstractGenerator<Double>
 			Takens best = null;
 			double bestKS = Double.POSITIVE_INFINITY;	
 			
+			Functions.tic();
 			for(int i : series(samples))
 			{
 				double distance = distances.get(Global.random.nextInt(distances.size()));
@@ -231,6 +232,10 @@ public class Takens extends AbstractGenerator<Double>
 					bestKS = ksValue;
 					best = current;
 				}
+				
+				if(i%200 == 0)
+					Global.log().info("Iteration " + i + " of " + samples + " finished. ("+((100 * i)/samples) +"% after "+Functions.toc()+" seconds)");
+				
 			}
 			
 			return best;

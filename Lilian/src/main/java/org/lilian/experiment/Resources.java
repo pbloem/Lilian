@@ -13,6 +13,7 @@ import org.data2semantics.tools.graphs.Vertex;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Generator;
+import org.lilian.data.real.Histogram2D;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
@@ -305,5 +306,13 @@ public class Resources
 		throws IOException
 	{
 		return Datasets.readImages(dir, gray);
+	}
+	
+	@Resource(name="image to points")
+	public static List<Point> imageToPoints(@Name("file") File file, @Name("size") int size)
+			throws IOException
+	{
+		Histogram2D hist = Histogram2D.fromImage(file);
+		return hist.generate(size);
 	}
  }
