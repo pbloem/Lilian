@@ -40,6 +40,11 @@ public class Classification
 		return wrong/total;
 	}
 	
+	public static <P> Classified<P> empty()
+	{
+		return new Combination<P>();		
+	}
+	
 	public static <P> Classified<P> combine(List<P> data, List<Integer> classes)
 	{
 		return new Combination<P>(data, classes);
@@ -52,14 +57,21 @@ public class Classification
 		private List<P> data;
 		private List<Integer> classes;
 		
+		public Combination() 
+		{
+			this.data = new ArrayList<P>();
+			this.classes = new ArrayList<Integer>();
+		}
+		
 		public Combination(List<P> data, List<Integer> classes)
 		{
-			this.data = Collections.unmodifiableList(data);
-			this.classes = Collections.unmodifiableList(classes);
+			this.data = new ArrayList<P>(data);
+			this.classes = new ArrayList<Integer>(classes);
 			
 			for(int cls : classes)
 				maxClass = max(maxClass, cls);
 		}
+
 
 		@Override
 		public int cls(int i)
@@ -296,7 +308,15 @@ public class Classification
 			
 			return points;
 		}
-		
+
+		@Override
+		public void setMaxClass(int max) 
+		{
+			if(max < this.maxClass)
+				throw new IllegalArgumentException("Argument ("+max+") cannot be less than current maxClass ("+maxClass+").");
+			
+			maxClass = max;
+		}
 	}
 	
 	/**
@@ -353,21 +373,25 @@ public class Classification
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<Point> readCSV(File file) throws IOException
+	public static Classified<Point> readCSV(File file) throws IOException
 	{
-		List<Point> data = new ArrayList<Point>();
+		List<Point> points = new ArrayList<Point>();
+		List<Integer> classes = new ArrayList<Integer>();
 		
 	    CSVReader reader = new CSVReader(new FileReader(file));
 	    String [] nextLine;
 	    while ((nextLine = reader.readNext()) != null) 
 	    {
-	    	double[] values = new double[nextLine.length];
-	    	for(int i = 0; i < nextLine.length; i++)
+	    	double[] values = new double[nextLine.length - 1];
+	    	for(int i = 0; i < nextLine.length - 1; i++)
 	    		values[i] = Double.parseDouble(nextLine[i]);
-	    	data.add(new Point(values));
+	    	points.add(new Point(values));
+	    	
+	    	int clss = Integer.parseInt(nextLine[nextLine.length - 1]);
+	    	classes.add(clss);
 	    }
 	    
-	    return data;
+	    return combine(points, classes);
 	}
 	
 	public static <M> Classified<M> empty()

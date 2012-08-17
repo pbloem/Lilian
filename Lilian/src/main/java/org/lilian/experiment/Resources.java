@@ -285,4 +285,18 @@ public class Resources
 	{
 		return Datasets.readCSV(file);
 	}
+	
+	@Resource(name="csv classification")
+	public static Classified<Point> csvClassification(@Name("file") File file) 
+		throws IOException
+	{
+		return Classification.readCSV(file);
+	}
+	
+	@Resource(name="csv classification filtered")
+	public static List<Point> csvClassificationFiletered(@Name("file") File file, @Name("class") int clss) 
+		throws IOException
+	{
+		return Classification.readCSV(file).points(clss);
+	}	
  }

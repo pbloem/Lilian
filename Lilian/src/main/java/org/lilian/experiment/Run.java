@@ -217,6 +217,12 @@ public class Run
 			parametersOrdered.clear();
 			pAnnotations.clear();
 			
+			System.out.print("Constructor annotations: ");
+			for(Annotation[] annotations : constructor.getParameterAnnotations())
+				for(Annotation annotation : annotations)
+					System.out.print(((Parameter)annotation).name() + ", ");
+			System.out.println();
+			
 			for(Annotation[] annotations : constructor.getParameterAnnotations())
 			{
 				Parameter pAnnotation = null;
@@ -227,10 +233,16 @@ public class Run
 				}
 				
 				if(pAnnotation == null) // unannotated constructor argument
+				{
+					Global.log().info("Unannotated constructor argument");
 					break;
+				}
 				
 				if(! parametersCopy.remove(pAnnotation.name()) )
+				{
+					Global.log().info("Parameter " + pAnnotation.name() + " in init file but not in constructor (This could be alright if there is another constructor that does have this parameter).");					
 					break; // parameter in init file, but not in constructor
+				}
 				
 				parametersOrdered.add(pAnnotation.name());
 				pAnnotations.add(pAnnotation);
@@ -240,6 +252,9 @@ public class Run
 			{
 				match = new Builder(constructor);
 				break;
+			} else
+			{
+				Global.log().info("All parameters in the constructor found in the init file, but the following init file arguments are left over: " + parametersCopy);				
 			}
 		}
 		
@@ -297,7 +312,7 @@ public class Run
 			}			
 		}
 		
-		// * If match is still null, we've found no @Factory methods of 
+		// * If match is still null, we've found no @Factory methods or
 		//   constructors that match the parameters in the init file.
 		if(match == null)
 			throw new IllegalArgumentException("No appropriate constructors or factory methods found.");
@@ -376,6 +391,9 @@ public class Run
 			if(equals(typeClass, type))
 				return interpretMulti(value, parameter, type);
 			
+			if(String.class.equals(typeClass) && File.class.equals(type))
+				return interpretMultiFile(value, parameter, type);
+				
 			if(first instanceof Map<?, ?>)
 				return interpretMultiResource(value, parameter, type);
 		}
@@ -551,6 +569,16 @@ public class Run
 		return m;
 	}
 
+	public static Multi<Object> interpretMultiFile(Object value, Parameter parameter, Class<?> type)
+	{
+		Multi<Object> m = new Multi<Object>();
+		
+		for(String v :(Collection<String>) value)
+			m.add(new File(v));
+		
+		return m;
+	}	
+	
 	private static Object interpretMultiResource(Object value,
 			Parameter parameter, Class<?> type)
 	{

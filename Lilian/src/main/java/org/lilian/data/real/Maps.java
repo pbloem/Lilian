@@ -230,9 +230,12 @@ public class Maps
 	 */
 	public static AffineMap centered(List<Point> data)
 	{
+		if(data.size() == 0)
+			throw new IllegalArgumentException("Cannot find centering map for empty dataset");
+		
 		int dim = data.get(0).dimensionality();
 		
-		double min[]   = new double[dim],
+		double min[]  = new double[dim],
 		       max[]   = new double[dim],
 		       scale[] = new double[dim];
 		

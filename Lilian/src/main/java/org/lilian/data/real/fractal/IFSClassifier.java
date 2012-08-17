@@ -283,6 +283,14 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		return models.get(i);
 	}
 	
+	/**
+	 * 
+	 * @param size The number of classes
+	 * @param depth the depth to which to evaluate the IFS models
+	 * @param ifsBuilder
+	 * @param mapBuilder
+	 * @return
+	 */
 	public AffineMap preMap(int i)
 	{
 		return preMaps.get(i);
@@ -321,7 +329,7 @@ public class IFSClassifier extends AbstractClassifier implements Parametrizable,
 		@Override
 		public int numParameters() 
 		{
-			return size * (1 + ifsBuilder.numParameters());
+			return size * (1 + ifsBuilder.numParameters() + mapBuilder.numParameters());
 		}
 	}
 	
