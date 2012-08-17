@@ -21,7 +21,7 @@ import org.lilian.util.distance.Distance;
 import org.lilian.util.distance.SquaredEuclideanDistance;
 
 /**
- * Basic version of the IFS classifier which calculates a straightforward 
+ * Basic version of the IFS classifier which calculates a straightforward
  * density.
  *
  */
