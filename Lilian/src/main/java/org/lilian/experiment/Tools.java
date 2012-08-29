@@ -1,6 +1,7 @@
 package org.lilian.experiment;
 
 import static org.lilian.experiment.Tools.isNumeric;
+import static org.lilian.util.Series.series;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.lilian.models.BasicFrequencyModel;
+import org.lilian.util.Series;
 
 /**
  * Utility functions, mostly for reflection
@@ -196,5 +198,19 @@ public class Tools
 		}
 		
 		return min;
+	}
+	
+	public static <T> List<List<T>> combine(List<T>... lists)
+	{
+		List<List<T>> table = new ArrayList<List<T>>();
+		for(int i : series(lists[0].size()))
+		{
+			ArrayList<T> row = new ArrayList<T>(lists.length);
+			for(List<T> list : lists)
+				row.add(list.get(i));
+			table.add(row);
+		}
+		
+		return table;
 	}
 }

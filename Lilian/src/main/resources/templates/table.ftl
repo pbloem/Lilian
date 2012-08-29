@@ -27,7 +27,7 @@
 		<#list table as row>
 			<tr>
 			<#list row as cell>
-			  <td>${cell}</td>
+			  <td><#if cell?is_number >${cell?c}<#else>${cell}</#if></td>
 			</#list>
 			</tr>
 		</#list>
