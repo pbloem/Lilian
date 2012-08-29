@@ -5,7 +5,7 @@ $(function() {
 	$('.rs-line').each(function ()
 	{
 		section = $(this);
-
+		
 		id = 'rs-line-' + randomString(12);
 		section.append(
 			$('<div>').addClass('plot').attr('id', id)
@@ -16,6 +16,7 @@ $(function() {
 				section.attr('data-use-index') == "true" : false;
 		data = load($('.' + dataSource), useIndex);	
 				
+		
 		$.jqplot(id, [data],
 		{
 			axes: {
@@ -27,7 +28,8 @@ $(function() {
 				}
 			},
 			series: [{
-				showMarker: false,
+				showMarker: section.hasClass('scatter'),
+				showLine: ! section.hasClass('scatter'),
 				lineWidth: 2.5
 			}]
 		});
@@ -54,8 +56,8 @@ $(function() {
 						}
 					},
 					series: [{
-						showMarker: false,
-						lineWidth: 2.5,
+						showMarker: section.hasClass('scatter'),
+						showLine: ! section.hasClass('scatter'),
 						color:'#5FAB78'
 					}]
 				});	

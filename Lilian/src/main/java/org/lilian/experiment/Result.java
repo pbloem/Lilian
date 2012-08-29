@@ -19,6 +19,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Result
 {
+	public enum Plot {LINE, SCATTER}; 
+	
 	String name();
 	String description() default "";
+	Plot plot() default Plot.LINE;
 }

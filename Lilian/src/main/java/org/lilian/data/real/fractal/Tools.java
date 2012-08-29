@@ -33,7 +33,7 @@ public class Tools
 	
 	private static class Search<M extends AffineMap> 
 	{
-		Distance<List<Double>> distance = new EuclideanDistance();
+		Distance<Point> distance = new EuclideanDistance();
 		
 		IFS<M> model;
 		int depth;

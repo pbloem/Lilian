@@ -403,10 +403,10 @@ public class Classification
 	    {
 	    	double[] values = new double[nextLine.length - 1];
 	    	for(int i = 0; i < nextLine.length - 1; i++)
-	    		values[i] = Double.parseDouble(nextLine[i]);
+	    		values[i] = Double.parseDouble(nextLine[i].trim());
 	    	points.add(new Point(values));
 	    	
-	    	int clss = Integer.parseInt(nextLine[nextLine.length - 1]);
+	    	int clss = Integer.parseInt(nextLine[nextLine.length - 1].trim());
 	    	classes.add(clss);
 	    }
 	    

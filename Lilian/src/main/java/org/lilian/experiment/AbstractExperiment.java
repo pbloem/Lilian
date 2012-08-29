@@ -353,6 +353,8 @@ public abstract class AbstractExperiment implements Experiment
 				map.put("width", width);
 				map.put("height", height);
 				
+				map.put("plottype", anno.plot().toString().toLowerCase());
+				
 				StringWriter out = new StringWriter();
 				Template tpl;
 				try
@@ -414,6 +416,8 @@ public abstract class AbstractExperiment implements Experiment
 				for(int i : Series.series(tokens.size()))
 					pairs.add(Arrays.asList(tokens.get(i), frequencies.get(i)));
 				map.put("histogram", pairs);
+				
+				map.put("plottype", anno.plot().toString().toLowerCase());
 				
 				Template tpl;
 				try

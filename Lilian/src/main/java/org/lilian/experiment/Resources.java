@@ -49,6 +49,18 @@ public class Resources
 		
 		return data;
 	}
+
+	@Resource(name="sierpinski-noise")
+	public static List<Point> sierpinski(@Name("size") int size, @Name("noise") double noise)
+	{
+		if(noise == 0.0)
+			return sierpinski(size);
+		
+		List<Point> data = Datasets.addNoise(IFSs.sierpinski().generator(), noise).generate(size);
+		Collections.shuffle(data);
+		
+		return data;
+	}	
 	
 	@Resource(name="koch")
 	public static List<Point> koch(@Name("size") int size)
@@ -81,6 +93,14 @@ public class Resources
 	public static List<Point> ball(@Name("dim") int dim,  @Name("size") int size)
 	{
 		List<Point> data = Datasets.ball(dim).generate(size);
+		
+		return data;
+	}
+	
+	@Resource(name="cube")
+	public static List<Point> cube(@Name("dim") int dim,  @Name("size") int size)
+	{
+		List<Point> data = Datasets.cube(dim).generate(size);
 		
 		return data;
 	}
@@ -132,10 +152,20 @@ public class Resources
 	}	
 	
 	@Resource(name="swiss")
-	public static List<Point> swiss(@Name("size") int size)
+	public static List<Point> swiss(@Name("size") int size, @Name("noise") double noise)
 	{
-		return Datasets.swiss().generate(size);
+		return Datasets.swiss(noise).generate(size);
 	}
+	
+	@Resource(name="spiral")
+	public static List<Point> spiral(@Name("size") int size, @Name("noise") double noise)
+	{
+		if(noise == 0.0)
+			return Datasets.spiral(-45, 45).generate(size);
+		
+		return Datasets.addNoise(Datasets.spiral(-45, 45), noise).generate(size);
+	}	
+	
 
 	@Resource(name="mvn")
 	public static List<Point> mvn(@Name("dim") int dim,  @Name("size") int size)

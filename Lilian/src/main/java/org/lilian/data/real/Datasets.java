@@ -68,9 +68,9 @@ public class Datasets
 	 * 
 	 * @return
 	 */
-	public static List<Point> sample(List<Point> data, int n)
+	public static <P> List<P> sample(List<P> data, int n)
 	{
-		List<Point> res = new ArrayList<Point>(n);
+		List<P> res = new ArrayList<P>(n);
 		
 		for(int i : series(n))
 			res.add(data.get(Global.random.nextInt(data.size())));
@@ -83,15 +83,15 @@ public class Datasets
 	 * 
 	 * @return
 	 */
-	public static List<Point> sampleWithReplacement(List<Point> data, int n)
+	public static <P> List<P> sampleWithReplacement(List<P> data, int n)
 	{
 		
 		// *  Shuffle the list and copy the first n items
-		List<Point> res = new ArrayList<Point>(data);
+		List<P> res = new ArrayList<P>(data);
 		Collections.shuffle(res);
 		
 		// * Copy the sublist over, so we the gc can clean up the shuffled list.
-		List<Point> res2 = new ArrayList<Point>(res.subList(0, n));
+		List<P> res2 = new ArrayList<P>(res.subList(0, n));
 		
 		return res2;
 	}
@@ -132,15 +132,22 @@ public class Datasets
 	 */
 	public static Generator<Point> swiss()
 	{
-		return new Swiss();
+		return new Swiss(0.0);
+	}
+
+	public static Generator<Point> swiss(double noise)
+	{
+		return new Swiss(noise);
 	}
 	
 	private static class Swiss extends AbstractGenerator<Point>
 	{		
 		List<MVN> mvns = new ArrayList<MVN>();
+		MVN noise;
 		
-		public Swiss()
+		public Swiss(double noise)
 		{
+			this.noise = noise == 0.0 ? null : new MVN(3, noise);
 			
 			mvns.add(new MVN(new Point( 7.5,   7.5), 1.0));
 			mvns.add(new MVN(new Point( 7.5,  12.5), 1.0));
@@ -155,12 +162,87 @@ public class Datasets
 	
 			// * 2D point
 			Point p = mvns.get(i).generate();
+
+			if(noise == null)
+				return new Point(
+					p.get(0) * Math.cos(p.get(0)),
+					p.get(1),
+					p.get(0) * Math.cos(p.get(0)));
+			
+			Point n = noise.generate();
 			return new Point(
-				p.get(0) * Math.cos(p.get(0)),
-				p.get(1),
-				p.get(0) * Math.cos(p.get(0)));
+					p.get(0) * Math.cos(p.get(0)) + n.get(0),
+					p.get(1) + n.get(1),
+					p.get(0) * Math.cos(p.get(0)) + n.get(2));
 		}
 	}	
+
+	public static Generator<Point> addNoise(Generator<Point> base, double var)
+	{
+		return new Noisy(base, var);
+	}
+	
+	private static class Noisy extends AbstractGenerator<Point> 
+	{
+		Generator<Point> master;
+		MVN noise;
+
+		public Noisy(Generator<Point> master, double var)
+		{
+			this.master = master;
+			noise = new MVN(master.generate().dimensionality(), var);
+		}
+
+		@Override
+		public Point generate()
+		{
+			Point base = master.generate();
+			Point n = noise.generate();
+			double [] b = base.getBackingData();
+			for(int i = 0; i < b.length; i++)
+				b[i] += n.get(i);
+			
+			return Point.fromRaw(b);
+		}
+	}
+	
+	/**
+	 * 
+	 * tMin = -45, tMax =45 
+	 * 
+	 * @param tMin
+	 * @param tMax
+	 * @return
+	 */
+	public static Generator<Point> spiral(double tMin, double tMax)
+	{
+		return new LogSpiral(tMin, tMax);
+	}	
+	
+	public static class LogSpiral extends AbstractGenerator<Point>
+	{
+		double tMin, tMax;
+
+		public LogSpiral(double tMin, double tMax)
+		{
+			super();
+			this.tMin = tMin;
+			this.tMax = tMax;
+		}
+
+		@Override
+		public Point generate()
+		{
+			double t = Global.random.nextDouble();
+			t = t * (tMax - tMin) + tMin;
+			
+			
+			double x = Math.exp(0.1 * t) * Math.cos(t),
+			       y = Math.exp(0.1 * t) * Math.sin(t);
+			
+			return new Point(x, y);
+		}
+	}
 	
 	/**
 	 * Three small MVNs in R^2

@@ -59,7 +59,7 @@ public class MapsTest
 	{
 		int num = 30;
 		
-		Distance<List<Double>> d = new EuclideanDistance();
+		Distance<Point> d = new EuclideanDistance();
 		Map map = Similitude.affineMapBuilder(2).build(Parameters.random(4, 0.5));
 		
 		List<Point> x, y;
@@ -78,7 +78,7 @@ public class MapsTest
 	@Test
 	public void testFindMap3()
 	{
-		Distance<List<Double>> d = new EuclideanDistance();
+		Distance<Point> d = new EuclideanDistance();
 
 		List<Point> x, y;
 		x = new ArrayList<Point>();
@@ -101,7 +101,7 @@ public class MapsTest
 	@Test
 	public void testFindMap4()
 	{
-		Distance<List<Double>> d = new EuclideanDistance();
+		Distance<Point> d = new EuclideanDistance();
 
 		List<Point> x, y;
 		x = new ArrayList<Point>();
@@ -124,7 +124,7 @@ public class MapsTest
 	@Test
 	public void testFindMap5()
 	{
-		Distance<List<Double>> d = new EuclideanDistance();
+		Distance<Point> d = new EuclideanDistance();
 
 		List<Point> x, y;
 		x = new ArrayList<Point>();
@@ -145,7 +145,7 @@ public class MapsTest
 	@Test
 	public void testFindMap6()
 	{
-		Distance<List<Double>> d = new EuclideanDistance();
+		Distance<Point> d = new EuclideanDistance();
 
 		List<Point> x, y;
 		x = new ArrayList<Point>();

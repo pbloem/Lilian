@@ -18,7 +18,7 @@
 		</table>
 		
 		
-		<div class="rs-line chart-container" data-source="raw-data-${id}" data-use-index="false"> </div>
+		<div class="rs-line chart-container ${plottype}" data-source="raw-data-${id}" data-use-index="false"> </div>
 	</div>
 		
 	<div id="tabs-2">
