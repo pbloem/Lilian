@@ -609,7 +609,11 @@ public class MultiTakens extends AbstractGenerator<Double>
 		double sig = best.significance(distances, epsilon);
 		System.out.println("Significance for range ["+best.minDistance()+", "+best.maxDistance()+"):"+sig);
 		if(sig < sigThreshold)
-			return Arrays.asList(best);
+		{
+			List<MultiTakens> res = new ArrayList<MultiTakens>();
+			res.add(best);
+			return res;
+		}
 		
 		double maxBelow = best.minDistance(), 
 		       minAbove = best.maxDistance();
