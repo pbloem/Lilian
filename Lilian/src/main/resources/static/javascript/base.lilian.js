@@ -30,7 +30,8 @@ $(function() {
 			series: [{
 				showMarker: section.hasClass('scatter'),
 				showLine: ! section.hasClass('scatter'),
-				lineWidth: 2.5
+				lineWidth: 2.5,
+				markerOptions: {size: 3.0}
 			}]
 		});
 
@@ -58,7 +59,8 @@ $(function() {
 					series: [{
 						showMarker: section.hasClass('scatter'),
 						showLine: ! section.hasClass('scatter'),
-						color:'#5FAB78'
+						color:'#5FAB78',
+						markerOptions: {size: 3.0}
 					}]
 				});	
 		
