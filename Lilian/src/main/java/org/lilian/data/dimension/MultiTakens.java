@@ -593,7 +593,16 @@ public class MultiTakens extends AbstractGenerator<Double>
 			Collections.sort(distances);
 		}
 		
-		return multifit(0.0, Double.POSITIVE_INFINITY, distances, maxDepth, epsilon, sigThreshold);
+		List<MultiTakens> m = multifit(0.0, Double.POSITIVE_INFINITY, distances, maxDepth, epsilon, sigThreshold);
+		
+		ArrayList<MultiTakens> multi = new ArrayList<MultiTakens>(m.size());
+		
+		// Retain only significant ranges
+		for(MultiTakens dist : m)
+			if(dist.significance(distances, epsilon) >= sigThreshold)
+				multi.add(dist);
+		
+		return multi;
 	}
 	
 	private static List<MultiTakens> multifit(double min, double max, List<Double> distances, int depth, double epsilon, double sigThreshold)
@@ -608,12 +617,12 @@ public class MultiTakens extends AbstractGenerator<Double>
 		
 		double sig = best.significance(distances, epsilon);
 		System.out.println("Significance for range ["+best.minDistance()+", "+best.maxDistance()+"):"+sig);
-		if(sig < sigThreshold)
-		{
-			List<MultiTakens> res = new ArrayList<MultiTakens>();
-			// res.add(best);
-			return res;
-		}
+//		if(sig < sigThreshold)
+//		{
+//			List<MultiTakens> res = new ArrayList<MultiTakens>();
+//			// res.add(best);
+//			return res;
+//		}
 		
 		double maxBelow = best.minDistance(), 
 		       minAbove = best.maxDistance();
