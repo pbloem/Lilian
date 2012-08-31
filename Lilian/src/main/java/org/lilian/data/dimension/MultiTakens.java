@@ -611,7 +611,7 @@ public class MultiTakens extends AbstractGenerator<Double>
 		if(sig < sigThreshold)
 		{
 			List<MultiTakens> res = new ArrayList<MultiTakens>();
-			res.add(best);
+			// res.add(best);
 			return res;
 		}
 		
