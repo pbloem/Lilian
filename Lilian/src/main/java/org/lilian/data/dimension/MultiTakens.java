@@ -136,7 +136,7 @@ public class MultiTakens extends AbstractGenerator<Double>
 	
 	public boolean contains(double d)
 	{
-		return d >= minDistance && d < maxDistance;
+		return minDistance <= d && d < maxDistance;
 	}
 	
 	/**
@@ -678,7 +678,7 @@ public class MultiTakens extends AbstractGenerator<Double>
 			if(Global.random.nextDouble() < outside.size()/(double)observed.size())
 				result.add(outside.get(Global.random.nextInt(outside.size())));
 			else
-				distributions.get(model.choose()).generate();
+				result.add(distributions.get(model.choose()).generate());
 		}
 		
 		Collections.sort(result);
