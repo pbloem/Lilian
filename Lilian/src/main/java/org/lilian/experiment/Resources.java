@@ -10,6 +10,7 @@ import java.util.List;
 import org.data2semantics.tools.graphs.Edge;
 import org.data2semantics.tools.graphs.GML;
 import org.data2semantics.tools.graphs.Vertex;
+import org.lilian.data.dimension.BiTakens;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Generator;
@@ -345,4 +346,18 @@ public class Resources
 		Histogram2D hist = Histogram2D.fromImage(file);
 		return hist.generate(size);
 	}
- }
+	
+	@Resource(name="double takens")
+	public static List<Double> doubleTakens(
+			@Name("size") int size,
+			@Name("d1") double d1, 
+			@Name("d2") double d2, 
+			@Name("split") double split, 
+			@Name("max") double max)
+	{
+		List<Double> gen = new BiTakens(split, max, d1, d2).generate(size);
+		Collections.sort(gen);
+		
+		return gen;
+	}
+}

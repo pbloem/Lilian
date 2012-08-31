@@ -68,24 +68,30 @@ public class CorrelationIntegral implements Serializable {
 	public static <T> CorrelationIntegral fromDataset(
 			List<T> data, double step, double max, Distance<T> distance)
 	{
+		List<Double> distances = Takens.distances(data, distance);
+		
+		return fromDistances(distances, step, max);
+	}
+	
+	public static CorrelationIntegral fromDistances( 
+			List<Double> distances, double step, double max)
+	{
 		List<Double> radii = new ArrayList<Double>();
 		
 		for(double r = Math.log10(step); r <= Math.log10(max); r += step)
 			radii.add(Math.pow(10.0, r));
-		
-		return fromDataset(data, radii, distance);
+				
+		return fromDistances(distances, radii);
 	}	
 	
-	public static <T> CorrelationIntegral fromDataset(
-			List<T> data, List<Double> radii, Distance<T> distance)
+	public static CorrelationIntegral fromDistances(
+			List<Double> distances, List<Double> radii)
 	{
 		CorrelationIntegral cint = new CorrelationIntegral(radii);
 		
-		for(int i = 0; i < data.size(); i++)
-			for(int j = i+1; j < data.size(); j++)
-				cint.observe(data.get(i), data.get(j), distance);
+		for(double distance : distances)
+			cint.observe(distance);
 
-		
 		return cint;
 	}
 	

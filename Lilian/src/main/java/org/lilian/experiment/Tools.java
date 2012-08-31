@@ -200,6 +200,22 @@ public class Tools
 		return min;
 	}
 	
+
+	public static double max(List<? extends Number> values)
+	{
+	
+		double max = Double.NEGATIVE_INFINITY;
+		
+		for(Object value : values)
+		{
+			double v = ((Number) value).doubleValue();
+			if(!(Double.isNaN(v) || Double.isNaN(v)))
+				max = Math.max(max, v);
+		}
+		
+		return max;
+	}	
+	
 	public static <T> List<List<T>> combine(List<T>... lists)
 	{
 		List<List<T>> table = new ArrayList<List<T>>();

@@ -268,6 +268,8 @@ public class Run
 		
 			for(Method factory : experimentClass.getDeclaredMethods())
 			{
+				Global.log().info("Checking method " + factory);
+ 
 				// * check for @Factory annotation
 				boolean isFactory = false;
 				for(Annotation annotation : factory.getAnnotations())
@@ -276,6 +278,7 @@ public class Run
 				
 				if(isFactory)
 				{	
+					Global.log().info("Checking factory method " + factory);
 
 					List<String> parametersCopy = new ArrayList<String>(parameters);
 					parametersOrdered.clear();
@@ -295,7 +298,11 @@ public class Run
 							break;
 						
 						if(! parametersCopy.remove(pAnnotation.name()) )
+						{
+							Global.log().info("Annotation " + pAnnotation + " not found in init file.");				
+							
 							break; // parameter in init file, but not in constructor
+						}
 						
 						System.out.println(pAnnotation);
 						
@@ -307,6 +314,8 @@ public class Run
 					{
 						match = new Builder(factory);
 						break;
+					} else {
+						Global.log().info("All parameters in the Factory method found in the init file, but the following init file arguments are left over: " + parametersCopy);				
 					}
 				}
 			}			
