@@ -71,9 +71,12 @@ public class Point
 		return values.length;
 	}
 	
-	public void set(int index, double value)
+	public Double set(int index, Double value)
 	{
+		double old = values[index];
 		values[index] = value;
+		
+		return old;
 	}
 	
 	@Override

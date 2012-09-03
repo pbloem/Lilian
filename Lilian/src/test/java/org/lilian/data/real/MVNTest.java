@@ -2,9 +2,12 @@ package org.lilian.data.real;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
+import org.lilian.search.Builder;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
 
@@ -91,5 +94,22 @@ public class MVNTest
 //		for(int i : Series.series(AffineMap.numParameters(dim)))
 //			assertEquals(mvn.map().parameters().get(i), mvn2.map().parameters().get(i), 0.02);
 	}	
+	
+	@Test
+	public void parametersTest()
+	{
+		int dim = 4;
+		Builder<MVN> builder = MVN.builder(dim);
+		
+		List<Double> random = Point.random(MVN.numParameters(dim), 0.5);
+		MVN mvn = builder.build(random);
+		
+		System.out.println(mvn.density(new Point(0, 0, 0, 0)));
+		
+		mvn = builder.build(mvn.parameters());
+		
+		System.out.println(mvn.density(new Point(0, 0, 0, 0)));
+		
+	}
 	
 }

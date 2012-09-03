@@ -49,6 +49,27 @@ public class Resources
 		Collections.shuffle(data);
 		
 		return data;
+	}	
+	
+	@Resource(name="sierpinski-generator")
+	public static Generator<Point> sierpinskiGen(@Name("depth") int depth)
+	{
+		return IFSs.sierpinski().generator(depth);
+	}
+	
+	@Resource(name="cantor")
+	public static List<Point> cabntor(@Name("size") int size)
+	{
+		List<Point> data = IFSs.cantor().generator().generate(size);
+		Collections.shuffle(data);
+		
+		return data;
+	}	
+	
+	@Resource(name="cantor-generator")
+	public static Generator<Point> cantoriGen(@Name("depth") int depth)
+	{
+		return IFSs.cantor().generator(depth);
 	}
 
 	@Resource(name="sierpinski-noise")
@@ -156,6 +177,12 @@ public class Resources
 	public static List<Point> swiss(@Name("size") int size, @Name("noise") double noise)
 	{
 		return Datasets.swiss(noise).generate(size);
+	}
+	
+	@Resource(name="swiss-generator")
+	public static Generator<Point> swissGen( @Name("noise") double noise)
+	{
+		return Datasets.swiss(noise);
 	}
 	
 	@Resource(name="spiral")

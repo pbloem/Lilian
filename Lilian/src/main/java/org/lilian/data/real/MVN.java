@@ -4,6 +4,7 @@ import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.pow;
+import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,10 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.apache.commons.math.linear.SingularMatrixException;
 import org.lilian.Global;
+import org.lilian.search.Builder;
+import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Series;
 
 
 /**
@@ -38,8 +42,11 @@ import org.lilian.util.MatrixTools;
  *   </li>
  * </ul>
  */
-public class MVN implements Density, Generator<Point>
+public class MVN implements Density, Generator<Point>, Parametrizable
 {
+
+	private static final long serialVersionUID = 2741764705947779052L;
+
 	public static final double THRESHOLD = 10E-10;
 	
 	// The transformation form the standard normal MVN to this one
@@ -274,7 +281,58 @@ public class MVN implements Density, Generator<Point>
 		return new MVN(new Point(mean), cov);
 	}
 	
-	
+	/**
+	 * Takes a list of points of the same dimensionality and estimates a 
+	 * multivariate normal distribution for them.
+	 * 
+	 * The MVN is estimated as the sample mean and sample covariance matrix.
+	 * 
+	 * @param points
+	 * @param weights A list of nonnegative weights, with one value for each 
+	 *   point in points. 
+	 * 
+	 * @return
+	 */
+	public static MVN find(List<Point> points, List<Double> weights)
+	{
+		if(points.size() != weights.size())
+			throw new IllegalArgumentException("Size of points ("+points.size()+") and size of weights ("+weights.size()+") should match.");
+		
+		double sum = 0.0;
+		for(double weight : weights)
+			sum += weight;
+		
+		double sqSum = 0.0;
+		for(double weight : weights)
+			sqSum += weight * weight;	
+		
+		int dim = points.get(0).dimensionality();
+		int size = points.size();
+		
+		// * Calculate the mean
+		double[] mean = new double[dim];
+		for(int i : series(points.size()))
+			for(int j : series(dim))
+				mean[j] += points.get(i).get(j) * (weights.get(i) / sum);
+			
+		// * Calculate the covariance
+		RealVector difference;
+		RealMatrix cov = MatrixTools.identity(dim);
+		
+		for(int i : series(points.size()))
+		{
+			Point x = points.get(i);
+			difference = x.getVector().subtract(mean);
+			difference.mapMultiplyToSelf(weights.get(i)/sum);
+			
+			cov = cov.add(difference.outerProduct(difference));
+		}
+		
+		cov = cov.scalarMultiply(1.0/(1.0 - sqSum));
+		
+		return new MVN(new Point(mean), cov);
+	}
+		
 	/**
 	 * Takes a list of points of the same dimensionality and estimates a 
 	 * spherical multivariate normal distribution for them.
@@ -309,5 +367,54 @@ public class MVN implements Density, Generator<Point>
 		double s = sumQuadrance / (size * dim);
 		
 		return new MVN(new Point(mean), MatrixTools.identity(dim).scalarMultiply(s));
-	}	
+	}
+
+	@Override
+	public List<Double> parameters()
+	{
+		return transform.parameters();
+	}
+	
+	public static int numParameters(int dim)
+	{
+		return dim * dim + dim;
+	}
+	
+	public static Builder<MVN> builder(int dim)
+	{
+		return new MVNBuilder(dim);
+	}
+	
+	private static class MVNBuilder implements Builder<MVN>
+	{	
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2614087937675063246L;
+		int dimension;
+		Builder<AffineMap> mapBuilder;
+		
+		public MVNBuilder(int dimension)
+		{
+			this.dimension = dimension;
+			mapBuilder = AffineMap.affineMapBuilder(dimension);
+		}
+
+		@Override
+		public MVN build(List<Double> parameters)
+		{
+			if(numParameters() != parameters.size())
+				throw new IllegalArgumentException("Number of parameters ("+parameters.size()+") should equald dim*dim + dim "+numParameters());
+			
+			AffineMap map = mapBuilder.build(parameters);
+			return new MVN(map);
+		}
+
+		@Override
+		public int numParameters()
+		{
+			return mapBuilder.numParameters();
+		}
+		
+	}
 }

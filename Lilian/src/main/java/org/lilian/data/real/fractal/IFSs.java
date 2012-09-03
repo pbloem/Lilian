@@ -137,6 +137,7 @@ public class IFSs
 				.45,0.0, 0.0,.45, -.5,-.5, 1.0
 				));		
 	}
+
 	
 	public static IFS<Similitude> cantorASim()
 	{
@@ -147,6 +148,15 @@ public class IFSs
 				));		
 	}	
 
+	public static IFS<Similitude> cantor1D()
+	{
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				1/3.0,  2/3.0, 0.0, 0.0, 1.0,
+				1/3.0, -2/3.0, 0.0, 0.0, 1.0
+				));		
+	}	
+	
 	public static IFS<AffineMap> cantorB()
 	{
 		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.affineMapBuilder(2));
