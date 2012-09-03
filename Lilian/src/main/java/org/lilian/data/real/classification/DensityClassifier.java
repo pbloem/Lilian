@@ -21,10 +21,10 @@ public class DensityClassifier<T extends Density>
 	public DensityClassifier(T model, double prior) {
 		super(model.dimension(), 0);
 		
-		addModel(model, prior);
+		add(model, prior);
 	}
 	
-	public void addModel(T model, double prior)
+	public void add(T model, double prior)
 	{
 		models.add(model);
 		priors.add(prior);
@@ -52,32 +52,6 @@ public class DensityClassifier<T extends Density>
 	{
 		return Collections.unmodifiableList(models);
 	}
-	
-//	/**
-//	 * Returns a dataset with a given number of points total.
-//	 * 
-//	 * Each point is drawn from one of the MOG models according to the class 
-//	 * priors.
-//	 * 
-//	 * @param numPoints The total number of points in the dataset. The 
-//	 * 	distribution among the classes will be determined by the class priors. 
-//	 */
-//	public Dataset<Integer> representation(int numPoints)
-//	{
-//		List<Point> points;
-//		List<Integer> classes = new ArrayList<Integer>();
-//		
-//		points = new ArrayList<Point>();
-//		for(int i = 0; i < numPoints; i++)
-//		{	
-//			int classIndex = Functions.drawDiscrete(priors, priorSum);
-//			
-//			classes.add(classIndex);
-//			points.add(models.get(classIndex).generate());
-//		}
-//		
-//		return new Dataset<Integer>(points, classes);
-//	}
 	
 	public String toString()
 	{

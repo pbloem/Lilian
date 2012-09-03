@@ -11,7 +11,7 @@ import org.lilian.Global;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
 
-public class MOG extends MapModel<AffineMap> implements Generator<Point>
+public class MOG extends MapModel<AffineMap> implements Generator<Point>, Density
 {
 	private static final long serialVersionUID = -3478114010368720453L;
 
@@ -52,10 +52,15 @@ public class MOG extends MapModel<AffineMap> implements Generator<Point>
 			sum += value;
 		
 		if(sum == 0.0)
-			throw new IllegalArgumentException("Array ("+in+") sums to zero. Cannot normalize.");
-		
-		for(int i = 0; i < in.size(); i++)
-			in.set(i, in.get(i)/sum);
+		{
+			Global.log().info("Array ("+in+") sums to zero. Cannot normalize.");
+			for(int i = 0; i < in.size(); i++)
+				in.set(i, 1.0/in.size());
+		} else
+		{			
+			for(int i = 0; i < in.size(); i++)
+				in.set(i, in.get(i)/sum);
+		}
 	}
 		
 	@Override
