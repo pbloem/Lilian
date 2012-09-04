@@ -355,7 +355,7 @@ public class Takens extends AbstractGenerator<Double>
 			for(int i : Series.series(numCandidates))
 			{
 				List<Double> distanceSample = new ArrayList<Double>(ksSamples);
-				for(int j : series(numCandidates))
+				for(int j : series(samplesPerCandidate))
 				{
 					int a = -1, b = -1; 
 					while(a == b)
