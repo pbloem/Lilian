@@ -79,11 +79,11 @@ public class Datasets
 	}
 	
 	/**
-	 * Sample n elements randomly with replacement
+	 * Sample n elements randomly without replacement
 	 * 
 	 * @return
 	 */
-	public static <P> List<P> sampleWithReplacement(List<P> data, int n)
+	public static <P> List<P> sampleWithoutReplacement(List<P> data, int n)
 	{
 		
 		// *  Shuffle the list and copy the first n items
