@@ -126,7 +126,7 @@ public abstract class AbstractExperiment implements Experiment
 		// * Save all the fields tagged with @State
 		// @SuppressWarnings("unchecked")
 		Class<? extends Experiment> c = (Class<? extends Experiment>)this.getClass();
-		logger.info(c + "");
+		// logger.info(c + "");
 		
 		List<Field> stateFields = new ArrayList<Field>();
 		for(Field field : c.getFields())
@@ -138,7 +138,7 @@ public abstract class AbstractExperiment implements Experiment
 				{
 					stateFields.add(field);	
 				}
-				logger.info(annotation + "");
+				// logger.info(annotation + "");
 			}
 		}
 		
@@ -161,9 +161,7 @@ public abstract class AbstractExperiment implements Experiment
 			// * Save all the fields tagged with @State
 			// @SuppressWarnings("unchecked")
 			Class<? extends Experiment> c = this.getClass();
-			
-			System.out.println(stateFields());
-			
+						
 			for(Field field : stateFields())
 			{
 				Object value = field.get(this);
