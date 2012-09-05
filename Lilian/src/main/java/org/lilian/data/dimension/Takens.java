@@ -260,19 +260,7 @@ public class Takens extends AbstractGenerator<Double>
 			
 			Functions.tic();
 			
-			List<Double> distanceSample = new ArrayList<Double>(ksSamples);
-			for(int i : series(ksSamples))
-			{
-				int a = -1, b = -1; 
-				while(a == b)
-				{
-					a = Global.random.nextInt(data.size());
-					b = Global.random.nextInt(data.size());
-				}
-				
-				distanceSample.add(metric.distance(data.get(a), data.get(b)));
-			}
-			Collections.sort(distanceSample);
+			List<Double> distanceSample = sample(ksSamples);
 			
 			for(int i : series(candidates.size()))
 			{
@@ -290,7 +278,25 @@ public class Takens extends AbstractGenerator<Double>
 			}
 
 			return best;
-		}		
+		}	
+		
+		public List<Double> sample(int size)
+		{
+			List<Double> distanceSample = new ArrayList<Double>(size);
+			for(int i : series(size))
+			{
+				int a = -1, b = -1; 
+				while(a == b)
+				{
+					a = Global.random.nextInt(data.size());
+					b = Global.random.nextInt(data.size());
+				}
+				
+				distanceSample.add(metric.distance(data.get(a), data.get(b)));
+			}
+			Collections.sort(distanceSample);	
+			return distanceSample;
+		}
 		
 		/**
 		 * Fir with all distances, but use a sample to estimate KS distance
@@ -351,10 +357,30 @@ public class Takens extends AbstractGenerator<Double>
 		 */
 		public Takens fit(int numCandidates, int samplesPerCandidate, int ksSamples)
 		{
+			List<Double> candidates = candidates(numCandidates, samplesPerCandidate);
+			
+			Collections.sort(candidates);
+			
+			Global.log().info("candidates: " + candidates);
+			
+			return fit(candidates, ksSamples);
+		}	
+		
+		/**
+		 * Generates a list of candidates for the maxDistance parameter by 
+		 * fitting to a small subsample of the data multiple times. For each 
+		 * fit the maxDistance is returned as a candidate. 
+		 * 
+		 * @param numCandidates
+		 * @param samplesPerCandidate
+		 * @return
+		 */
+		public List<Double> candidates(int numCandidates, int samplesPerCandidate)
+		{
 			List<Double> candidates = new ArrayList<Double>(numCandidates);
 			for(int i : Series.series(numCandidates))
 			{
-				List<Double> distanceSample = new ArrayList<Double>(ksSamples);
+				List<Double> distanceSample = new ArrayList<Double>(numCandidates);
 				for(int j : series(samplesPerCandidate))
 				{
 					int a = -1, b = -1; 
@@ -370,14 +396,10 @@ public class Takens extends AbstractGenerator<Double>
 				
 				Takens dist = Takens.fit(distanceSample, true).fit();
 				candidates.add(dist.maxDistance());
-			}
+			}			
 			
-			Collections.sort(candidates);
-			
-			Global.log().info("candidates: " + candidates);
-			
-			return fit(candidates, ksSamples);
-		}	
+			return candidates;
+		}
 		
 	}
 	
@@ -421,8 +443,8 @@ public class Takens extends AbstractGenerator<Double>
 			
 			double dimension = n / (- sum +  n * log(maxDistance));
 			return new Takens(dimension, maxDistance);
-		}			
-		
+		}	
+				
 		public Takens fitSampled(int samples)
 		{
 			// * Find the distance that minimizes the KS value
@@ -501,6 +523,38 @@ public class Takens extends AbstractGenerator<Double>
 
 			return best;
 		}
+		
+		
+		/**
+		 * Fits to a golden standard. The parameter d_max is chosen so that the 
+		 * difference of the dimension estimate with the given target is 
+		 * minimized. 
+		 * 
+		 * @param target
+		 * @return
+		 */
+		public Takens fitError(double target)
+		{
+			// * Find the distance that minimizes the KS value
+			Takens best = null;
+			double lowestError = Double.POSITIVE_INFINITY;		
+			
+			Functions.tic();
+			
+			for(int i : series(distances.size()))
+			{
+				Takens current = fit(distances.get(i));
+				double error = Math.abs(current.dimension() - target);
+				
+				if(error < lowestError)
+				{
+					lowestError = error;
+					best = current;
+				}
+			}
+
+			return best;
+		}	
 		
 		public Takens fit()
 		{

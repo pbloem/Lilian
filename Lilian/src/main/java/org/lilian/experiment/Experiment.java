@@ -1,5 +1,7 @@
 package org.lilian.experiment;
 
+import java.util.List;
+
 /**
  * Classes implementing this interface represent experiments to be run.
  * 
@@ -19,5 +21,4 @@ public interface Experiment extends Cloneable
 	public String description();
 	
 	public void setDescription(String description);
-
 }

@@ -100,7 +100,19 @@ public abstract class AbstractExperiment implements Experiment
 		t1 = System.currentTimeMillis();
 		t = t1 - t0;
 		
-		writeReport();
+		try {
+			runScripts();
+		} catch(IOException e)
+		{
+			throw new RuntimeException("Error running scripts", e);
+		}		
+		
+		try {
+			writeReport();
+		} catch(IOException e)
+		{
+			throw new RuntimeException("Error writing report", e);
+		}
 		
 		tearDown();
 		
@@ -237,7 +249,7 @@ public abstract class AbstractExperiment implements Experiment
 		return new Date(t1);
 	}
 	
-	public void writeReport()
+	public void writeReport() throws IOException
 	{
 		// * Create data model
 		Map<String, Object> results = new HashMap<String, Object>();
@@ -300,7 +312,7 @@ public abstract class AbstractExperiment implements Experiment
 		logger.info("Report written");
 	}
 	
-	private void processResult(List<Map<String, Object>> rs, Object value, Result anno)
+	private void processResult(List<Map<String, Object>> rs, Object value, Result anno) throws IOException
 	{
 		// *  The method returns multiple results in a Results object
 		if(value instanceof Results)
@@ -370,6 +382,34 @@ public abstract class AbstractExperiment implements Experiment
 				
 				resMap.put("name", anno.name());
 				resMap.put("description", anno.description());
+				
+				// * Also write to CSV
+				
+				File csvDir = new File(dir, "csv/");
+				csvDir.mkdirs();	
+
+				File outFile = new File(csvDir, "data." + Tools.cssSafe(anno.name()) + ".csv");
+				
+				BufferedWriter outWriter = new BufferedWriter(new FileWriter(outFile));
+				for(int i : Series.series(height))
+				{
+					if(i != 0)
+						outWriter.write("\n");
+					for(int j : Series.series(width))
+					{
+						if(j != 0)
+							outWriter.write(", ");
+						String str = ((List<?>)((List<?>)value).get(i)).get(j).toString();
+						
+						str = str.replaceAll("[\"\",]", ""); // remove quotes
+						if(str.matches(".*\\s.*"))
+							str = "\"" + str + "\"";
+						
+						outWriter.write(str);
+					}
+				}
+				
+				outWriter.close();
 				
 			}  else // for a list of values (possibly numeric)
 			{
@@ -443,13 +483,7 @@ public abstract class AbstractExperiment implements Experiment
 			File outFile = new File(new File(dir, "images/"), Tools.cssSafe(anno.name()) + ".png");
 			outFile.mkdirs();
 			
-			try
-			{
-				ImageIO.write(image, "PNG", outFile);
-			} catch (IOException e1)
-			{
-				throw new RuntimeException(e1);
-			}
+			ImageIO.write(image, "PNG", outFile);
 			
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("path", outFile.getAbsolutePath());
@@ -506,9 +540,28 @@ public abstract class AbstractExperiment implements Experiment
 	{
 		this.description = description; 
 	}
+	
+	/**
+	 * A collection of python scripts to execute after the experiment is complete
+	 * @return
+	 */
+	public List<String> scripts() 
+	{
+		return Collections.emptyList();
+	}
+	
+	
+	public void runScripts() throws IOException
+	{
+		// * For each script:
+		// * ... copy the script into the directory ./python/
+		// * ... run the script in python/
+		
+		
+	}	
 
 	/**
-	 * Copies all firles and directories in the given classpath directory to 
+	 * Copies all files and directories in the given classpath directory to 
 	 * the given target directory in the filesystem.
 	 * 
 	 * @param cpDir
@@ -594,5 +647,6 @@ public abstract class AbstractExperiment implements Experiment
 		
 		return string.substring(prefix.length());
 	}
+
 
 }

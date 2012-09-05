@@ -21,9 +21,11 @@ body {
 	padding-left: 40px;
 }
 
+.chart-container.scatter .plot,
 .chart-container.scatter .log-plot {
 	width: 500px;
 	height: 500px;
+	padding: 0;
 }
 
 .hidden {
