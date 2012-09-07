@@ -3,6 +3,7 @@ package org.lilian.experiment;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -102,7 +104,7 @@ public abstract class AbstractExperiment implements Experiment
 		
 		try {
 			runScripts();
-		} catch(IOException e)
+		} catch(Exception e)
 		{
 			throw new RuntimeException("Error running scripts", e);
 		}		
@@ -543,6 +545,9 @@ public abstract class AbstractExperiment implements Experiment
 	
 	/**
 	 * A collection of python scripts to execute after the experiment is complete
+	 * 
+	 * Each string represents a url to the script in the classpath.
+	 * 
 	 * @return
 	 */
 	public List<String> scripts() 
@@ -551,13 +556,47 @@ public abstract class AbstractExperiment implements Experiment
 	}
 	
 	
-	public void runScripts() throws IOException
+	public void runScripts() throws IOException, InterruptedException
 	{
+		File target = new File(dir, "python/");
+		target.mkdirs();
+		
 		// * For each script:
-		// * ... copy the script into the directory ./python/
-		// * ... run the script in python/
-		
-		
+		for(String script : scripts())
+		{
+			// * ... copy the script into the directory ./python/
+			copy("scripts/" + script, target); 
+			
+			// * Change directory
+			Runtime runtime = Runtime.getRuntime();
+			
+			// * ... run the script in python/
+			// TODO: Make this platform independent (sort of)
+			Process p = runtime.exec(
+					"arch -i386 /usr/bin/python " + script, 
+					new String[]{
+							"PATH=/Library/Frameworks/Python.framework/Versions/2.7/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/usr/local/git/bin:/usr/texbin",
+							"PYTHONPATH=/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages"},
+					target);
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			
+			BufferedReader ebr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(target, script+".log")));			
+			BufferedWriter ebw = new BufferedWriter(new FileWriter(new File(target, script+".err.log")));
+			
+			System.out.println(p.waitFor());
+			
+			String line;
+			while ( (line = br.readLine()) != null) 
+				bw.write(line + "\n");
+			while ( (line = ebr.readLine()) != null) 
+				ebw.write(line + "\n");
+			
+			
+			bw.close();
+			ebw.close();
+		}
 	}	
 
 	/**
@@ -586,12 +625,18 @@ public abstract class AbstractExperiment implements Experiment
 	public void copyResources(URL originUrl, File destination) 
 			throws IOException 
 	{
-		
+		System.out.println(originUrl);
 	    URLConnection urlConnection = originUrl.openConnection();
 	    
-	    if (new File(originUrl.getPath()).exists()) {
-	        FileUtils.copyDirectory(new File(originUrl.getPath()), destination);
-	    } else if (urlConnection instanceof JarURLConnection) {
+	    File file = new File(originUrl.getPath());
+	    if (file.exists()) 
+	    {	
+	    	if(file.isDirectory())
+	    		FileUtils.copyDirectory(new File(originUrl.getPath()), destination);
+	    	else
+	    		FileUtils.copyFile(file, new File(destination, file.getName()));
+	    } else if (urlConnection instanceof JarURLConnection) 
+	    {
 	        copyJarResourcesRecursively(destination, (JarURLConnection) urlConnection);
 	    } else {
 	        throw new RuntimeException("URLConnection[" + urlConnection.getClass().getSimpleName() +
