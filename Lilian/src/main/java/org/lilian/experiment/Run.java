@@ -558,7 +558,7 @@ public class Run
 			resource = match.invoke(null, inputs);
 		} catch (Exception e)
 		{
-			throw new RuntimeException("Method invocation failed", e);
+			throw new RuntimeException("Method invocation failed on match " + match, e);
 		}
 		return resource;
 	}

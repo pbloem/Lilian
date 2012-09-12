@@ -24,6 +24,8 @@ import org.lilian.data.real.classification.Classifier;
 import org.lilian.data.real.classification.Classifiers;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
+import org.lilian.grammars.Grammar;
+import org.lilian.grammars.TestGrammars;
 import org.lilian.search.Builder;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.jung.Graphs;
@@ -386,5 +388,30 @@ public class Resources
 		Collections.sort(gen);
 		
 		return gen;
+	}
+	
+	@Resource(name="toy grammar")
+	public static Grammar<String> toyGrammar(@Name("name") String name)
+	{
+		if(name.equals("av"))
+			return TestGrammars.adriaansVervoort();
+		if(name.equals("ta1"))
+			return TestGrammars.ta1();
+		if(name.equals("mirror"))
+			return TestGrammars.mirror();
+
+		throw new IllegalArgumentException("Grammar \""+name+"\" not known.");
+	}	
+	
+	@Resource(name="toy grammar data")
+	public static List<List<String>> toyGrammarData(@Name("name") String name, @Name("size")int size)
+	{
+		Grammar<String> grammar = toyGrammar(name);
+		System.out.println(grammar);
+		List<List<String>> data = new ArrayList<List<String>>(size);
+		for(int i : Series.series(size))
+			data.add(grammar.generateSentence("S", 0, 25));
+		
+		return data;
 	}
 }

@@ -191,6 +191,21 @@ public class TestGrammars
 	
 		return g;
 	}
+
+	public static PCFGrammar<String> mirror()
+	{
+		PCFGrammar<String> g = new PCFGrammar<String>();
+		
+		addRule("S X", 1.0, g);
+		
+		addRule("X D0 X D1", 2.5, g);
+		addRule("X D0 D1", 1.0, g);
+		
+		addRule("D0 0", 1.0, g);
+		addRule("D1 1", 1.0, g);
+	
+		return g;
+	}
 	
 	/**
 	 * Adds a rule to a string grammar
@@ -225,15 +240,8 @@ public class TestGrammars
 		return sentence;
 	}	
 	
-	public static void main(String[] args)
+	private static <P> List<P> c(P... p)
 	{
-		Grammar<String> g = simple();
-		
-		for(int i = 0; i < 20; i++)
-		{
-			Tree<String> tree = g.generateTree("S", 0, 0, null);
-			
-			System.out.println(tree.getLeaves());
-		}
+		return Arrays.asList(p);
 	}
 }

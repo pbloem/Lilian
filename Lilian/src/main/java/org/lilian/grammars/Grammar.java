@@ -88,9 +88,9 @@ public interface Grammar<T> extends Parser<T> {
 	 * @return A randomly generated sentence. null if the model can't generate 
 	 *         any sentences yet, or none at this maxDepth.
 	 */
-	public Collection<T> generateSentence(T topSymbol, int minDepth, int maxDepth);
+	public List<T> generateSentence(T topSymbol, int minDepth, int maxDepth);
 	
-	public Collection<T> generateSentence(int minDepth, int maxDepth);
+	public List<T> generateSentence(int minDepth, int maxDepth);
 	
 	public void write(File directory, String base) throws IOException;
 	

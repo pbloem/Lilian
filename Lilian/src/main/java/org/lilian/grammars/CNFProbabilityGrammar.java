@@ -31,50 +31,40 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 
 	/* maps constituents to all rules that have them on the right as the single
 	 * constituent (these have to be terminal rules) */
-	protected LinkedHashMap<T, Set<CNFRule>> oneSymbolMap;
+	protected Map<T, Set<CNFRule>> oneSymbolMap;
 	
 	/* maps constituents to rules where they occur as the left 'to' symbol */
-	protected LinkedHashMap<T, Set<CNFRule>> leftSymbolMap;
+	protected Map<T, Set<CNFRule>> leftSymbolMap;
 	
 	/* maps constituents to rules where they occur as the right 'to' symbol */	
-	protected LinkedHashMap<T, Set<CNFRule>> rightSymbolMap;
+	protected Map<T, Set<CNFRule>> rightSymbolMap;
 	
 	/* maps two constituents to all rules that have them on the right */
-	protected LinkedHashMap<Pair<T, T>, Set<CNFRule>> twoSymbolMap;
+	protected Map<Pair<T, T>, Set<CNFRule>> twoSymbolMap;
 	
 	/* maps constituents to all rules that have them on the left */
-	protected LinkedHashMap<T, Set<CNFRule>> fromMapCNF;
+	protected Map<T, Set<CNFRule>> fromMapCNF;
 	
 	/* Store the frequencies of rules and constituents*/
-	protected Map<CNFRule, MDouble> probabilities;
+	protected Map<CNFRule, Double> probabilities;
 
 	private Set<T> emptySet = Collections.emptySet();
 	
 	public CNFProbabilityGrammar()
 	{
 		/* Clear the current CNF version of the grammar */
-		oneSymbolMap = new LinkedHashMap<T, Set<CNFRule>>();
-		twoSymbolMap = new LinkedHashMap<Pair<T, T>, Set<CNFRule>>();
+		oneSymbolMap =   new LinkedHashMap<T, Set<CNFRule>>();
+		twoSymbolMap =   new LinkedHashMap<Pair<T, T>, Set<CNFRule>>();
 		leftSymbolMap  = new LinkedHashMap<T, Set<CNFRule>>();
 		rightSymbolMap = new LinkedHashMap<T, Set<CNFRule>>();
-		fromMapCNF = new LinkedHashMap<T, Set<CNFRule>>();
-		probabilities = new HashMap<CNFRule, MDouble>();
+		fromMapCNF =     new LinkedHashMap<T, Set<CNFRule>>();
+		probabilities =  new HashMap<CNFRule, Double>();
 	}
 
 	@Override
 	public void addRule(T from, Collection<? extends T> to)
 	{
-		if(to.size() < 1 || to.size() > 2)
-			throw new IllegalArgumentException("Rule not in Chomsky Normal Form. Right-hand side ("+to+") must have 1 or 2 symbols. ");
-		
-		if(to.size() == 2)
-		{
-			Iterator<? extends T> it = to.iterator();
-			addRule(from, it.next(), it.next());
-		}
-		
-		if(to.size() == 1)
-			addRule(from, to.iterator().next());
+		addRule(from, to, 1.0);
 	}
 
 	@Override
@@ -174,25 +164,26 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 		if (! probabilities.containsKey(rule) )
 			return 0.0;
 		
-		return probabilities.get(rule).getValue(); 
+		return probabilities.get(rule); 
 
 	}
 	
 	private double getProbability(CNFRule rule)
 	{
-		/* 
+		/**
 		 * The reason this method doesn't check the hashmap directly with its 
 		 * input is because getProbability cannot be bypassed, as that would break 
-		 * classes that extend this class. See TODO above */ 
+		 * classes that extend this class. See TODO above 
+		 */ 
 		return getProbability(rule.getFrom(), rule.getTo1(), rule.getTo2()); 
 	}
 	
-	public Collection<T> generateSentence(T topSymbol,int minDepth,  int maxDepth)
+	public List<T> generateSentence(T topSymbol, int minDepth, int maxDepth)
 	{
 		throw new UnsupportedOperationException();		
 	}
 
-	public Collection<T> generateSentence(int minDepth, int maxDepth)
+	public List<T> generateSentence(int minDepth, int maxDepth)
 	{
 		throw new UnsupportedOperationException();
 	}
@@ -282,12 +273,15 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 	{
 		if (probabilities.containsKey(rule))
 		{
-			MDouble prob = probabilities.get(rule);
-			if(increment) 	prob.increment(probability);
-			else			prob.setValue(probability);
+			double prob = probability;
+			if(increment) 	
+				prob += probabilities.get(rule);
+			
+			probabilities.put(rule, prob);
+
 		} else	
 		{
-			probabilities.put(rule, new MDouble(probability));
+			probabilities.put(rule, probability);
 		}
 		
 		/* Add the rule to the 'from' map */
@@ -674,12 +668,10 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 			for(Node node : nodes)
 			{
 				if(i > beamWidth)
-				{
 					node.disable();
-				}
+				
 				i++;
 			}
-
 		}
 
 
@@ -693,7 +685,8 @@ public class CNFProbabilityGrammar<T> implements Grammar<T>
 		public boolean isMember()
 		{
 			/* If the top-left cell in the parse chart is non-empty then at least 
-			 * one parse has been found. */
+			 * one parse has been found.
+			 */
 			return (array.get(0).get(n).size() > 0);
 		}
 

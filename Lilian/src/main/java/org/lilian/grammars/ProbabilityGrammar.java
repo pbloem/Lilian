@@ -22,14 +22,14 @@ public class ProbabilityGrammar<T> implements Grammar<T>
 	}
 
 	@Override
-	public Collection<T> generateSentence(T topSymbol, int minDepth, int maxDepth)
+	public List<T> generateSentence(T topSymbol, int minDepth, int maxDepth)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Collection<T> generateSentence(int minDepth, int maxDepth)
+	public List<T> generateSentence(int minDepth, int maxDepth)
 	{
 		// TODO Auto-generated method stub
 		return null;

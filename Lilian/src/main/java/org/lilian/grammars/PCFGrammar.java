@@ -133,7 +133,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 	 * 
 	 *  @param maxDepth	The maximum depth of the tree generating the sentence.
 	 */
-	public Collection<T> generateSentence(int minDepth, int maxDepth)
+	public List<T> generateSentence(int minDepth, int maxDepth)
 	{
 		RegularConstituent symbol = constituents.randomToken();
 		
@@ -146,9 +146,11 @@ public class PCFGrammar<T> implements Grammar<T> {
 	 *  @param maxDepth	The maximum depth of the tree generating the sentence.
 	 *  @param maxDepth The top symbol of the sentence.
 	 */	
-	public Collection<T> generateSentence(T topSymbol, int minDepth,  int maxDepth)
+	public List<T> generateSentence(T topSymbol, int minDepth,  int maxDepth)
 	{
 		Tree<T> tree = generateTree(topSymbol, minDepth, maxDepth, null);
+		if(tree == null)
+			return null;
 		
 		return tree.getLeaves();
 	}
@@ -480,7 +482,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 	 */
 	private void toCNF()
 	{
-		/* This method generates the CNF version of the grammar. In a CNf version, 
+		/* This method generates the CNF version of the grammar. In a CNF version, 
 		 * the grammar, all rules must be of the type A -> B, C (binary production 
 		 * from non-terminal to non-terminals) or D -> e (unary production from 
 		 * non-terminal to terminal).
@@ -1205,7 +1207,7 @@ public class PCFGrammar<T> implements Grammar<T> {
 	
 	/** 
 	 * This abstract class is used to create a common superclass for 
-	 * RegularConstituents (which conatin a symbol of type T) and 
+	 * RegularConstituents (which contain a symbol of type T) and 
 	 * TempConstituents which are only used in the creation of the grammar's 
 	 * CNF 
 	 */
