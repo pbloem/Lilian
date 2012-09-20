@@ -1,20 +1,22 @@
 package org.lilian.util.graphs;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The parent interface for all types of graphs: simple, directed, weighted, 
  * multigraphs, hypergraphs, trees etc.
  * 
- * For the sake of clarity, the slightlu obscure mathematical terminology for 
+ * For the sake of clarity, the slightly obscure mathematical terminology for 
  * graphs is avoided. Instead of vertices we talk about nodes, instead of edges
  * we talk about links.
  * 
  * The properties of graphs captured and dictated by this interface are as follows
  * <ul>
- *  <li>A graph is a collection of Node objects</li>
+ *  <li>A graph is a list of Node objects</li>
  *  <li>A link connects several nodes (ie. hypergraphs are included in this interface)</li>
- *  <li>Nodes are always labelled. The generic type of the graph is the generic 
+ *  <li>Nodes are always labeled. The generic type of the graph is the generic 
  *      type of the node</li>
  * </ul>
  * 
@@ -33,17 +35,12 @@ import java.util.List;
  *        others. </li>   
  * </ul>
  * 
- * TODO: Perhaps the basic type should be an unlabeled graph (which would 
- *       massively simplify the generics). A good number of graphs are 
- *       unlabeled, and it would be awkward if all those use cases would have to 
- *       deal with the self-referential generic structure.
- * 
  * @author peter
  *
  * @param <N>
  * @param <L>
  */
-public interface Graph<L, N extends Node<L, N>> extends List<N>
+public interface Graph<L, N extends Node<L, N>> extends Collection<N>
 {
 
 	/**
@@ -54,5 +51,25 @@ public interface Graph<L, N extends Node<L, N>> extends List<N>
 	 */
 	public N node(L label);
 	
-	public List<N> nodes(L label);
+	public Set<N> nodes(L label);
+	
+	/**
+	 * Adds a new node with the given label 
+	 */
+	public N addNode(L label);
+	
+	public int numEdges();
+	
+	/**
+	 * Checks whether two nodes exist with the given labels that are connected.
+	 * 
+	 * If multiple pairs of nodes exist with these labels, only one of them 
+	 * needs to be connected for the method to return true.
+	 *  
+	 * @param first
+	 * @param second
+	 * @return
+	 */
+	public boolean connected(L first, L second);
+	
 }

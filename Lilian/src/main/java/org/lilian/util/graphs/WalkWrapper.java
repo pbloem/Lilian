@@ -9,7 +9,7 @@ import java.util.Iterator;
  * 
  * Example code:
  * <code>
- * List<Node<L, T>> = graph.nodes("a");  
+ * List<Node<String, T>> list = graph.nodes("a");  
  * </code>
  * 
  * @author peter

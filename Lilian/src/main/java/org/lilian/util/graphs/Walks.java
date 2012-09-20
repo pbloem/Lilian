@@ -14,7 +14,7 @@ import org.lilian.util.Functions;
 /**
  * <p>
  * This class provides several factories for Walks, Iterables over graphs.
- * The point of this class is to make it simple to treaverse graphs.
+ * The point of this class is to make it simple to traverse graphs.
  * 	</p><p>
  * For example:
  * <code>
@@ -197,7 +197,7 @@ public class Walks
 			{
 
 				if(buffer.size() < 5 && next < buffer.size())
-					for(N node : reverse(buffer.get(next).neighbours()) )
+					for(N node : buffer.get(next).neighbours())
 						buffer.add(next+1, node);
 				
 				next++;
