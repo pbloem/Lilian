@@ -22,7 +22,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 	private Graph<L, N> graph1, graph2;
 	
 	private State best;
-	private double bestCost;
+	private double bestCost = Double.POSITIVE_INFINITY;
 	
 	private double threshold;
 	
@@ -52,6 +52,10 @@ public class InexactMatch<L, N extends Node<L, N>>
 	{
 		while(! buffer.isEmpty())
 		{
+//			for(State state : buffer)
+//				System.out.println(state);
+//			System.out.println();
+//			
 			State top = buffer.poll();
 			
 			// * If the lowest state has cost higher than threshold, we 
@@ -141,6 +145,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 		private int[] nodes2;
 		
 		private double cost;
+		private boolean complete;
 		
 		/**
 		 * Creates a root state
@@ -150,6 +155,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 			nodes1 = new int[0];
 			nodes2 = new int[0];
 			cost = 0.0;
+			complete = false;
 		}
 		
 		/**
@@ -158,7 +164,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 		 * @param g1Node
 		 * @param g2Node
 		 */
-		public State(State parent, int g1Node, int g2Node)
+		public State(State parent, int g1Node, int g2Node, boolean complete)
 		{
 			int n = parent.size();
 			nodes1 = new int[n+1];
@@ -170,6 +176,8 @@ public class InexactMatch<L, N extends Node<L, N>>
 			nodes1[n] = g1Node;
 			nodes2[n] = g2Node;
 			
+			this.complete = complete;
+						
 			// * Calculate score
 			cost = currentCost() + expectedCost();
 		}
@@ -182,10 +190,10 @@ public class InexactMatch<L, N extends Node<L, N>>
 			Set<N> a1 = new HashSet<N>();
 			Set<N> a2 = new HashSet<N>();
 			
-			for(int i : nodes1)
+			for(int i : series(nodes1.length))
 				if(node1(i) != null)
 					a1.add(node1(i));
-			for(int i : nodes2)
+			for(int i : series(nodes2.length))
 				if(node2(i) != null)
 					a2.add(node2(i));
 			
@@ -246,32 +254,32 @@ public class InexactMatch<L, N extends Node<L, N>>
 			
 			// * Link penalties
 			for(int i : series(size()))
-				for(int j : series(size()))
+				for(int j : series(i+1, size()))
 				{
-					if(node1(i) == null || node1(j) == null)
-					{
-						if(! (node2(i) == null || node2(j) == null))
-						{
-							if(node2(i).connected(node2(j)))
-								cost += costFunction.addLink();
-						} else
-						{
-							// * one node is added and the other is deleted
-							//   so no links between them (right?)
-						}
-						
-					} else if(node1(i).connected(node1(j)))
-					{
-						if(! node2(i).connected(node2(j)))
-							cost += costFunction.addLink();
-					} else 
-					{
-						if(node2(i).connected(node2(j)))
-							cost += costFunction.removeLink();
-					}
+					N n1i = node1(i), n1j = node1(j), 
+					  n2i = node2(i), n2j = node2(j);
+					
+					boolean n1connected;
+					if(n1i == null || n1j == null)
+						n1connected = false;
+					else
+						n1connected = n1i.connected(n1j);
+					
+					boolean n2connected;
+					if(n2i == null || n2j == null)
+						n2connected = false;
+					else
+						n2connected = n2i.connected(n2j); 
+										
+					if(n1connected && !n2connected)
+						cost += costFunction.addLink();
+					
+					if(!n1connected && n2connected)
+						cost += costFunction.removeLink();
+
 				}
 			// Maybe this can be optimized by iterating over edges (once
-			// we have that implemented.
+			// we have that implemented).
 			
 			
 			return cost;
@@ -318,10 +326,12 @@ public class InexactMatch<L, N extends Node<L, N>>
 				
 				for(int n1 : nodes1)
 					if(n1 >= 0)
-						remaining1.remove(n1);
+						remaining1.remove((Integer)n1);
 				for(int n2 : nodes2)
 					if(n2 >= 0)
-						remaining2.remove(n2);
+						remaining2.remove((Integer)n2);
+				
+				System.out.println(State.this + " remaining: " + remaining1 + " " + remaining2);
 				
 				i = 0;
 				j = 0;
@@ -345,7 +355,10 @@ public class InexactMatch<L, N extends Node<L, N>>
 				int n1 = remaining1.get(i),
 				    n2 = remaining2.get(j);
 				
-				State result = new State(State.this, n1, n2);
+				boolean complete1 = (n1 < 0 && remaining1.size() == 1) || (n1 >= 0 && remaining1.size() <= 2 );
+				boolean complete2 = (n2 < 0 && remaining2.size() == 1) || (n2 >= 0 && remaining2.size() <= 2 );				
+	
+				State result = new State(State.this, n1, n2, complete1 && complete2);
 				
 				j++;
 				if(j > remaining2.size() - 1)
@@ -376,7 +389,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 		 */
 		public boolean complete()
 		{
-			return size() == graph1.size();
+			return complete;
 		}
 		
 		/**
@@ -414,7 +427,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 				);
 			}
 			
-			sb.append("]");
+			sb.append("] ").append(cost() + " ").append(complete() ? "c" : "i");
 				
 			return sb.toString();
 		}

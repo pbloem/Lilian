@@ -39,7 +39,6 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 	protected int numEdges = 0;
 	protected long modCount = 0;
 	
-	
 	public class Node implements org.lilian.util.graphs.Node<L, Node>
 	{
 		private Set<Node> neighbours = new LinkedHashSet<Node>();

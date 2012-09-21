@@ -95,4 +95,31 @@ public class Graphs
 		
 		return out;
 	}
+	
+	public static BaseGraph<String> k2()
+	{
+		BaseGraph<String> graph = new BaseGraph<String>();
+		
+		BaseGraph<String>.Node n1 = graph.addNode("a");
+		BaseGraph<String>.Node n2 = graph.addNode("b");
+		
+		n1.connect(n2);
+		
+		return graph;
+	}
+	
+	public static BaseGraph<String> k3()
+	{
+		BaseGraph<String> graph = new BaseGraph<String>();
+		
+		BaseGraph<String>.Node n1 = graph.addNode("a");
+		BaseGraph<String>.Node n2 = graph.addNode("b");
+		BaseGraph<String>.Node n3 = graph.addNode("c");
+		
+		n1.connect(n2);
+		n2.connect(n3);
+		n3.connect(n1);
+		
+		return graph;
+	}	
 }
