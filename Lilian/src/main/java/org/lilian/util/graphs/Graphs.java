@@ -1,5 +1,7 @@
 package org.lilian.util.graphs;
 
+import static org.lilian.util.Series.series;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -122,4 +124,22 @@ public class Graphs
 		
 		return graph;
 	}	
+	
+	public static BaseGraph<String> line(int n)
+	{
+		BaseGraph<String> graph = new BaseGraph<String>();
+
+		if(n == 0)
+			return graph;
+			
+		BaseGraph<String>.Node last = graph.addNode("."), next;
+		for(int i : series(n-1))
+		{
+			next = graph.addNode(".");
+			last.connect(next);
+			last = next;
+		}
+		
+		return graph;
+	}
 }

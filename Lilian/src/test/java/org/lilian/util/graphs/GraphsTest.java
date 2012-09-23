@@ -10,7 +10,10 @@ public class GraphsTest
 	@Test
 	public void test()
 	{
-		fail("Not yet implemented");
+		BaseGraph<String> line = Graphs.line(3);
+		
+		System.out.println(line);
+		assertEquals(3, line.size());
 	}
 
 }

@@ -315,6 +315,7 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 		for(L label : nodes.keySet())
 			for(Node node : nodes.get(label))
 			{
+				
 				for(Node neighbour : node.neighbours())
 					if(! done.contains(neighbour))
 					{
@@ -325,6 +326,16 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 					
 						sb.append(node.toString() + " -- " + neighbour.toString());
 					}
+				
+				if(node.neighbours().isEmpty())
+				{
+					if(first)
+						first = false;
+					else
+						sb.append("; ");
+					
+					sb.append(node.toString());
+				}
 				
 				done.add(node);
 			}
