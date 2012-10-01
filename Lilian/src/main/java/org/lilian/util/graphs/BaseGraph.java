@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.lilian.util.Pair;
+import org.lilian.util.Series;
 import org.lilian.util.graphs.algorithms.UndirectedVF2;
 
 /**
@@ -39,10 +40,43 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 	protected int numEdges = 0;
 	protected long modCount = 0;
 	
+	public BaseGraph()
+	{
+	}
+	
+	/**
+	 * Returns a graph with the same structure and labels as that in the 
+	 * argument.
+	 * 
+	 * @param graph
+	 * @return
+	 */
+	public <N extends org.lilian.util.graphs.Node<L, N>> BaseGraph(Graph<L, N> graph)
+	{	
+		List<N> nodes = new ArrayList<N>(graph);
+		List<BaseGraph<L>.Node> outNodes = new ArrayList<BaseGraph<L>.Node>(graph.size());
+		
+		for(int i : Series.series(graph.size()))
+		{
+			BaseGraph<L>.Node newNode = addNode(nodes.get(i).label());
+			outNodes.add(newNode);
+		}
+		
+		for(int i : Series.series(graph.size()))
+			for(int j : Series.series(i, graph.size()))
+				if(nodes.get(i).connected(nodes.get(j)))
+					outNodes.get(i).connect(outNodes.get(j));
+	}
+	
 	public class Node implements org.lilian.util.graphs.Node<L, Node>
 	{
 		private Set<Node> neighbours = new LinkedHashSet<Node>();
 		private L label;
+		
+		// A node is dead when it is removed from the graph. Since there is no way 
+		// to ensure that clients don't maintain copies of node objects we 
+		// keep check of nodes that are no longer part of the graph. 
+		private boolean dead = false;
 		
 		private Integer labelId = null;
 		private Long labelIdMod;
@@ -164,6 +198,23 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 
 			return label + (unique ? "" : "_" + labelId());
 		}
+		
+		/**
+		 * Since clients can maintain links to nodes that have been removed 
+		 * from the graph, there is a danger of these nodes being used and 
+		 * causing mayhem. 
+		 * 
+		 * To prevent such situations we will explicitly give such nodes a state 
+		 * of 'dead'. Using dead nodes in any way (except calling this method) 
+		 * can result in an IllegalStateException
+		 * 
+		 * @return
+		 */
+		public boolean dead()
+		{
+			return dead;
+		}
+		
 	}
 
 	@Override
@@ -286,6 +337,29 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 		return node;
 	}
 	
+	@Override
+	public boolean remove(Object object)
+	{
+		if(! (object instanceof BaseGraph.Node))
+			return false;
+		
+		@SuppressWarnings("unchecked")
+		Node node = (Node) object;
+
+		if(node.graph() != this)
+			throw new IllegalArgumentException("Node does noet belong to this graph.");
+		
+		boolean contained = nodes.get(node.label()).remove(node);
+		if(!contained)
+
+		for(Node neighbour : node.neighbours())
+			node.disconnect(neighbour);
+		
+		node.dead = true;
+		
+		return true;
+	}
+
 	/**
 	 * Returns true if each label currently describes a unique node. 
 	 * 

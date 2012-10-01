@@ -98,6 +98,7 @@ public class Graphs
 		return out;
 	}
 	
+		
 	public static BaseGraph<String> k2()
 	{
 		BaseGraph<String> graph = new BaseGraph<String>();

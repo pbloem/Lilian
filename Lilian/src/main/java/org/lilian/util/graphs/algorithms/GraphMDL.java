@@ -5,6 +5,7 @@ import static org.lilian.util.Functions.log2;
 import org.apache.commons.math.util.MathUtils;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Functions;
+import org.lilian.util.graphs.BaseGraph;
 import org.lilian.util.graphs.Graph;
 import org.lilian.util.graphs.Node;
 
@@ -70,7 +71,17 @@ public class GraphMDL
 		
 		bits += mdl(substructure);
 		
-		// Graphs.
+		int numSubs = 0;
+		
+		BaseGraph<L> copy = new BaseGraph<L>(graph);
+		
+		
+		// * copy the graph
+		// * delete the substructures
+		// * add a transformation cost if the substructure match is inexact
+		// * Add log(# of substructures)
+		// * for each link from outside the substructure to inside the substructure
+		//   add log(|V|) + log(|S|)
 		
 		
 		return bits;
