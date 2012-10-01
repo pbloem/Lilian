@@ -5,6 +5,6 @@ public interface Stochastic<L, N extends Stochastic.Node<L, N>> extends Weighted
 
 	
 	public interface Node<L, N extends Stochastic.Node<L, N>> 
-			extends Weighted.Node<L, N> {
+			extends Weighted.WeightedNode<L, N> {
 	}
 }

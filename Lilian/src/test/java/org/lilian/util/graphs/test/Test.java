@@ -6,16 +6,14 @@ import java.util.List;
 public class Test
 {
 
-
-	interface Person {}
+	public List<? extends Number> list()
+	{
+		return listInner();
+	}
 	
-	interface Builder extends Person {}
-	
-	interface Thinker extends Person {}
-	
-	interface BrickLayer extends Builder {}
-	
-	interface Network<L extends Person> {}
-	
-	
+	private List<Integer> listInner()
+	{
+		return null;
+		
+	}
 }
