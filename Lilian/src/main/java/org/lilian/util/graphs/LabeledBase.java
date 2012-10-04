@@ -310,22 +310,6 @@ public class LabeledBase<L, W> extends AbstractCollection<LabeledBase<L, W>.Node
 		
 	}
 
-	/**
-	 * Returns true if there exists a mapping from nodes in this graph thi nodes 
-	 * in the other graph such that their labels are equal (ie. equal() returns 
-	 * true) two nodes are connected in this graph if and only if they are
-	 * connected in the other graph.
-	 *  
-	 * @param other
-	 * @return
-	 */
-	public <N extends org.lilian.util.graphs.Node<L, N>> boolean equals(Graph<L, N> other)
-	{
-		UndirectedVF2<L, N> vf2 = new UndirectedVF2<L, N>((Graph<L, N>) this, other, true);
-		
-		return vf2.matches();
-	}
-
 	@Override
 	public int numEdges()
 	{
