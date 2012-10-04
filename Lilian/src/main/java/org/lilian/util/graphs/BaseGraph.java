@@ -215,6 +215,23 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 			return dead;
 		}
 		
+		/**
+		 * Removes this node from the graph
+		 */
+		protected void remove()
+		{
+			boolean contained = nodes.get(label()).remove(this);
+			dead = true;
+			
+			
+			Iterator<Node> it = neighbours.iterator();
+			while(it.hasNext())
+			{
+				Node neighbour = it.next();
+				neighbour.neighbours.remove(this);
+				it.remove();
+			}
+		}
 	}
 
 	@Override
@@ -340,22 +357,25 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 	@Override
 	public boolean remove(Object object)
 	{
+		size--;
+		modCount++;
+		
 		if(! (object instanceof BaseGraph.Node))
 			return false;
 		
 		@SuppressWarnings("unchecked")
 		Node node = (Node) object;
+		L label = node.label();
 
 		if(node.graph() != this)
-			throw new IllegalArgumentException("Node does noet belong to this graph.");
+			throw new IllegalArgumentException("Node does not belong to this graph.");
 		
-		boolean contained = nodes.get(node.label()).remove(node);
-		if(!contained)
-
-		for(Node neighbour : node.neighbours())
-			node.disconnect(neighbour);
+		node.remove();
 		
-		node.dead = true;
+		// If this is the last node with the given label, remove it from the nodes 
+		// Map
+		if(nodes.get(label) != null && nodes.get(label).size() == 0)
+			nodes.remove(label);
 		
 		return true;
 	}
@@ -427,6 +447,12 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 				if(f.connected(s))
 					return true;
 		return false;
+	}
+
+	@Override
+	public Set<L> labels()
+	{
+		return Collections.unmodifiableSet(nodes.keySet());
 	}
 	
 

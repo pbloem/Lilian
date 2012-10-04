@@ -143,4 +143,45 @@ public class Graphs
 		
 		return graph;
 	}
+	
+	public static BaseGraph<String> star(int n)
+	{
+		BaseGraph<String> graph = new BaseGraph<String>();
+			
+		BaseGraph<String>.Node center = graph.addNode(".");
+		for(int i : Series.series(n))
+			center.connect(graph.addNode("."));
+		
+		return graph;
+	}
+	
+	public static BaseGraph<String> ladder(int n)
+	{
+		BaseGraph<String> graph = new BaseGraph<String>();
+
+		if(n == 0)
+			return graph;
+			
+		BaseGraph<String>.Node lastLeft = graph.addNode("."),
+		                       lastRight = graph.addNode("."),				
+		                       nextLeft, nextRight;
+		lastLeft.connect(lastRight);
+		
+		for(int i : series(n-1))
+		{
+			nextRight = graph.addNode(".");
+			nextLeft  = graph.addNode(".");
+			
+			nextLeft.connect(nextRight);
+			
+			nextRight.connect(lastRight);
+			nextLeft.connect(lastLeft);
+			
+			lastLeft = nextLeft;
+			lastRight = nextRight;
+		}
+		
+		return graph;
+	}
+	
 }

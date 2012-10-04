@@ -1,10 +1,12 @@
 package org.lilian.util.graphs.algorithms;
 
 import static org.lilian.util.Functions.log2;
+import static org.lilian.util.Series.series;
 
 import org.apache.commons.math.util.MathUtils;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Functions;
+import org.lilian.util.Series;
 import org.lilian.util.graphs.BaseGraph;
 import org.lilian.util.graphs.Graph;
 import org.lilian.util.graphs.Node;
@@ -18,7 +20,7 @@ import org.lilian.util.graphs.Node;
 public class GraphMDL
 {
 
-	public <L, N extends Node<L, N>> double mdl(Graph<L, N> graph)
+	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph)
 	{
 		int n = graph.size();
 		
@@ -47,8 +49,7 @@ public class GraphMDL
 			aBits += log2(maxNeighbours + 1) + MathUtils.binomialCoefficientLog(n, k)/Math.log(2.0);
 		}
 		
-		
-		// *  Node edge labels yet, so no bits required for that.
+		// *  No node edge labels yet, so no bits required for that.
 			
 		return nBits + aBits;
 	}
@@ -65,27 +66,46 @@ public class GraphMDL
 	 * @param substructure
 	 * @return
 	 */
-	public <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, Graph<L, N> substructure)
+	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, Graph<L, N> substructure, double threshold)
 	{
 		double bits = 0.0;
 		
+		// * Store the substructure in
+		//   (the end of this representation is recognizable, so no prefix coding required) 
 		bits += mdl(substructure);
 		
-		int numSubs = 0;
+		InexactCost<L> cost = CostFunctions.transformationCost(
+				graph.labels().size(), graph.size(), graph.numEdges());
+		InexactSubgraphs<L, N> is = new InexactSubgraphs<L, N>(graph, substructure, cost, threshold);
 		
-		BaseGraph<L> copy = new BaseGraph<L>(graph);
+		// * Store the leftover graph
+		bits += mdl(is.silhouette());
 		
-		
-		// * copy the graph
-		// * delete the substructures
-		// * add a transformation cost if the substructure match is inexact
-		// * Add log(# of substructures)
-		// * for each link from outside the substructure to inside the substructure
-		//   add log(|V|) + log(|S|)
-		
+		// * for each substructure
+		for(int i : series(is.numMatches()))
+		{
+			// * store the transformation cost
+			bits += prefix(is.transCosts().get(i));
+			
+			// * store the number of links
+			bits += prefix(log2(is.numLinks().get(i) + 1));
+			// * Store each link
+			bits += is.numLinks().get(i) * (log2(graph.size()) + log2(substructure.size()));
+		}
 		
 		return bits;
 	}
 	
-	
+	/**
+	 * The cost of storing the given number of bits in prefix coding.
+	 * @param bits
+	 * @return
+	 */
+	public static double prefix(double bits)
+	{
+		if(bits == 0)
+			return 1;
+		
+		return log2(bits) + bits;
+	}
 }

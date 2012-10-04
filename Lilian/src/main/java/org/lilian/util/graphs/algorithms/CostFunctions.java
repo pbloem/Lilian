@@ -3,6 +3,7 @@ package org.lilian.util.graphs.algorithms;
 import static org.lilian.util.Functions.log2;
 
 import org.lilian.util.Functions;
+import org.lilian.util.graphs.Graph;
 
 public class CostFunctions
 {
@@ -26,6 +27,11 @@ public class CostFunctions
 	public static <L> InexactCost<L> transformationCost(int numLabels, int numNodes, int numEdges)
 	{
 		return new TransformationCost<L>(numLabels, numNodes, numEdges);
+	}
+	
+	public static <L> InexactCost<L> transformationCost(Graph<L, ?> graph)
+	{
+		return new TransformationCost<L>(graph.labels().size(), graph.size(), graph.numEdges());
 	}
 	
 	private static class UniformCost<L> implements InexactCost<L>

@@ -61,6 +61,12 @@ public interface Graph<L, N extends Node<L, N>> extends Collection<N>
 	public int numEdges();
 	
 	/**
+	 * Returns the nodelabels
+	 * @return
+	 */
+	public Set<L> labels();
+	
+	/**
 	 * Checks whether two nodes exist with the given labels that are connected.
 	 * 
 	 * If multiple pairs of nodes exist with these labels, only one of them 

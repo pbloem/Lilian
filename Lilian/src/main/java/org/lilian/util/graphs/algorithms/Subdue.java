@@ -33,21 +33,27 @@ public class Subdue<L, N extends Node<L, N>>
 	private InexactCost<Token> costFunction = null;
 	
 	private Graph<L, N> graph;
+	private BaseGraph<Token> tGraph;
+	
 	private Set<L> labels;
 	
 	public Subdue(Graph<L, N> graph)
 	{
 		this.graph = graph;
-		labels();
+		tGraph = wrap(graph);
+		
+		labels = graph.labels();
 	}
 
 	public Subdue(Graph<L, N> graph, InexactCost<L> costFunction, double costThreshold)
 	{
 		this.costThreshold = costThreshold;
 		this.costFunction = new CostWrapper(costFunction);
-		this.graph = graph;
 		
-		labels();
+		this.graph = graph;
+		this.tGraph = wrap(graph);
+		
+		labels = graph.labels();
 	}
 	
 	public Collection<Substructure> search(int iterations, int beamWidth, int maxBest, int maxSubSize)
@@ -119,14 +125,6 @@ public class Subdue<L, N extends Node<L, N>>
 		return graph;
 	}
 	
-	private void labels()
-	{
-		labels = new LinkedHashSet<L>();
-
-		for(N node : graph)
-			labels.add(node.label());
-	}
-	
 	/**
 	 * Returns all substructures that can be derived by adding a link to the 
 	 * given parent (possibly by also adding a new node)
@@ -161,6 +159,15 @@ public class Subdue<L, N extends Node<L, N>>
 
 	}
 	
+	/**
+	 * Creates a copy of the given node with a single extra node (of the given label)
+	 * connected to the graph by the given existing node n1.
+	 * 
+	 * @param parent
+	 * @param n1
+	 * @param label
+	 * @return
+	 */
 	private BaseGraph<Token> copy(BaseGraph<Token> parent, BaseGraph<Token>.Node n1, L label)
 	{
 		BaseGraph<Token> child = new BaseGraph<Token>();
@@ -182,6 +189,7 @@ public class Subdue<L, N extends Node<L, N>>
 					nodesOut.get(i).connect(nodesOut.get(j));
 			
 			}
+			
 			if(ni.equals(n1))
 				nodesOut.get(i).connect(newNode);
 		}
@@ -222,6 +230,26 @@ public class Subdue<L, N extends Node<L, N>>
 					
 			
 		return child;
+	}
+	
+	private BaseGraph<Token> wrap(Graph<L, N> graph)
+	{
+		BaseGraph<Token> wrapped = new BaseGraph<Token>();
+		List<N> nodesIn = new ArrayList<N>(graph);
+		List<BaseGraph<Token>.Node> nodesOut = new ArrayList<BaseGraph<Token>.Node>(graph.size());
+		
+		for(N nodeIn : nodesIn)
+			nodesOut.add(wrapped.addNode(new LabelToken(nodeIn.label())));
+		
+		for(int i : series(nodesIn.size()))
+			for(int j : series(i, nodesIn.size()))
+			{
+				N ni = nodesIn.get(i), nj = nodesIn.get(j);
+				if(ni.connected(nj))
+					nodesOut.get(i).connect(nodesOut.get(j));
+			}
+		
+		return wrapped;
 	}
 
 
@@ -298,7 +326,7 @@ public class Subdue<L, N extends Node<L, N>>
 	 * @author Peter
 	 *
 	 */
-	private class Substructure 
+	public  class Substructure 
 		implements Comparable<Substructure>
 	{
 		private BaseGraph<Token> subGraph;
@@ -317,7 +345,7 @@ public class Subdue<L, N extends Node<L, N>>
 
 		private void calculateScore()
 		{
-			score = 1;
+			score = GraphMDL.mdl(tGraph, subGraph, costThreshold);
 		}
 		
 		public double score()

@@ -23,12 +23,12 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	
 	private BaseGraph<L> graph1; 
 	private Graph<L, N> graph2;
-	
-
+	 
 	private double threshold;
 	
 	private List<BaseGraph<L>.Node> nodeList1;
 	private List<N> nodeList2; 
+	
 	private InexactCost<L> costFunction;
 	
 	// * The number of links required to connect each substructure to the graph
@@ -49,11 +49,13 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 		
 		this.costFunction = cost;
 		
-		
 		State best = null;
 		do 
 		{
 			best = search();
+			
+			// System.out.println("Found " + best);
+
 			if(best != null)
 			{
 				// * remove the matched nodes from the graph
@@ -69,10 +71,11 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				
 				Set<BaseGraph<L>.Node> nodes = new HashSet<BaseGraph<L>.Node>();
 				for(int i : rm)
-				{
-					BaseGraph<L>.Node node = nodeList1.remove(i);
-					nodes.add(node);
-				}
+					if(i >= 0)
+					{
+						BaseGraph<L>.Node node = nodeList1.remove(i);
+						nodes.add(node);
+					}
 				
 				// * record transformation cost and linking cost
 				int links = 0;
@@ -89,6 +92,9 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				for(BaseGraph<L>.Node node : nodes)
 					this.graph1.remove(node);
 			}
+			
+			// System.out.println(nodeList1);
+			// System.out.println(this.graph1);
 		} while(best != null);
 	}
 
@@ -96,6 +102,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	{
 		State best = null;
 		double bestCost = Double.POSITIVE_INFINITY;
+		
 		PriorityQueue<State> buffer = new PriorityQueue<State>();
 		buffer.add(new State());
 
@@ -106,7 +113,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			// * If the lowest state has cost higher than threshold, we 
 			//   will never reach a state below it.
 			if(top.cost() > threshold)
-				return null;
+				return best;
 			
 			// * Cost estimation is optimistic so if our current cost is worse 
 			//   than the best yet observed, it'll never get better.
@@ -114,13 +121,11 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				continue;
 			
 			if(top.complete())
-			{
 				if(top.cost() < bestCost)
 				{
 					best = top;
 					bestCost = top.cost();
 				}
-			}
 			
 			for(State child : top)
 				buffer.add(child);
@@ -184,7 +189,8 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 		}
 		
 		/**
-		 * creates a child state of the given state with the givebn pair added.
+		 * Creates a child state of the given state with the given pair added.
+		 * 
 		 * @param parent
 		 * @param g1Node
 		 * @param g2Node
@@ -204,10 +210,10 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			this.complete = complete;
 						
 			// * Calculate score
-			cost = currentCost() + expectedCost();
+			cost = expectedCost() + currentCost();
 		}
 		
-		private double currentCost()
+		private double expectedCost()
 		{
 			double cost = 0.0;
 			
@@ -235,8 +241,8 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				for(N neighbour : node.neighbours())
 					if(!a2.contains(neighbour))
 						b2.add(neighbour);
-			
-			cost += Math.abs(b1.size() - b2.size());
+			if(b2.size() > b1.size())
+				cost += Math.abs(b1.size() - b2.size());
 			
 			// * NOTE: The 1983 paper is not absolutely clear on this step
 			//   this may not be right
@@ -245,15 +251,16 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				b1Links += node.neighbours().size();
 			for(N node : b2)
 				b2Links += node.neighbours().size();
-			
+						
 			// * We need to be optimistic so we assume that every link addition 
 			//   fixes two of the missing neighbours counted above.
-			cost += Math.abs(b1Links - b2Links) / 2.0;
+			if(b2Links > b1Links)
+				cost += Math.abs(b1Links - b2Links) / 2.0;
 			
 			return cost;
 		}
 		
-		private double expectedCost()
+		private double currentCost()
 		{
 			double cost = 0.0;
 			
@@ -356,7 +363,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 					if(n2 >= 0)
 						remaining2.remove((Integer)n2);
 				
-				System.out.println(State.this + " remaining: " + remaining1 + " " + remaining2);
+//				System.out.println(State.this + " remaining: " + remaining1 + " " + remaining2);
 				
 				i = 0;
 				j = 0;
@@ -451,7 +458,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				);
 			}
 			
-			sb.append("] ").append(cost() + " ").append(complete() ? "c" : "i");
+			sb.append("] ").append(cost() + " ("+expectedCost()+", "+currentCost()+") ").append(complete() ? "c" : "i");
 				
 			return sb.toString();
 		}

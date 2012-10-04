@@ -414,6 +414,12 @@ public class LabeledBase<L, W> extends AbstractCollection<LabeledBase<L, W>.Node
 					return true;
 		return false;
 	}
+
+	@Override
+	public Set<L> labels()
+	{
+		return Collections.unmodifiableSet(nodes.keySet());
+	}
 	
 
 }
