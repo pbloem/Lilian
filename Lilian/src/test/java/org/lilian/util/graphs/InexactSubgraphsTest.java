@@ -13,8 +13,8 @@ public class InexactSubgraphsTest
 	@Test
 	public void test()
 	{
-		BaseGraph<String> line = Graphs.star(3);
-		BaseGraph<String> ladder = Graphs.ladder(5);
+		BaseGraph<String> line = Graphs.line(1);
+		BaseGraph<String> ladder = Graphs.ladder(6);
 		
 		System.out.println(line);
 		System.out.println(ladder);

@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.lilian.Global;
 import org.lilian.util.Series;
 
 public class Graphs
@@ -183,5 +184,22 @@ public class Graphs
 		
 		return graph;
 	}
+	
+	public static BaseGraph<String> random(int n, double prob)
+	{
+		BaseGraph<String> graph = new BaseGraph<String>();
+		List<BaseGraph<String>.Node> nodes = new ArrayList<BaseGraph<String>.Node>(n);
+
+		for(int i : series(n))
+			nodes.add(graph.addNode("."));
+		
+		for(int i : series(n))
+			for(int j : series(i+1, n))
+				if(Global.random.nextDouble() < prob)
+					nodes.get(i).connect(nodes.get(j));
+		
+		return graph;
+	}
+	
 	
 }

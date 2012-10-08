@@ -56,6 +56,14 @@ public class Subdue<L, N extends Node<L, N>>
 		labels = graph.labels();
 	}
 	
+	/**
+	 * 
+	 * @param iterations
+	 * @param beamWidth
+	 * @param maxBest
+	 * @param maxSubSize
+	 * @return
+	 */
 	public Collection<Substructure> search(int iterations, int beamWidth, int maxBest, int maxSubSize)
 	{
 		LinkedList<Substructure> parents = new LinkedList<Substructure>(),

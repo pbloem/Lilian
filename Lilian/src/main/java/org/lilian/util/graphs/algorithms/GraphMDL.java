@@ -5,6 +5,7 @@ import static org.lilian.util.Series.series;
 
 import org.apache.commons.math.util.MathUtils;
 import org.lilian.models.BasicFrequencyModel;
+import org.lilian.models.FrequencyModel;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.BaseGraph;
@@ -22,18 +23,32 @@ public class GraphMDL
 
 	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph)
 	{
-		int n = graph.size();
-		
-		
-		// * Encode the node labels
-		double nBits = 0.0;
 		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
 		for(N node : graph)
 			labels.add(node.label());
 		
+		return mdl(graph, labels);
+	}
+		
+
+	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, FrequencyModel<L> codebook)
+	{
+		int n = graph.size();
+		
+		// * Encode the node labels
+		double nBits = 0.0;
+
 		for(N node : graph)
-			nBits += log2(labels.probability(node.label()));
+			nBits += log2(codebook.probability(node.label()));
+		
+		// * If the graph is empty or size 1, we must 
+		//   establish this. If we used the empty string for either we would lose
+		//   the self-delimiting properties of the representation.
+		if(graph.size() == 0)
+			return 1;
+		if(graph.size() == 1 && nBits == 0) 
+			return 2.0;
 		
 		// * Encode the adjacency matrix
 		double aBits = 0;
@@ -68,11 +83,18 @@ public class GraphMDL
 	 */
 	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, Graph<L, N> substructure, double threshold)
 	{
+//		System.out.println("graph: " + graph);
+//		System.out.println("sub: " + substructure);
+		
+		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
+		for(N node : graph)
+			labels.add(node.label());
+		
 		double bits = 0.0;
 		
 		// * Store the substructure in
 		//   (the end of this representation is recognizable, so no prefix coding required) 
-		bits += mdl(substructure);
+		bits += mdl(substructure, labels);
 		
 		InexactCost<L> cost = CostFunctions.transformationCost(
 				graph.labels().size(), graph.size(), graph.numEdges());
@@ -80,6 +102,9 @@ public class GraphMDL
 		
 		// * Store the leftover graph
 		bits += mdl(is.silhouette());
+		
+		// * Store the size of the final graph
+		bits += prefix(log2(graph.size()));
 		
 		// * for each substructure
 		for(int i : series(is.numMatches()))

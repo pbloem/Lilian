@@ -92,10 +92,10 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				for(BaseGraph<L>.Node node : nodes)
 					this.graph1.remove(node);
 			}
-			
-			// System.out.println(nodeList1);
-			// System.out.println(this.graph1);
-		} while(best != null);
+//			
+//			 System.out.println(nodeList1);
+//			 System.out.println(this.graph1 + " " + this.graph1.size());
+		} while(best != null && ! this.graph1.isEmpty());
 	}
 
 	private State search()

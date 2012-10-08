@@ -331,7 +331,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 					if(n2 >= 0)
 						remaining2.remove((Integer)n2);
 				
-				System.out.println(State.this + " remaining: " + remaining1 + " " + remaining2);
+				// System.out.println(State.this + " remaining: " + remaining1 + " " + remaining2);
 				
 				i = 0;
 				j = 0;
