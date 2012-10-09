@@ -22,7 +22,7 @@ public class InexactSubgraphsTest
 		InexactCost<String> cost = CostFunctions.transformationCost(1, ladder.size(), ladder.numEdges());
 		InexactSubgraphs<String, BaseGraph<String>.Node> is =
 				new InexactSubgraphs<String, BaseGraph<String>.Node>(
-						ladder, line, cost, 10.0);
+						ladder, line, cost, 10.0, false);
 		
 		System.out.println(is.numMatches());
 		System.out.println(is.numLinks());

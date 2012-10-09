@@ -83,8 +83,8 @@ public class GraphMDL
 	 */
 	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, Graph<L, N> substructure, double threshold)
 	{
-//		System.out.println("graph: " + graph);
-//		System.out.println("sub: " + substructure);
+		System.out.println("graph: " + graph);
+		System.out.println("sub: " + substructure);
 		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
 		for(N node : graph)
@@ -97,8 +97,8 @@ public class GraphMDL
 		bits += mdl(substructure, labels);
 		
 		InexactCost<L> cost = CostFunctions.transformationCost(
-				graph.labels().size(), graph.size(), graph.numEdges());
-		InexactSubgraphs<L, N> is = new InexactSubgraphs<L, N>(graph, substructure, cost, threshold);
+				graph.labels().size(), substructure.size(), substructure.numEdges());
+		InexactSubgraphs<L, N> is = new InexactSubgraphs<L, N>(graph, substructure, cost, threshold, false);
 		
 		// * Store the leftover graph
 		bits += mdl(is.silhouette());

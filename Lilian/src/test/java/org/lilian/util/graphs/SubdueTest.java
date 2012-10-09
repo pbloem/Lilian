@@ -16,15 +16,19 @@ public class SubdueTest
 	@Test
 	public void test()
 	{
-		BaseGraph<String> in = Graphs.ladder(6);
+		BaseGraph<String> in = 
+				// Graphs.jbc();
+				// Graphs.random(10, 0.5);
+				Graphs.ba(30, 3, 1);
+		
 		
 		InexactCost<String> costFunction = CostFunctions.uniform();
 		Subdue<String, BaseGraph<String>.Node> sub = 
 				new Subdue<String, BaseGraph<String>.Node>(
-						in, costFunction, 4.0);
+						in, costFunction, 0.0);
 		
 		Collection<Subdue<String, BaseGraph<String>.Node>.Substructure> subs =
-				sub.search(6, 200, 3, 1000);
+				sub.search(4, 10, 10, -1);
 		
 		System.out.println(GraphMDL.mdl(in));
 		for(Subdue<String, BaseGraph<String>.Node>.Substructure structure : subs)

@@ -25,6 +25,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	private Graph<L, N> graph2;
 	 
 	private double threshold;
+	private boolean returnBest;
 	
 	private List<BaseGraph<L>.Node> nodeList1;
 	private List<N> nodeList2; 
@@ -37,12 +38,13 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	public List<Integer> transCosts = new ArrayList<Integer>();
 
 	public InexactSubgraphs(Graph<L, N> graph1, Graph<L, N> graph2,
-			InexactCost<L> cost, double threshold)
+			InexactCost<L> cost, double threshold, boolean returnBest)
 	{
 		this.graph1 = new BaseGraph<L>(graph1);
 		this.graph2 = graph2;
 		
 		this.threshold = threshold;
+		this.returnBest = returnBest;
 		
 		nodeList1 = new ArrayList<BaseGraph<L>.Node>(this.graph1);
 		nodeList2 = new ArrayList<N>(graph2);
@@ -121,11 +123,19 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				continue;
 			
 			if(top.complete())
-				if(top.cost() < bestCost)
+			{
+				if(returnBest)
 				{
-					best = top;
-					bestCost = top.cost();
+					if(top.cost() < bestCost)
+					{
+						best = top;
+						bestCost = top.cost();
+					}
+				} else
+				{
+					return top;
 				}
+			}
 			
 			for(State child : top)
 				buffer.add(child);
@@ -262,6 +272,21 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 		
 		private double currentCost()
 		{
+			// * if this is a complete match, then at least some of the pairs 
+			//   must be definite (ie. not represent the removal of addition of
+			//   a node.) 
+			if(complete())
+			{
+				int connected = 0;
+				for(int i : series(size()))
+					if(nodes1[i] >= 0 && nodes2[i] >= 0)
+						connected++;
+				
+				if(connected == 0)
+					return Double.POSITIVE_INFINITY;
+			}
+					
+			
 			double cost = 0.0;
 			
 			// * relabeling penalty

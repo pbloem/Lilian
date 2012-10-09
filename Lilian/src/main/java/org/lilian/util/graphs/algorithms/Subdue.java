@@ -13,11 +13,13 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.lilian.Global;
 import org.lilian.util.Series;
 import org.lilian.util.distance.Metrizable;
 import org.lilian.util.graphs.BaseGraph;
 import org.lilian.util.graphs.Graph;
 import org.lilian.util.graphs.Node;
+import org.lilian.util.graphs.VF2Test;
 
 /**
  * Subdue (Jonyer, Cook, Holder, 2003) finds relevant substructures in a graph 
@@ -58,58 +60,83 @@ public class Subdue<L, N extends Node<L, N>>
 	
 	/**
 	 * 
-	 * @param iterations
-	 * @param beamWidth
-	 * @param maxBest
-	 * @param maxSubSize
+	 * @param iterations The number of times to extend the current collections of substructures
+	 * @param beamWidth The number of substructures to keep
+	 * @param maxBest The number of best substructures to return
+	 * @param maxSubSize The maximum size of a substructure (-1 if no limit)
 	 * @return
 	 */
 	public Collection<Substructure> search(int iterations, int beamWidth, int maxBest, int maxSubSize)
 	{
+		Global.log().info("...");
 		LinkedList<Substructure> parents = new LinkedList<Substructure>(),
 				                 children = new LinkedList<Substructure>(),
 		                         bestList = new LinkedList<Substructure>();
 		
 		for(L label : labels)
+		{
+			Global.log().info(".");
 			parents.add(new Substructure(substructure(label)));
+		}
 		
 		sort(parents);
 		
 		for(int i : series(iterations))
 		{
+			Global.log().info("Starting iteration " + i);
+			Global.log().info("* there are " + parents.size() + " parents");
+			
 			// * generate all extensions of the parents
 			List<BaseGraph<Token>> extensions = new LinkedList<BaseGraph<Token>>();
 			for(Substructure parent : parents)
 				for(BaseGraph<Token> child : substructures(parent.subgraph()))
-					if(child.size() <= maxSubSize)
+					if(child.size() <= maxSubSize || maxSubSize == -1)
 						extensions.add(child);
+			
+			Global.log().info("Generated " + extensions.size() +  " children. Checking for isomorphisms.");
 			
 			// * check for isomorphic children
 			while(! extensions.isEmpty())
 			{
 				BaseGraph<Token> next = extensions.remove(0);
 				
+				if(extensions.size() % 100 == 0)
+					Global.log().info(extensions.size() + " left.");
+				
 				Iterator<BaseGraph<Token>> iterator = extensions.iterator();
 				while(iterator.hasNext())
 				{
 					BaseGraph<Token> other = iterator.next();
 					
-					InexactMatch<Token, BaseGraph<Token>.Node> im = 
-							new InexactMatch<Token, BaseGraph<Token>.Node>(
-									next, other, costFunction, costThreshold);
+//					InexactMatch<Token, BaseGraph<Token>.Node> im = 
+//							new InexactMatch<Token, BaseGraph<Token>.Node>(
+//									next, other, costFunction, costThreshold);
+//					
+//					if(im.matches())
+//						iterator.remove();
 					
-					if(im.matches())
+					UndirectedVF2<Token, BaseGraph<Token>.Node> vf2 = 
+							new UndirectedVF2<Subdue.Token, BaseGraph<Token>.Node>(next, other, true);
+					
+					if(vf2.matches())
 						iterator.remove();
 				}
 				
 				children.add(new Substructure(next));
 			}
 			
+			Global.log().info("Reduced to "+children.size()+" non-isomorphic children.");
+	
 			sort(children);
+			
+			for(Substructure child : children)
+				System.out.println("__ " + child);
+			
 			while(children.size() > beamWidth)
 				children.pollLast();
 			
-			bestList.addAll(parents);
+			bestList.addAll(children);
+			sort(bestList);
 			while(bestList.size() > maxBest)
 				bestList.pollLast();
 			
@@ -144,7 +171,7 @@ public class Subdue<L, N extends Node<L, N>>
 		
 		// * Try all additional connections between existing nodes
 		for(int i : series(nodes.size()))
-			for(int j : series(i, nodes.size()))
+			for(int j : series(i+1, nodes.size()))
 			{
 				BaseGraph<Token>.Node n1 = nodes.get(i), n2 = nodes.get(j);
 				if(! n1.connected(n2))
@@ -268,7 +295,7 @@ public class Subdue<L, N extends Node<L, N>>
 	 * @author Peter
 	 *
 	 */
-	private interface Token {
+	public interface Token {
 		
 	}
 	
@@ -353,7 +380,9 @@ public class Subdue<L, N extends Node<L, N>>
 
 		private void calculateScore()
 		{
+			System.out.print("(");
 			score = GraphMDL.mdl(tGraph, subGraph, costThreshold);
+			System.out.println(")");
 		}
 		
 		public double score()

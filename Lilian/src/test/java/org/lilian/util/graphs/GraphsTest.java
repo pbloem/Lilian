@@ -27,5 +27,12 @@ public class GraphsTest
 		assertEquals(n*2, ladder.size());
 	}
 
+	@Test
+	public void testJBC()
+	{
+		BaseGraph<String> jbc = Graphs.jbc();
+		
+		System.out.println(jbc);
+	}
 
 }

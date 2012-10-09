@@ -41,8 +41,8 @@ public class UndirectedVF2<L,  N extends Node<L, N>>
 		nodes1 = new ArrayList<N>(g1);
 		nodes2 = new ArrayList<N>(g2);
 		
-		System.out.println(nodes1);
-		System.out.println(nodes2);
+//		System.out.println(nodes1);
+//		System.out.println(nodes2);
 		
 		core1 = new ArrayList<Integer>(g1.size());
 		core2 = new ArrayList<Integer>(g2.size());
@@ -90,7 +90,7 @@ public class UndirectedVF2<L,  N extends Node<L, N>>
 			for(Integer n1 : series(t1.size()))
 				if(t1.get(n1) != null)
 				{
-					System.out.println(d + ": " + n1 + " " + n2);
+//					System.out.println(d + ": " + n1 + " " + n2);
 
 					if(testAndSearch(n1, n2, d))
 						return true;
@@ -112,7 +112,7 @@ public class UndirectedVF2<L,  N extends Node<L, N>>
 			for(Integer n1 : series(core1.size()))
 				if(core1.get(n1) == null)
 				{
-					System.out.println(d + ": " + n1 + " " + n2);
+//					System.out.println(d + ": " + n1 + " " + n2);
 
 					if(testAndSearch(n1, n2, d))
 						return true;
@@ -136,7 +136,7 @@ public class UndirectedVF2<L,  N extends Node<L, N>>
 	{
 		if(feasible(n1, n2))
 		{
-			System.out.println("feasible");
+//			System.out.println("feasible");
 			// * add candidates to core
 			core1.set(n1, n2);
 			core2.set(n2, n1);
@@ -162,7 +162,7 @@ public class UndirectedVF2<L,  N extends Node<L, N>>
 			Integer t2n2Depth = t2.get(n2);
 			t2.set(n2, null);
 			
-			System.out.println(" c - " + core1 + " " + core2 + " t - " + t1 + " " + t2);
+//			System.out.println(" c - " + core1 + " " + core2 + " t - " + t1 + " " + t2);
 			if(search(d + 1))
 				return true;  // * RETURN Statement
 			
@@ -185,8 +185,10 @@ public class UndirectedVF2<L,  N extends Node<L, N>>
 					t2.set(i, null);
 			
 			// * Optimize: Store the values of t1, t2 added in this scope.
-		} else 
-			System.out.println("not feasible");
+		} 
+		
+//		else 
+//			System.out.println("not feasible");
 
 		return false;
 		

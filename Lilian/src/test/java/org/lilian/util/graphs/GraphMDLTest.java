@@ -38,4 +38,22 @@ public class GraphMDLTest
 		System.out.println(GraphMDL.mdl(Graphs.line(2)));
 	}
 	
+	@Test
+	public void jbc()
+	{	
+		
+		BaseGraph<String> graph = Graphs.jbc();
+		
+		BaseGraph<String> substructure = new BaseGraph<String>();
+		// * square 1
+		BaseGraph<String>.Node s1x = graph.addNode("x"),
+                               s1y = graph.addNode("y"),
+                               s1z = graph.addNode("z"),
+                               s1q = graph.addNode("q");
+		
+		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), Graphs.single("x"), 20.0));
+		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), substructure, 20.0));
+
+	}
+	
 }

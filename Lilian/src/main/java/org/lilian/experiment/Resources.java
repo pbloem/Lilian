@@ -340,6 +340,23 @@ public class Resources
 		return Graphs.abRandom(nodes, 3, toAttach);
 	}
 	
+	@Resource(name="random graph lilian")
+	public static org.lilian.util.graphs.BaseGraph<String> randomLilian(
+		@Name("number of nodes") int nodes,
+		@Name("edge probability") double edgeProb)
+	{
+		return org.lilian.util.graphs.Graphs.random(nodes, edgeProb);
+	}
+	
+	@Resource(name="ba random graph lilian")
+	public static org.lilian.util.graphs.BaseGraph<String> abRandomLilian(
+		@Name("number of nodes") int nodes,
+		@Name("number to attach") int toAttach)
+	{
+		return org.lilian.util.graphs.Graphs.ba(nodes, 3, toAttach);
+	}
+	
+	
 	@Resource(name="csv file")
 	public static List<Point> csvFile(@Name("file") File file) 
 		throws IOException
