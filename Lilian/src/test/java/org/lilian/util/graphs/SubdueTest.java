@@ -18,8 +18,8 @@ public class SubdueTest
 	{
 		BaseGraph<String> in = 
 				// Graphs.jbc();
-				// Graphs.random(10, 0.5);
-				Graphs.ba(30, 3, 1);
+				Graphs.random(10, 0.5);
+				// Graphs.ba(30, 3, 1);
 		
 		
 		InexactCost<String> costFunction = CostFunctions.uniform();

@@ -394,7 +394,6 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 		
 		Set<Node> done = new HashSet<Node>();
 		
-		int c = 0;
 		boolean first = true;
 		for(L label : nodes.keySet())
 			for(Node node : nodes.get(label))
@@ -409,7 +408,6 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 							sb.append("; ");
 					
 						sb.append(node.toString() + " -- " + neighbour.toString());
-						c++;
 					}
 				
 				if(node.neighbours().isEmpty())
@@ -420,7 +418,6 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 						sb.append("; ");
 					
 					sb.append(node.toString());
-					c++;
 				}
 				
 				done.add(node);
@@ -428,7 +425,6 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 		
 		sb.append("}");
 		
-		System.out.println(sb.length());
 		return sb.toString();
 	}
 
