@@ -19,7 +19,6 @@ import org.lilian.util.distance.Metrizable;
 import org.lilian.util.graphs.BaseGraph;
 import org.lilian.util.graphs.Graph;
 import org.lilian.util.graphs.Node;
-import org.lilian.util.graphs.VF2Test;
 
 /**
  * Subdue (Jonyer, Cook, Holder, 2003) finds relevant substructures in a graph 
