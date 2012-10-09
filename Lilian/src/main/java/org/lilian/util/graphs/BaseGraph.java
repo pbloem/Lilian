@@ -51,14 +51,16 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 	 * @param graph
 	 * @return
 	 */
-	public <N extends org.lilian.util.graphs.Node<L, N>> BaseGraph(Graph<L, N> graph)
+	public static <L, N extends org.lilian.util.graphs.Node<L, N>> BaseGraph<L> copy(Graph<L, N> graph)
 	{	
+		BaseGraph<L> copy = new BaseGraph<L>();
+		
 		List<N> nodes = new ArrayList<N>(graph);
 		List<BaseGraph<L>.Node> outNodes = new ArrayList<BaseGraph<L>.Node>(graph.size());
 		
 		for(int i : Series.series(graph.size()))
 		{
-			BaseGraph<L>.Node newNode = addNode(nodes.get(i).label());
+			BaseGraph<L>.Node newNode = copy.addNode(nodes.get(i).label());
 			outNodes.add(newNode);
 		}
 		
@@ -66,6 +68,9 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 			for(int j : Series.series(i, graph.size()))
 				if(nodes.get(i).connected(nodes.get(j)))
 					outNodes.get(i).connect(outNodes.get(j));
+		
+		
+		return copy;
 	}
 	
 	public class Node implements org.lilian.util.graphs.Node<L, Node>

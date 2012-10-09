@@ -40,7 +40,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	public InexactSubgraphs(Graph<L, N> graph1, Graph<L, N> graph2,
 			InexactCost<L> cost, double threshold, boolean returnBest)
 	{
-		this.graph1 = new BaseGraph<L>(graph1);
+		this.graph1 = BaseGraph.copy(graph1);
 		this.graph2 = graph2;
 		
 		this.threshold = threshold;
