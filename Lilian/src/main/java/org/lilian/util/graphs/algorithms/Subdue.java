@@ -406,7 +406,7 @@ public class Subdue<L, N extends Node<L, N>>
 		
 		public String toString()
 		{
-			return subGraph.toString() + "_" + score;
+			return subGraph.toString() + " " + score + " " + GraphMDL.mdl(subGraph);
 		}
 	}
 	
