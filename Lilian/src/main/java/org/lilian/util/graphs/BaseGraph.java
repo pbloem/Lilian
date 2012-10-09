@@ -40,7 +40,7 @@ public class BaseGraph<L> extends AbstractCollection<BaseGraph<L>.Node>
 	protected int numEdges = 0;
 	protected long modCount = 0;
 	
-	public BaseGraph()
+	public <N extends org.lilian.util.graphs.Node<L, N>> BaseGraph()
 	{
 	}
 	
