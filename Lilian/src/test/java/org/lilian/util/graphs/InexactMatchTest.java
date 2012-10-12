@@ -3,9 +3,11 @@ package org.lilian.util.graphs;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.lilian.util.graphs.algorithms.CostFunctions;
-import org.lilian.util.graphs.algorithms.InexactCost;
-import org.lilian.util.graphs.algorithms.InexactMatch;
+import org.lilian.util.graphs.old.BaseGraph;
+import org.lilian.util.graphs.old.Graphs;
+import org.lilian.util.graphs.old.algorithms.CostFunctions;
+import org.lilian.util.graphs.old.algorithms.InexactCost;
+import org.lilian.util.graphs.old.algorithms.InexactMatch;
 
 public class InexactMatchTest
 {

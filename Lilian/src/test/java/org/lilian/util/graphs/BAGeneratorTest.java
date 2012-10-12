@@ -5,7 +5,8 @@ import static org.junit.Assert.*;
 import nl.peterbloem.powerlaws.Discrete;
 
 import org.junit.Test;
-import org.lilian.util.graphs.algorithms.BAGenerator;
+import org.lilian.util.graphs.old.Graphs;
+import org.lilian.util.graphs.old.algorithms.BAGenerator;
 
 public class BAGeneratorTest
 {

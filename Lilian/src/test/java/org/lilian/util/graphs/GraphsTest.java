@@ -3,6 +3,8 @@ package org.lilian.util.graphs;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.lilian.util.graphs.old.BaseGraph;
+import org.lilian.util.graphs.old.Graphs;
 
 public class GraphsTest
 {

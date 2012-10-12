@@ -10,7 +10,9 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.lilian.Global;
-import org.lilian.util.graphs.algorithms.UndirectedVF2;
+import org.lilian.util.graphs.old.BaseGraph;
+import org.lilian.util.graphs.old.Graphs;
+import org.lilian.util.graphs.old.algorithms.UndirectedVF2;
 
 public class VF2Test
 {

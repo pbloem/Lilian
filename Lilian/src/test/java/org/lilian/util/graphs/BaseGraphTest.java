@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Iterator;
 
 import org.junit.Test;
+import org.lilian.util.graphs.old.BaseGraph;
 
 public class BaseGraphTest
 {

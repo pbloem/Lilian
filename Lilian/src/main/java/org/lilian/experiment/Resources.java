@@ -341,19 +341,19 @@ public class Resources
 	}
 	
 	@Resource(name="random graph lilian")
-	public static org.lilian.util.graphs.BaseGraph<String> randomLilian(
+	public static org.lilian.util.graphs.old.BaseGraph<String> randomLilian(
 		@Name("number of nodes") int nodes,
 		@Name("edge probability") double edgeProb)
 	{
-		return org.lilian.util.graphs.Graphs.random(nodes, edgeProb);
+		return org.lilian.util.graphs.old.Graphs.random(nodes, edgeProb);
 	}
 	
 	@Resource(name="ba random graph lilian")
-	public static org.lilian.util.graphs.BaseGraph<String> abRandomLilian(
+	public static org.lilian.util.graphs.old.BaseGraph<String> abRandomLilian(
 		@Name("number of nodes") int nodes,
 		@Name("number to attach") int toAttach)
 	{
-		return org.lilian.util.graphs.Graphs.ba(nodes, 3, toAttach);
+		return org.lilian.util.graphs.old.Graphs.ba(nodes, 3, toAttach);
 	}
 	
 	
