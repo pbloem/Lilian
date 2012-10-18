@@ -42,14 +42,14 @@ public class ThreeLayer extends AbstractList<Double> implements Parametrizable, 
 	@Override
 	public List<java.lang.Double> parameters()
 	{
-		List<Double> parameters = new ArrayList<Double>(n*n);
+		List<Double> parameters = new ArrayList<Double>((n+1) * (h) + (h+1) * n);
 		
-		for(int i : series(n))
+		for(int i : series(n+1))
 			for(int j : series(h))
 				parameters.add(weights0.getEntry(i, j));
 		
 
-		for(int i : series(h))
+		for(int i : series(h+1))
 			for(int j : series(n))
 				parameters.add(weights1.getEntry(i, j));
 				
@@ -109,19 +109,21 @@ public class ThreeLayer extends AbstractList<Double> implements Parametrizable, 
 			fnn.h = h;
 			fnn.activation = activation;
 			
-			fnn.stateIn = new ArrayRealVector(n);
-			fnn.stateHidden = new ArrayRealVector(n);
+			fnn.stateIn = new ArrayRealVector(n+1);
+			fnn.stateIn.setEntry(n, 1.0); // * bias node
+			fnn.stateHidden = new ArrayRealVector(h+1);
+			fnn.stateHidden.setEntry(h, 1.0); // * bias node
 			fnn.stateOut = new ArrayRealVector(n);
 			
-			fnn.weights0 = new Array2DRowRealMatrix(h, n);
-			fnn.weights1 = new Array2DRowRealMatrix(n, h);
+			fnn.weights0 = new Array2DRowRealMatrix(h, n+1);
+			fnn.weights1 = new Array2DRowRealMatrix(n, h+1);
 			
 			int c = 0;
-			for(int i : series(h))
-				for(int j : series(n))
+			for(int i : series(h)) // to
+				for(int j : series(n+1)) // from
 					fnn.weights0.setEntry(i, j, parameters.get(c ++));
-			for(int i : series(n))
-				for(int j : series(h))
+			for(int i : series(n)) // to
+				for(int j : series(h+1)) // from
 					fnn.weights1.setEntry(i, j, parameters.get(c ++));
 			
 			return fnn;
@@ -130,7 +132,7 @@ public class ThreeLayer extends AbstractList<Double> implements Parametrizable, 
 		@Override
 		public int numParameters()
 		{
-			return n * h * 2;
+			return (n+1) * (h) + (h+1) * n;
 		}
 	
 	}
@@ -138,10 +140,12 @@ public class ThreeLayer extends AbstractList<Double> implements Parametrizable, 
 	@Override
 	public void step()
 	{
-		stateHidden = weights0.operate(stateIn);
+		stateHidden.setSubVector(0, weights0.operate(stateIn));
+		
 		for(int i : series(h))
 			stateHidden.setEntry(i, activation.function(stateHidden.getEntry(i)));
-		stateOut = weights1.operate(stateHidden);
+		
+		stateOut.setSubVector(0, weights1.operate(stateHidden));
 	}
 
 	@Override
