@@ -24,6 +24,7 @@ import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
 
 import org.lilian.Global;
+import org.lilian.util.Pair;
 import org.lilian.util.Series;
 import org.lilian.util.distance.SquaredEuclideanDistance;
 
@@ -498,9 +499,9 @@ public class Datasets
 						if(c == 0)
 							values[h] = color.getRed() / 255.0;
 						if(c == 1)
-							values[h] = color.getBlue() / 255.0;
-						if(c == 2)
 							values[h] = color.getGreen() / 255.0;
+						if(c == 2)
+							values[h] = color.getBlue() / 255.0;
 						
 						h ++;
 					}
@@ -578,7 +579,7 @@ public class Datasets
 	{
 		File[] files = dir.listFiles();
 		if(files == null)
-			throw new IllegalArgumentException("Argument (+"+dir+"+) is not a directory.");
+			throw new IllegalArgumentException("Argument ("+dir+") is not a directory.");
 		
 		List<Point> dataset = new ArrayList<Point>(files.length);
 		
@@ -587,5 +588,85 @@ public class Datasets
 				dataset.add(readImage(file, gray));
 		
 		return dataset;
+	}
+	
+	/**
+	 * returns the file size of the first image in the given directory
+	 */
+	public static Pair<Integer, Integer> size(File dir)
+		throws IOException
+	{
+		File[] files = dir.listFiles();
+		if(files == null)
+			throw new IllegalArgumentException("Argument (+"+dir+"+) is not a directory.");
+		
+		int width = -1, height = -1;
+		for(File file : files)
+			if(!file.isDirectory() && !file.isHidden())
+			{
+				BufferedImage image = read(file);
+				
+				width = image.getWidth();
+				height = image.getHeight();
+				
+				break;
+			}
+		
+		return new Pair<Integer, Integer>(width, height);
+	}
+	
+	/**
+	 * Reconstructs an image from the given point.
+	 * 
+	 * @param point
+	 * @param width
+	 * @param height
+	 * @param gray
+	 * @return
+	 */
+	public static BufferedImage toImage(Point point, int width, int height, boolean gray)
+	{
+
+		BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		
+		
+		int index = 0;
+		
+		if(gray) {
+			for(int i = 0; i < width; i++)
+				for(int j = 0; j < height; j++)
+				{
+
+					float f = clip((float)(double) point.get(index ++));
+					
+					Color color = new Color(f, f, f);
+					result.setRGB(i, j, color.getRGB());
+				}
+		} else 
+		{
+			int channelSize = width * height;
+			for(int i = 0; i < width; i++)
+				for(int j = 0; j < height; j++)
+				{
+					
+					float r = clip((float)(double) point.get(index));
+					float g = clip((float)(double) point.get(index + channelSize));
+					float b = clip((float)(double) point.get(index + channelSize * 2));
+					index ++;
+					
+					Color color = new Color(r, g, b);
+					result.setRGB(i, j, color.getRGB());
+			}
+		}
+				
+		return result;
+		
+	}
+	
+	private static float clip(float f)
+	{
+		f = f < 0.0f ? 0.0f : f;
+		f = f > 1.0f ? 1.0f : f;
+		return f;
 	}
 }

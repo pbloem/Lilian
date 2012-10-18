@@ -122,9 +122,14 @@ public class PCA
 	 */
 	public Point mapBack(Point simplified)
 	{
-		RealVector xs = new ArrayRealVector(dim);
-		xs.setSubVector(0, simplified.getBackingData());
+		RealVector reconstruction = mean.copy();
 		
-		return new Point(svd.getV().operate(xs).add(mean));
+		for(int i : series(simplified.size()))
+		{
+			double scale = simplified.get(i);
+			reconstruction.add(svd.getVT().getColumnVector(i).mapMultiply(scale));
+		}
+
+		return new Point(reconstruction);
 	}
 }

@@ -431,4 +431,11 @@ public class Resources
 		
 		return data;
 	}
+	
+	@Resource(name="file")
+	public static File file(@Name("file") String file)
+			throws IOException
+	{
+		return new File(file);
+	}
 }
