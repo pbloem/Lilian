@@ -57,7 +57,6 @@ public class ES<P extends Parametrizable> implements Serializable
 	private CrossoverMode anglesMode;
 	
 	// * TODO Parametrize these
-	private int mutationDimensions = 0;
 	private double angleMutationVar = 0.08;
 	private double convergenceSpeed = 0.001;
 	
@@ -70,9 +69,16 @@ public class ES<P extends Parametrizable> implements Serializable
 	private double mutationProbabilityScales = 1.0;	
 	private double mutationProbabilityObject = 1.0;	
 	
+	private boolean useMutationAngles;
+	
 	public ES(Builder<P> builder, Target<? super P> target, Collection<List<Double>> initialPop)
 	{
-		this(builder, target, initialPop, NUM_PARENTS, initialPop.size() * OFFSPRING, MAX_LIFESPAN, MODE);
+		this(builder, target, initialPop, NUM_PARENTS, initialPop.size() * OFFSPRING, MAX_LIFESPAN, MODE, true);
+	}	
+	
+	public ES(Builder<P> builder, Target<? super P> target, Collection<List<Double>> initialPop, boolean mutationDimensions)
+	{
+		this(builder, target, initialPop, NUM_PARENTS, initialPop.size() * OFFSPRING, MAX_LIFESPAN, MODE, mutationDimensions);
 	}	
 	
 	public ES(
@@ -82,12 +88,13 @@ public class ES<P extends Parametrizable> implements Serializable
 			int numParents, 
 			int offspringSize,
 			int maxAge,
-			CrossoverMode mode)
+			CrossoverMode mode,
+			boolean mutationAngles)
 	{
 		this(
 				builder, target, initialPop, 
 				numParents, offspringSize, maxAge, mode,
-				0.0001, 0.08);
+				0.0001, 0.08, mutationAngles);
 	}	
 	
 	public ES(
@@ -99,7 +106,8 @@ public class ES<P extends Parametrizable> implements Serializable
 			int maxAge,
 			CrossoverMode mode,
 			double convergenceSpeed,
-			double angleMutationVar)
+			double angleMutationVar,
+			boolean mutationAngles)
 	{
 		this.target = target;
 		this.builder = builder;
@@ -121,6 +129,8 @@ public class ES<P extends Parametrizable> implements Serializable
 		
 		this.convergenceSpeed = convergenceSpeed;
 		this.angleMutationVar = angleMutationVar;
+		
+		this.useMutationAngles = mutationAngles;
 	}
 	
 	/**
@@ -207,8 +217,7 @@ public class ES<P extends Parametrizable> implements Serializable
 			this.params = params;
 			this.instance = builder.build(params);
 			
-			int numScales = mutationDimensions;
-			if(numScales == 0) numScales = dimension;
+			int numScales = dimension;
 			
 			// Initial standard devs
 			double si = initialStdDevScales;
@@ -218,8 +227,12 @@ public class ES<P extends Parametrizable> implements Serializable
 			for(int i = 0; i < numScales; i++)
 				strategyScales.add(Global.random.nextGaussian() * si);
 
-			//int numAngles = (int)Math.floor((dimension - (numScales/2.0)) * (numScales - 1.0));
-			int numAngles = (int)Math.floor((numScales*numScales - numScales)/2.0);
+			int numAngles = 
+					useMutationAngles ? 
+							(int)Math.floor((numScales*numScales - numScales)/2.0) :
+							0;
+			
+			
 			strategyAngles = new ArrayList<Double>(numAngles);
 			for(int i = 0; i < numAngles; i++)
 				strategyAngles.add(Global.random.nextGaussian() * ai);			
@@ -306,6 +319,7 @@ public class ES<P extends Parametrizable> implements Serializable
 			// ... and the object parameters.
 			if(Global.random.nextDouble() < mutationProbabilityObject)
 			{
+				
 				// - draw a standard normal 
 				RealVector draw = new ArrayRealVector(childScales.size());
 				for(int i = 0; i < childScales.size(); i ++)
@@ -315,33 +329,23 @@ public class ES<P extends Parametrizable> implements Serializable
 				for(int i = 0; i < childScales.size(); i++)
 					draw.setEntry(i, draw.getEntry(i) * childScales.get(i));
 
-				// - rotate it
-				RealMatrix rot;
-				if(params.size() == 1)
-					rot = MatrixTools.identity(1);				
-				else
-					rot = Rotation.toRotationMatrix(childAngles);
-				
-				draw = rot.operate(draw);
+				if(! childAngles.isEmpty())
+				{
+					// - rotate it
+					RealMatrix rot;
+					if(params.size() == 1)
+						rot = MatrixTools.identity(1);				
+					else
+						rot = Rotation.toRotationMatrix(childAngles);
+					
+					draw = rot.operate(draw);
+					
+				}
 				
 				// - 'draw' is now a random draw form the MVN described by the 
 				//   strategy parameters
-				
 				for (int i = 0; i < draw.getDimension(); i++)
 					childParams.set(i, childParams.get(i) + draw.getEntry(i));
-				
-				// - this takes care of mutation in the left over dimension when 
-				//   not all dimensions are covered by the strategies.
-				//
-				//   In that case the last value of the draw functions as
-				//   the variance of a straightforward mutation of the rest of 
-				//   the dimensions. 
-				for (int i = draw.getDimension(); i < childParams.size(); i++)
-					childParams.set(i, 
-							childParams.get(i) 
-							+ Global.random.nextGaussian() 
-							* childScales.get(draw.getDimension() - 1));
-				
 			}
 			
 			Agent child = new Agent(childParams, childScales, childAngles); 

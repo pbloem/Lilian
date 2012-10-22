@@ -358,7 +358,7 @@ public class Rotation extends AffineMap implements Parametrizable
 				ES.initial(pop, builder.numParameters(), Math.PI),
 				2, 2*pop, 0, ES.CrossoverMode.UNIFORM,
 				0.000005,
-				0.02
+				0.02, true
 				);
 		
 		for(int i : series(generations))
@@ -422,7 +422,7 @@ public class Rotation extends AffineMap implements Parametrizable
 				ES.initial(pop, builder.numParameters(), 0.0),
 				2, 2 * pop, 0, ES.CrossoverMode.UNIFORM,
 				0.00005,
-				0.08
+				0.08, true
 				);
 		
 		for(int i : series(generations))

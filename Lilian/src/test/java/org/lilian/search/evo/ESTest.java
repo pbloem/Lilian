@@ -50,7 +50,7 @@ public class ESTest
 		ES<IFS<AffineMap>> es = new ES<IFS<AffineMap>>(
 				builder, target, initial, 
 				2, initial.size()*2, 0, 
-				ES.CrossoverMode.UNIFORM);
+				ES.CrossoverMode.UNIFORM, true);
 		
 		Functions.tic();		
 		for(int i : Series.series(GENERATIONS))
@@ -87,7 +87,7 @@ public class ESTest
 		ES<IFS<Similitude>> es = new ES<IFS<Similitude>>(
 				builder, target, initial, 
 				2, initial.size()*2, 0, 
-				ES.CrossoverMode.UNIFORM);
+				ES.CrossoverMode.UNIFORM, true);
 		
 		Functions.tic();		
 		for(int i : Series.series(GENERATIONS))
