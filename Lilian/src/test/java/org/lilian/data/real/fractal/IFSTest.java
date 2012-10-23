@@ -208,5 +208,17 @@ public class IFSTest
 		System.out.println("codes-again: " + Functions.toc() + " seconds");
 	}	
 	
+	@Test
+	public void testEndpoint()
+	{
+		IFS<Similitude> ifs = IFSs.sierpinskiSim();
+		List<Integer> code = Arrays.asList(1, 2, 0, 2, 0, 1, 1, 1, 0, 2);
+		
+		Point point = IFS.endpoint(ifs, code);
+		//System.out.println(point);
+		//System.out.println(code + " " + IFS.code(ifs, point, code.size()));
+		assertEquals(code, IFS.code(ifs, point, code.size()));
+	}
+	
 	
 }

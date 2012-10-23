@@ -299,6 +299,18 @@ public class IFSs
 		return builder.build(params);
 	}
 
+	public static IFS<Similitude> square()
+	{
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(4, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.5, 0.5, 0.0, 1.0,
+				0.5,  0.5,-0.5, 0.0, 1.0, 
+				0.5, -0.5, 0.5, 0.0, 1.0, 
+				0.5, -0.5,-0.5, 0.0, 1.0
+				));
+	}
+
 //	public static IFSDensityModel randomTSR(int comp, double stdDev)
 //	{
 //		List<Double> parameters = new ArrayList<Double>();

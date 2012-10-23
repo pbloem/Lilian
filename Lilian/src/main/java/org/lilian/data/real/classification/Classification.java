@@ -89,6 +89,12 @@ public class Classification
 		public int cls(int i)
 		{
 			return classes.get(i);
+		}	
+
+		@Override
+		public List<Integer> classes()
+		{
+			return Collections.unmodifiableList(classes);
 		}
 
 		@Override

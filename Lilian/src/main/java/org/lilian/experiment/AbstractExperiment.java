@@ -44,6 +44,7 @@ import org.apache.commons.io.FileUtils;
 import org.jfree.io.FileUtilities;
 import org.jfree.ui.FilesystemFilter;
 import org.lilian.Global;
+import org.lilian.data.real.classification.Classified;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
@@ -392,26 +393,7 @@ public abstract class AbstractExperiment implements Experiment
 
 				File outFile = new File(csvDir, "data." + Tools.cssSafe(anno.name()) + ".csv");
 				
-				BufferedWriter outWriter = new BufferedWriter(new FileWriter(outFile));
-				for(int i : Series.series(height))
-				{
-					if(i != 0)
-						outWriter.write("\n");
-					for(int j : Series.series(width))
-					{
-						if(j != 0)
-							outWriter.write(", ");
-						String str = ((List<?>)((List<?>)value).get(i)).get(j).toString();
-						
-						str = str.replaceAll("[\"\",]", ""); // remove quotes
-						if(str.matches(".*\\s.*"))
-							str = "\"" + str + "\"";
-						
-						outWriter.write(str);
-					}
-				}
-				
-				outWriter.close();
+				writeCSV(outFile, value, width, height);
 				
 			}  else // for a list of values (possibly numeric)
 			{
@@ -521,6 +503,34 @@ public abstract class AbstractExperiment implements Experiment
 		rs.add(resMap);
 	}
 	
+	private void writeCSV(File outFile, Object value, int width, int height) 
+			throws IOException
+	{
+		BufferedWriter outWriter = new BufferedWriter(new FileWriter(outFile));
+		for(int i : Series.series(height))
+		{
+			if(i != 0)
+				outWriter.write("\n");
+			for(int j : Series.series(width))
+			{
+				if(j != 0)
+					outWriter.write(", ");
+				String str = ((List<?>)((List<?>)value).get(i)).get(j).toString();
+				
+				str = str.replaceAll("[\"\",]", ""); // remove quotes
+				if(str.matches(".*\\s.*"))
+					str = "\"" + str + "\"";
+				
+				outWriter.write(str);
+			}
+			
+			if(value instanceof Classified<?>)
+				outWriter.write(", " + ((Classified<?>)value).cls(i));
+		}
+		
+		outWriter.close();
+	}
+
 	private Object invoke(Method method)
 	{
 		try{

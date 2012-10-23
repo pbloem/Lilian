@@ -20,6 +20,8 @@ public interface Classified<P> extends List<P>
 
 	public int cls(int i);
 	
+	public List<Integer> classes();
+	
 	public int numClasses();	
 	
 	/**

@@ -15,6 +15,7 @@ import org.lilian.data.real.Map;
 import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
+import org.lilian.data.real.classification.Classified;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
@@ -262,6 +263,21 @@ public class IFS<M extends Map & Parametrizable >
 		return result.mean();
 	}
 	
+	public static Point endpoint(IFS<Similitude> ifs, List<Integer> code)
+	{
+		return endpoint(ifs, code, new Point(ifs.dimension()));
+	}
+	
+	public static Point endpoint(IFS<Similitude> ifs, List<Integer> code, Point current)
+	{
+		if(code.isEmpty())
+			return current;
+		
+		Point next = ifs.get(code.get(code.size() - 1)).map(current);
+		
+		return endpoint(ifs, code.subList(0, code.size() - 1), next);
+	}
+	
 	/**
 	 * Finds the transformation of the initial distribution that is most likely 
 	 * to generate the given point. Transformations considered are all d length
@@ -472,5 +488,27 @@ public class IFS<M extends Map & Parametrizable >
 			dist += d*d;
 		}
 		return dist;
+	}
+
+	public static List<List<Integer>> codes(IFS<Similitude> ifs,
+			List<Point> points, int depth)
+	{
+		List<List<Integer>> codes = new ArrayList<List<Integer>>(points.size());
+		
+		for(Point point : points)	
+			codes.add(code(ifs, point, depth));
+		
+		return codes;
+	}
+
+	public static List<Point> endpoints(IFS<Similitude> ifs,
+			List<List<Integer>> codes)
+	{
+		List<Point> points = new ArrayList<Point>(codes.size());
+		
+		for(List<Integer> code : codes)	
+			points.add(endpoint(ifs, code));
+		
+		return points;
 	}
 }
