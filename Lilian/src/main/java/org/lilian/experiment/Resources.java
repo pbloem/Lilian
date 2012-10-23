@@ -218,7 +218,7 @@ public class Resources
 	@Resource(name="newton")
 	public static Classified<Point> newton(@Name("size") int size)
 	{
-		List<Point> points = new MVN(2).generate(size);
+		List<Point> points = Datasets.cube(2).generate(size);
 		List<Integer> classes = Classifiers.newton().classify(points);
 		
 		return Classification.combine(points, classes);

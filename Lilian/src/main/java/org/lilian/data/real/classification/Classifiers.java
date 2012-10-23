@@ -17,6 +17,9 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Point;
+import org.lilian.data.real.Similitude;
+import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.IFSs;
 import org.lilian.util.Functions;
 
 public class Classifiers
@@ -665,5 +668,33 @@ public class Classifiers
 		public void learn(List<? extends List<Double>> data, List<Integer> classes) {
 			throw new UnsupportedOperationException("The Square classifier doesn't learn");			
 		}
-	}		
+	}
+	
+	public static Classifier ifs(int depth)
+	{
+		return new IFSExampleClassifier(depth);
+	}
+	
+	private static class IFSExampleClassifier extends AbstractClassifier
+	{		
+		int depth;
+		IFS<Similitude> model = IFSs.square();
+		
+		public IFSExampleClassifier(int depth)
+		{
+			super(2, 2);
+			this.depth = depth;
+		}
+
+		public int classify(Point point) 
+		{
+			List<Integer> code = IFS.code(model, point, depth);
+			
+			int sum = 0;
+			for(int i : code)
+				sum += i;
+		
+			return code.contains(0) ? 1 : 0;
+		}
+	}			
 }
