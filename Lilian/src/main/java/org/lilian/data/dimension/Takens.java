@@ -11,6 +11,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import nl.peterbloem.powerlaws.Uncertainties;
+
 import org.lilian.Global;
 import org.lilian.data.real.AbstractGenerator;
 import org.lilian.data.real.Datasets;
@@ -41,6 +43,43 @@ public class Takens extends AbstractGenerator<Double>
 	public double dimension()
 	{
 		return dimension;
+	}
+	
+	/**
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public int headSize(Collection<Double> data, boolean sorted)
+	{
+		int n = 0;
+		for(double d : data)
+			if(d <= maxDistance())
+				n++;
+			else
+				break;
+		
+		return n;
+	}
+	
+	/**
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public <P> int headSize(List<P> data, Distance<? super P> distance)
+	{
+		int n = 0;
+		double d;
+		for(int i : series(data.size()))
+			for(int j : series(i + 1, data.size()))
+			{
+				d = distance.distance(data.get(i), data.get(j)); 
+				if(d <= maxDistance()) 
+					n++;
+			}
+		
+		return n;
 	}
 	
 	/**
@@ -598,5 +637,34 @@ public class Takens extends AbstractGenerator<Double>
 		return distances;
 	}
 	
-
+	public static Uncertainties uncertainties(List<Double> data, int bootstrapSize)
+	{
+		List<Double> exponents = new ArrayList<Double>(bootstrapSize);
+		List<Integer> nheads = new ArrayList<Integer>(bootstrapSize);
+		List<Double> maxDistances = new ArrayList<Double>(bootstrapSize);
+		
+		List<Double> bData = new ArrayList<Double>(bootstrapSize);
+		for(int i : Series.series(bootstrapSize))
+		{
+			// * Draw data randomly
+			bData.clear();
+			for(int j : series(data.size()))
+				bData.add(data.get(Global.random.nextInt(data.size())));
+			Collections.sort(bData);
+				
+			// * fit model
+			Takens tak = Takens.fit(bData, true).fit();
+			
+			// * extract parameters
+			exponents.add(tak.dimension());
+			maxDistances.add(tak.maxDistance());
+			nheads.add(tak.headSize(data, true));
+		}
+		
+		double nTailUncertainty    = nl.peterbloem.powerlaws.Functions.standardDeviation(nheads), 
+		       xMinUncertainty     = nl.peterbloem.powerlaws.Functions.standardDeviation(maxDistances),
+		       exponentUncertainty = nl.peterbloem.powerlaws.Functions.standardDeviation(exponents);	
+		
+		return new Uncertainties(exponentUncertainty, xMinUncertainty, nTailUncertainty);
+	}
 }
