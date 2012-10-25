@@ -206,6 +206,15 @@ public class Resources
 		return data;
 	}	
 	
+	@Resource(name="mvn")
+	public static List<Point> mvn(@Name("dim") int dim, @Name("var") double var, @Name("size") int size)
+	{
+		Generator<Point> gen = new MVN(dim, var);
+		List<Point> data = gen.generate(size);
+		
+		return data;
+	}		
+	
 	@Resource(name="mandelbrot-class")
 	public static Classified<Point> mandelbrotClass(@Name("size") int size)
 	{
