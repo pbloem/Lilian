@@ -2,6 +2,7 @@ package org.lilian.data.real;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
+import static org.lilian.data.real.Draw.toPixel;
 import static org.lilian.util.Series.series;
 
 import java.awt.BasicStroke;
@@ -21,6 +22,7 @@ import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.Tools;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;
+import org.lilian.neural.NeuralNetworks;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.Series;
 
@@ -34,6 +36,40 @@ import org.lilian.util.Series;
  */
 public class Draw
 {
+	
+	public static BufferedImage trace(List<Point> data, int res, double opacity, boolean center)
+	{
+		if(center)
+		{
+			Map map = Maps.centered(data);
+			data = new MappedList(data, map);
+		}
+		
+		BufferedImage image = new BufferedImage(res, res, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = image.createGraphics();
+		
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		graphics.setColor(new Color(1.0f, 1.0f, 1.0f, (float)opacity));
+		graphics.setStroke(new BasicStroke(0.5f));	
+	
+		Point last = data.get(0), current;
+		
+		for(int i : Series.series(1, data.size()))
+		{
+			current = data.get(i);
+			
+			graphics.drawLine(
+					toPixel(last.get(0), res, -1.0, 1.0),
+					toPixel(last.get(1), res, -1.0, 1.0), 
+					toPixel(current.get(0), res, -1.0, 1.0), 
+					toPixel(current.get(1), res, -1.0, 1.0));
+			
+			last = current;
+		}
+		
+		return image;
+	}
 	
 	public static BufferedImage draw(List<Point> data, int res, boolean log)
 	{

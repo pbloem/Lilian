@@ -126,7 +126,7 @@ public abstract class AbstractExperiment implements Experiment
 	 * Set up the experiment if it is started for the first time. If the 
 	 * experiment is restarted, this method is skipped.
 	 */
-	protected abstract void setup();
+	protected void setup() {}
 	
 	protected abstract void body();
 	
