@@ -47,6 +47,7 @@ public class Classifiers
 		componentColors.add(Color.MAGENTA);
 		componentColors.add(Color.PINK);
 		componentColors.add(Color.LIGHT_GRAY);
+		componentColors.add(Color.DARK_GRAY);
 
 		
 	}

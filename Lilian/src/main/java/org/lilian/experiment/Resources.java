@@ -206,7 +206,7 @@ public class Resources
 		return data;
 	}	
 	
-	@Resource(name="mvn")
+	@Resource(name="mvn var")
 	public static List<Point> mvn(@Name("dim") int dim, @Name("var") double var, @Name("size") int size)
 	{
 		Generator<Point> gen = new MVN(dim, var);

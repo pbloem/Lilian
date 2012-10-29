@@ -3,8 +3,10 @@ package org.lilian.data.real.classification;
 import static java.lang.Math.max;
 import static org.lilian.util.Series.series;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +22,7 @@ import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Static utility methods for the task of classification.
@@ -442,5 +445,26 @@ public class Classification
 		Classified<M> copy = combine(instances, classes);
 		copy.setMaxClass(max - 1);
 		return copy;
+	}
+
+	public static void write(Classified<Point> classified, File file)
+		throws IOException
+	{
+		CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(file)));
+		
+		for(int i : series(classified.size()))
+		{
+			Point point = classified.get(i);
+			int cls = classified.cls(i);
+			
+			String[] line = new String[point.size()+1];
+			for(int j : series(point.size()))
+				line[j] = Double.toString(point.get(j));
+			line[point.size()] = Integer.toString(cls);
+			
+			writer.writeNext(line);
+		}
+		
+		writer.close();
 	}
 }

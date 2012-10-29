@@ -7,9 +7,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
+
+import org.apache.commons.math.MaxIterationsExceededException;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.DecompositionSolver;
+import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
@@ -20,7 +24,8 @@ import org.lilian.util.Series;
 
 public class Maps
 {
-
+	public static int MAX_SVD_RETRIES = 20;
+	
 	/**
 	 * Finds the best fitting affine transformation from the points in xSet to 
 	 * the points in ySet. The transformation is composed of a rotation matrix R, 
@@ -118,8 +123,23 @@ public class Maps
 		covariance = covariance.scalarMultiply(1.0/size);
 		
 		// * Find U, V and S
+		int retries = 0;
+		boolean success = false;
+		SingularValueDecomposition svd = null;
+		while(! success)
+		{
+			try 
+			{
+				svd = new SingularValueDecompositionImpl(covariance);
+				success = true;
+			} catch (InvalidMatrixException e)
+			{
+				retries++;
+				if(retries > MAX_SVD_RETRIES)
+					throw new RuntimeException(e);
+			}
+		}
 		
-		SingularValueDecomposition svd = new SingularValueDecompositionImpl(covariance);
 	
 		RealMatrix u  = svd.getU();
 		RealMatrix vt = svd.getVT();

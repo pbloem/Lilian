@@ -71,6 +71,16 @@ public class Draw
 		return image;
 	}
 	
+	public static BufferedImage draw(List<Point> data, int res, boolean log, boolean center)
+	{
+		if(center)
+		{
+			Map map = Maps.centered(data);
+			data = new MappedList(data, map);
+		}
+		return draw(data, res, log);
+	}
+	
 	public static BufferedImage draw(List<Point> data, int res, boolean log)
 	{
 		double[] range = new double[]{-1.0, 1.0};
