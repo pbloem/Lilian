@@ -15,6 +15,8 @@ class CompositeMap extends AbstractMap
 		if(maps.length == 0)
 			throw new IllegalArgumentException("Cannot create compositemap with no components");
 		components = new ArrayList<Map>(maps.length);
+		for(Map map : maps)
+			components.add(map);
 	}
 
 	@Override

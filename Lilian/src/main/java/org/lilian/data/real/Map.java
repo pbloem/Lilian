@@ -29,5 +29,11 @@ public interface Map extends Serializable {
 	
 	public List<Point> map(List<Point> points);
 	
+	/**
+	 * Returns a map whose function is equal to applying first this map, and then
+	 * the argument to the result of the first mapping.
+	 * @param other
+	 * @return
+	 */
 	public Map compose(Map other);
 }
