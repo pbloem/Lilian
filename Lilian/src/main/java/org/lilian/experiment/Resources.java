@@ -14,6 +14,7 @@ import org.lilian.data.dimension.BiTakens;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Generator;
+import org.lilian.data.real.Generators;
 import org.lilian.data.real.Histogram2D;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
@@ -94,7 +95,18 @@ public class Resources
 		
 		return data;
 	}
+	
+	
+	@Resource(name="lorenz")
+	public static List<Point> lorenz(@Name("size") int size)
+	{
+		List<Point> data = Generators.lorenz().generate(size);
+		Collections.shuffle(data);
 		
+		return data;
+	}
+		
+	
 	
 	@Resource(name="sierpinski-off")
 	public static List<Point> sierpinskiOff(@Name("size") int size, @Name("p1") double p1, @Name("p2") double p2, @Name("p3") double p3)

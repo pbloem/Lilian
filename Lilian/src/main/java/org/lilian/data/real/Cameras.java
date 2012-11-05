@@ -14,12 +14,12 @@ public class Cameras
 {
 	public static Map basic()
 	{
-		double d = 1.6, s2 = Math.sqrt(2.0);
+		double d = 1.1, s2 = Math.sqrt(2.0);
 		
 		return new Basic(
-			new Point(d, d, d/10).getVector(), // x, y, z 
+			new Point(d, -d, d/5).getVector(), // x, y, z 
 			new Point(0, 0, 1.0).getVector(),
-			new Point(0.45 * Math.PI, 0.25 * Math.PI, Math.PI)); // y z x
+			new Point(0.40 * Math.PI, 0.75 * Math.PI, Math.PI)); // y z x
 	}
 	
 	private static class Basic extends AbstractMap

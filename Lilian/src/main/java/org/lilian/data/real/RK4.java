@@ -36,6 +36,8 @@ public class RK4 extends AbstractGenerator<Point>
 		           k3 = d.derivative(x.add(k2.mapMultiply(0.5)), t + 0.5 * h).mapMultiply(h),
 		           k4 = d.derivative(x.add(k3), t + h).mapMultiply(h);
 		
+		//System.out.println(k1 + " " + k2 + " " + k3 + " " + k4);
+		
 		RealVector k = k1
 				.add(k2.mapMultiply(2.0))
 				.add(k3.mapMultiply(2.0))

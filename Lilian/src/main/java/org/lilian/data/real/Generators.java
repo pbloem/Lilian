@@ -92,7 +92,7 @@ public class Generators
 	
 	public static Generator<Point> rossler(double a, double b, double c, double h)
 	{
-		Generator<Point> rossler = new RK4(new RosslerDerivative(a, b, c), 0.001, new ArrayRealVector(3));
+		Generator<Point> rossler = new RK4(new RosslerDerivative(a, b, c), h, new ArrayRealVector(3));
 		
 		rossler.generate(1000000);
 		
@@ -124,6 +124,47 @@ public class Generators
 			}, 0, 3);
 		}
 	}
+	
+	public static Generator<Point> lorenz()
+	{
+		return lorenz(10.0, 28.0, 8.0/3.0, 0.001);
+	}
+	
+	public static Generator<Point> lorenz(double s, double r, double b, double h)
+	{
+		Generator<Point> lorenz = new RK4(new LorenzDerivative(s, r, b), h, 
+				new ArrayRealVector(new double[]{0.1, 0.1, 0.1}, 0, 3));
+		
+		lorenz.generate(1000000);
+		
+		return lorenz;
+	}
+	
+	private static class LorenzDerivative implements RK4.Derivative
+	{
+		double s, r, b;
+		
+		public LorenzDerivative(double s, double r, double b)
+		{
+			this.s = s;
+			this.r = r;
+			this.b = b;
+		}
+		
+		@Override
+		public RealVector derivative(RealVector in, double t)
+		{
+			double x = in.getEntry(0),
+			       y = in.getEntry(1),
+			       z = in.getEntry(2);
+			
+			return new ArrayRealVector(new double[]{
+				s * (y - x),
+				x * (r - z) - y,
+				x * y - b * z
+			}, 0, 3);
+		}
+	}	
 	
 	public static Generator<Point> mapped(Generator<Point> master, Map map)
 	{
