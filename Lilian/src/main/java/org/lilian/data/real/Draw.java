@@ -36,6 +36,19 @@ import org.lilian.util.Series;
  */
 public class Draw
 {
+	private static final short[] invertTable;
+	private static final short[] sameTable;
+
+	
+	static 
+	{
+		invertTable = new short[256];
+		for (int i = 0; i < 256; i++) 
+			invertTable[i] = (short) (255 - i);
+		sameTable = new short[256];
+		for (int i = 0; i < 256; i++) 
+			sameTable[i] = (short) (i);
+	}	
 	
 	public static BufferedImage trace(List<Point> data, int res, double opacity, boolean center)
 	{
@@ -817,5 +830,15 @@ public class Draw
 		double pixSize = abs(rangeStart - rangeEnd) / (double) res;
 		return pixSize * ((double) pixel) + pixSize * 0.5 + rangeStart;		
 	}			
+	
+	public static BufferedImage invert(BufferedImage src) 
+	{
+		int w = src.getWidth();
+		int h = src.getHeight();
+		BufferedImage dst = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 
+		BufferedImageOp invertOp = new LookupOp(new ShortLookupTable(0, new short[][] {invertTable, invertTable, invertTable, sameTable}), null);
+		
+		return invertOp.filter(src, dst);
+	}
 }

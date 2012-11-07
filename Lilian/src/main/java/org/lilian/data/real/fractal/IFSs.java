@@ -2,16 +2,23 @@ package org.lilian.data.real.fractal;
 
 import static org.lilian.util.Series.series;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.math.linear.RealVector;
 import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
+import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Map;
+import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
+import org.lilian.search.Parameters;
 import org.lilian.search.Parametrizable;
+import org.lilian.search.evo.ES;
+import org.lilian.search.evo.Target;
 import org.lilian.util.Series;
 
 
@@ -309,6 +316,253 @@ public class IFSs
 				0.5, -0.5, 0.5, 0.0, 1.0, 
 				0.5, -0.5,-0.5, 0.0, 1.0
 				));
+	}
+	
+	public static IFS<Similitude> square(double a, double b, double c, double d)
+	{
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(4, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.5, 0.5, 0.0, a,
+				0.5,  0.5,-0.5, 0.0, b, 
+				0.5, -0.5, 0.5, 0.0, c, 
+				0.5, -0.5,-0.5, 0.0, d
+				));
+	}
+	
+	/**
+	 * Produces a simple initial model from a set of random double variables.
+	 * 
+	 * @param dim
+	 * @param comp
+	 * @param var
+	 * @return
+	 */
+	public static IFS<Similitude> initialRandom(int dim, int comp, double var)
+	{
+		// Create random Similitudes
+		int np = Similitude.similitudeBuilder(dim).numParameters();
+
+
+		List<Double> parameters = new ArrayList<Double>();
+		for(int i = 0; i < np; i++)
+			parameters.add(Global.random.nextGaussian() * var);	
+		
+		IFS<Similitude> model = new IFS<Similitude>(new Similitude(parameters), 1.0);
+		for(int i = 1; i < comp; i++)
+		{
+			parameters.clear();
+			for(int j = 0; j < np; j++)
+				parameters.add(Global.random.nextGaussian() * var);
+			model.addMap(new Similitude(parameters), 1.0);
+		}
+		
+		return model;
+	}
+
+	/**
+	 * Produces an initial model such that the given points are the fixed points 
+	 * of each component. The components do not rotate and have the given scaling parameter
+	 * 
+	 * @param comp
+	 * @param points
+	 * @return
+	 */
+	public static IFS<Similitude> initialPoints(double scale, List<Point> points)
+	{
+		int dim = points.get(0).dimensionality();
+		IFS<Similitude> model = null;
+		double prior = 1.0/points.size();
+		
+		for(Point point : points)
+		{
+			RealVector translation = point.getVector().mapMultiply(1.0 - scale);
+			Similitude map = new Similitude(scale, new Point(translation), (List<Double>)new Point((dim * dim - dim)/2));
+			
+			if(model == null)
+				model = new IFS<Similitude>(map, prior);
+			else
+				model.addMap(map, prior);
+		}
+		
+		return model;
+		
+	}
+	
+	/**
+	 * Produces an initial model such that the given points are the fixed points 
+	 * of each component. The components do not rotate and have the given scaling parameter
+	 * 
+	 * @param comp
+	 * @param points
+	 * @return
+	 */
+	public static IFS<Similitude> initialSphere(int dim, int comp, double radius, double scale)
+	{
+		List<Point> points = Datasets.sphere(dim, radius).generate(comp);
+		return initialPoints(scale, points);
+	}	
+	
+	/**
+	 * Produces an initial model with fixed points all at a fixed distance from 
+	 * the origin and a maximal angle between any two fixed points.
+	 * 
+	 * This method uses a search rather than an analytical approach.
+	 * 
+	 * @param dim
+	 * @param comp
+	 * @return
+	 */
+	public static IFS<Similitude> initialSpread(int dim, int comp, double radius, double scale)
+	{
+		Builder<PointList> b = new PointListBuilder(dim, comp);
+		ES<PointList> es = new ES<PointList>(
+				b, new SpreadTarget(radius), ES.initial(100, b.numParameters(), 0.6));
+		
+		for(int i : Series.series(100))
+			es.breed();
+		
+		PointList list = es.best().instance();
+		List<Point> points = new ArrayList<Point>(list.size());
+		for(Point point : list)
+		{
+			RealVector v = point.getVector();
+			v.unitize();
+			v.mapMultiplyToSelf(radius);
+			Point nw = new Point(v);
+			points.add(nw);
+		}
+		
+		return initialPoints(scale, points);
+	}
+	
+	/**
+	 * Provides an initial IFS that is n slightly perturbed variants of the 
+	 * identity transform.
+	 * 
+	 * @return
+	 */
+	public static IFS<Similitude> initialIdentity(int dim, int num, double var)
+	{
+		Similitude source = Similitude.identity(dim);
+				
+		IFS<Similitude> ifs = null;
+		for(int i : Series.series(num))
+		{
+			Similitude perturbed = 
+					Parameters.perturb(source,
+							Similitude.similitudeBuilder(dim), 
+							var);
+			if(perturbed.scalar() > 1.0)
+				perturbed = perturbed.inverse();
+			
+			if(ifs == null)
+				ifs = new IFS<Similitude>(perturbed, 1.0);
+			else
+				ifs.addMap(perturbed, 1.0);
+		}
+		
+		return ifs;
+	}
+	
+	private static class SpreadTarget implements Target<List<Point>>
+	{
+		double radius;
+		
+		public SpreadTarget(double radius)
+		{
+			this.radius = radius;
+		}
+
+		@Override
+		public double score(List<Point> points)
+		{
+//			double penSum = 0.0;
+//			
+//			for(Point p : points)
+//			{
+//				double pen = Math.abs(radius - p.getVector().getNorm());
+//				penSum += pen;
+//			}
+			
+			double min = Double.POSITIVE_INFINITY;
+			
+			for(int i = 0; i < points.size(); i++)
+				for(int j = i + 1; j < points.size(); j++)
+				{
+					RealVector a = points.get(i).getVector(),
+					           b = points.get(j).getVector();
+					
+					double dot = a.dotProduct(b);
+					double prd = a.getNorm() * b.getNorm();
+					
+					double angle = Math.acos(dot/prd);
+					
+					min = Math.min(min, angle);
+				}
+					
+			return min;
+		}
+	}
+	
+	private static class PointList extends AbstractList<Point> implements Parametrizable
+	{
+		public List<Point> master;
+		
+		public PointList(List<Point> master)
+		{
+			this.master = master;
+		}
+
+		@Override
+		public List<Double> parameters()
+		{
+			List<Double> parameters = new ArrayList<Double>();
+			for(Point p : master)
+				parameters.addAll(p);
+			
+			return parameters;
+		}
+
+		@Override
+		public Point get(int index)
+		{
+			return master.get(index);
+		}
+
+		@Override
+		public int size()
+		{
+			return master.size();
+		}
+	}
+	
+	private static class PointListBuilder implements Builder<PointList>
+	{
+		private int num;
+		private int dim;
+		
+		public PointListBuilder(int dim, int num)
+		{
+			this.num = num;
+			this.dim = dim;
+		}
+
+		@Override
+		public PointList build(List<Double> parameters)
+		{
+			List<Point> points = new ArrayList<Point>();
+			for(int i = 0; i < num*dim; i += dim)
+				points.add(new Point(parameters.subList(i, i + dim)));
+				
+			return new PointList(points);
+		}
+
+		@Override
+		public int numParameters()
+		{
+			return num * dim;
+		}
 	}
 
 //	public static IFSDensityModel randomTSR(int comp, double stdDev)

@@ -48,7 +48,7 @@ public class IFSTarget<M extends Map & Parametrizable> implements Target<IFS<M>>
 			generatedPoints = object.generator().generate(sampleSize);			
 		}
 		
-		return -HausdorffDistance.hausdorff(generatedPoints, targetPoints);		
+		return - HausdorffDistance.hausdorff(generatedPoints, targetPoints);		
 	}
 
 }
