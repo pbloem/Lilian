@@ -37,7 +37,7 @@ import org.lilian.util.Series;
  * Gaussian distribution. Thus, if we start with an initial Gaussian 
  * distribution, and apply the transformations of a k-component IFS model once,
  * we have a basic k-component Gaussian mixture model. If we apply the IFS 
- * transformation again we have a k^2-component Guassian mixture model, where 
+ * transformation again we have a k^2-component Gaussian mixture model, where 
  * each component originates from first one application of a chosen 
  * transformation, and then another. 
  * <p/>
@@ -75,8 +75,12 @@ import org.lilian.util.Series;
  * <li>
  * If insufficient point received the correct codes for one of the components, 
  * we 'split' one of the existing components by generating two slightly
- * perturbed versions and assigning one the original and one the left-over code.
- * </li>
+ * perturbed versions and assigning one the original and one the left-over code. </li>
+ * <li>
+ * The training data should be centered on the origin for the algorithm to work. 
+ * The best strategy is to use {@link Maps.centered()} and {@MappedList} to 
+ * created a centered version of the data. the inverse of this map can be used 
+ * to map data back to data space if necessary.</li>
  * </ul>
  * 
  * @author Peter
@@ -100,8 +104,6 @@ public class EM implements Serializable
 	//   covariance (by fitting an MVN as described above).
 	public static final int COVARIANCE_THRESHOLD = 5; 
 
-	// ** Fields
-	
 	// * Left-over components (with no data assigned) are given to 
 	//   perturbed copies of other components. They are perturbed by adding 
 	//   Gaussian noise with the given variance to their parameters. 
@@ -112,7 +114,9 @@ public class EM implements Serializable
 	private boolean useSphericalMVN; 	
 
 	private List<Point> data;
-	public  IFS<Similitude> model;	
+	private MVN basis; 
+	
+	private  IFS<Similitude> model;	
 	
 	private int numComponents;
 	private int dimension;
@@ -154,6 +158,8 @@ public class EM implements Serializable
 		
 		Builder<Similitude> sb = Similitude.similitudeBuilder(dimension);
 		builder = IFS.builder(numComponents, sb);
+		
+		basis = useSphericalMVN ? MVN.findSpherical(data) : MVN.find(data);
 	}	
 	
 	public void iterate(int sampleSize, int depth) 
@@ -170,6 +176,7 @@ public class EM implements Serializable
 	 */
 	protected void modelToCodes(int sampleSize, int depth)
 	{
+		
 		List<Point> sample =  
 			sampleSize	== -1 ? data : Datasets.sample(data, sampleSize);
 
@@ -316,14 +323,26 @@ public class EM implements Serializable
 		return maps;
 	}
 	
+	/**
+	 * @return The current iteration's model.
+	 */
 	public IFS<Similitude> model() 
 	{
 		return model;
 	}
 	
 	/**
+	 * @return The multivariate Gaussian model (possibly spherical) that was 
+	 *         fitted to the data.
+	 */
+	public MVN basis()
+	{
+		return basis;
+	}
+	
+	/**
 	 * A node in the code tree. Each code represents a path in this tree from 
-	 * root to leaf. At each node, we store each point whose path sists that 
+	 * root to leaf. At each node, we store each point whose path visits that 
 	 * node. (ie. the root node contains all points, and each node below the root
 	 * contains all points whose code starts with a given symbol).
 	 * 
@@ -792,7 +811,7 @@ public class EM implements Serializable
 			em.iterate(eval, depth);
 						
 			IFS<Similitude> currentModel = em.model();
-			double currentScore = target.score(model);
+			double currentScore = target.score(currentModel);
 			
 			if(currentScore > score)
 			{
@@ -800,7 +819,7 @@ public class EM implements Serializable
 				model = currentModel;
 			}
 			
-			Global.log().info("Generation " + i + ", score " + score);
+			Global.log().info("Generation " + i + ", score " + score + " " + currentScore);
 		}
 		
 		return model;

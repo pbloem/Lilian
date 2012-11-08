@@ -41,15 +41,10 @@ public class IFS<M extends Map & Parametrizable >
 
 	// * the number of steps to take intially when generating points
 	public static final int INITIAL_STEPS = 50;
-	
-	// * The density model used to build the IFs model from   
-	protected MVN basis;
-	
+		
 	public IFS(M map, double weight)
 	{
 		super(map, weight);
-		
-		basis = new MVN(map.dimension());
 	}
 
 	/**
@@ -57,6 +52,10 @@ public class IFS<M extends Map & Parametrizable >
 	 * 
 	 * This generator is quick and efficient, but always simulates the IFS
 	 * at infinite depth.
+	 * <p/>
+	 * This generator does not provide an option for a basis distribution, as it 
+	 * generates to infinite depth, so all initial distributions will result in 
+	 * roughly the same behavior.
 	 * 
 	 * @return
 	 */
@@ -64,11 +63,11 @@ public class IFS<M extends Map & Parametrizable >
 	{
 		return new IFSGenerator();
 	}
-		
 
 	/**
 	 * Returns a generator which generates points to a fixed depth. It's a 
-	 * little slower than the chaos game (about a factor of depth). 
+	 * little slower than the chaos game (about a factor of depth), but can draw
+	 * points from low-depth models and draws properly iid points.
 	 * 
 	 * @return
 	 */
@@ -84,10 +83,19 @@ public class IFS<M extends Map & Parametrizable >
 	
 	private class IFSGenerator extends AbstractGenerator<Point>
 	{
-		Point p = basis.generate();
+		Generator<Point> basis;
+		Point p;
 
 		public IFSGenerator()
 		{
+			this(new MVN(dimension));
+		}
+		
+		public IFSGenerator(Generator<Point> basis)
+		{
+			this.basis = basis;
+			p = this.basis.generate();
+			
 			for(int i = 0; i < INITIAL_STEPS; i++)
 				p = random().map(p);
 		}
@@ -113,8 +121,7 @@ public class IFS<M extends Map & Parametrizable >
 		
 		public IFSFixedDepthGenerator(int depth)
 		{
-			basis = new MVN(dimension());
-			this.depth = depth;
+			this(depth, new MVN(dimension()));
 		}
 		
 		@Override
@@ -147,8 +154,6 @@ public class IFS<M extends Map & Parametrizable >
 			
 		return m;
 	}
-	
-	
 
 	/**
 	 * The number of parameters required to represent a MapModel.
