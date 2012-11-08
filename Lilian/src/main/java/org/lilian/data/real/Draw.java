@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.fractal.Tools;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;

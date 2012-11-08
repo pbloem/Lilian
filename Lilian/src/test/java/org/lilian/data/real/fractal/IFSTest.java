@@ -153,12 +153,12 @@ public class IFSTest
 		}
 	}
 	
-	// @Test
+    @Test
 	public void testCode2() throws IOException
 	{
-		int depth = 5;
-		double[] xrange = new double[]{-3.0, 3.0};
-		double[] yrange = new double[]{-3.0, 3.0};
+		int depth = 2;
+		double[] xrange = new double[]{-1.0, 1.0};
+		double[] yrange = new double[]{-1.0, 1.0};
 		
 		Functions.tic();		
 		
@@ -167,11 +167,11 @@ public class IFSTest
 		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-again");
 		dir.mkdirs();
 
-		IFS<Similitude> ifs = IFSs.sierpinskiOffSim();
+		IFS<Similitude> ifs = IFSs.sierpinskiSim();
 		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
 		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
 		
-		image = Draw.drawCodes(ifs, xrange, yrange, 200, depth, -1);
+		image = Draw.drawCodes(ifs, xrange, yrange, 100, depth, -1);
 		ImageIO.write(image, "PNG", new File(dir, "codes-again.png") );
 
 		

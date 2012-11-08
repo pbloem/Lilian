@@ -112,4 +112,15 @@ public class MVNTest
 		
 	}
 	
+	@Test
+	public void transformTest()
+	{
+		MVN basis = new MVN(2);
+		System.out.println(basis.map());
+		
+		MVN other = new MVN(2, 0.3);
+		System.out.println(other.map());
+		
+	}
+	
 }

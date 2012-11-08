@@ -236,9 +236,7 @@ public class IFS<M extends Map & Parametrizable >
 	
 	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, int depth, MVN basis)
 	{
-		SearchResultImpl result = new SearchResultImpl();
-		search(ifs, point, depth, result, new ArrayList<Integer>(), 0.0,
-			basis.map().getTransformation(), basis.map().getTranslation());
+		SearchResult result = search(ifs, point, depth, basis);
 		
 		return result.probSum();
 	}
@@ -261,9 +259,7 @@ public class IFS<M extends Map & Parametrizable >
 	public static Point endpoint(IFS<Similitude> ifs, Point point, int depth,
 			MVN basis)
 	{
-		SearchResultImpl result = new SearchResultImpl();
-		search(ifs, point, depth, result, new ArrayList<Integer>(), 0.0,
-			basis.map().getTransformation(), basis.map().getTranslation());
+		SearchResult result = search(ifs, point, depth, basis);
 		
 		return result.mean();
 	}
@@ -302,9 +298,7 @@ public class IFS<M extends Map & Parametrizable >
 			IFS<M> ifs, Point point, int depth, MVN basis)
 	{		
 		SearchResult res = search(
-				ifs, point, depth, new SearchResultImpl(),
-				new ArrayList<Integer>(depth), 0.0, 
-				basis.map().getTransformation(), basis.map().getTranslation());
+				ifs, point, depth, basis);
 		return res.code();
 	}
 	
@@ -319,24 +313,31 @@ public class IFS<M extends Map & Parametrizable >
 	{
 		SearchResult res = search(
 				ifs, point, depth, new SearchResultImpl(),
-				new ArrayList<Integer>(depth), 0.0, 
-				basis.map().getTransformation(), basis.map().getTranslation());
+				new ArrayList<Integer>(depth), 0.0,
+				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
+				basis);
 		return res;
 	}
 	
 	private static <M extends AffineMap> SearchResult search(
 			IFS<M> ifs, Point point, int depth, 
 			SearchResultImpl result, List<Integer> current, 
-			double logPrior, RealMatrix transform, RealVector translate)	
+			double logPrior, 
+			RealMatrix transform, RealVector translate,
+			MVN basis)	
 	{
 		if(current.size() == depth)
 		{
 			double logProb;
 			
 			AffineMap map = new AffineMap(transform, translate);
+			AffineMap mvnMap = basis.map();
+			
+			map = (AffineMap) map.compose(mvnMap);
+			
 			if(map.invertible())
 			{
-				MVN mvn = new MVN(new AffineMap(transform, translate));
+				MVN mvn = new MVN(map);
 				logProb = logPrior + Math.log(mvn.density(point));
 			} else { 
 				logProb = Double.NEGATIVE_INFINITY;
@@ -357,7 +358,7 @@ public class IFS<M extends Map & Parametrizable >
 			ct = ct.add(translate);
 			
 			search(ifs, point, depth, result, current, 
-					logPrior + Math.log(ifs.probability(i)), cr, ct);
+					logPrior + Math.log(ifs.probability(i)), cr, ct, basis);
 			
 			current.remove(current.size() - 1);
 		}
