@@ -245,6 +245,12 @@ public class Resources
 		return Classification.combine(points, classes);
 	}	
 	
+	@Resource(name="rossler")
+	public static List<Point> rossler(@Name("size") int size)
+	{
+		return Generators.rossler().generate(size);
+	}		
+	
 	@Resource(name="magnet")
 	public static Classified<Point> magnet(@Name("size") int size)
 	{

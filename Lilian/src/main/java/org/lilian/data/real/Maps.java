@@ -243,7 +243,7 @@ public class Maps
 	}
 	
 	/**
-	 * Returns a map that centers the data at zero and scales it to fit the 
+	 * Returns a map that scales the data to fit the 
 	 * bi-unit square exactly
 	 * @param data
 	 * @return
