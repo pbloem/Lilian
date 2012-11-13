@@ -87,12 +87,12 @@ public class Generators
 	
 	public static Generator<Point> rossler()
 	{
-		return rossler(0.2, 0.2, 5.7, 0.001);
+		return rossler(0.2, 0.2, 5.7, 0.001, 200);
 	}
 	
-	public static Generator<Point> rossler(double a, double b, double c, double h)
+	public static Generator<Point> rossler(double a, double b, double c, double h, int skip)
 	{
-		Generator<Point> rossler = new RK4(new RosslerDerivative(a, b, c), h, new ArrayRealVector(3));
+		Generator<Point> rossler = new RK4(new RosslerDerivative(a, b, c), h, new ArrayRealVector(3), skip);
 		
 		rossler.generate(1000000);
 		
