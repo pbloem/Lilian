@@ -32,7 +32,6 @@ public interface Classified<P> extends List<P>
 	 */
 	public boolean add(P item, int cls);
 	
-	
 	public boolean add(int index, P item, int cls);
 
 	

@@ -16,6 +16,8 @@ import org.lilian.data.real.Datasets;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
+import org.lilian.data.real.weighted.Weighted;
+import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.search.Builder;
 import org.lilian.search.Parameters;
@@ -114,6 +116,9 @@ public class EM implements Serializable
 
 	private int numComponents;
 	private int dimension;
+	
+	// * The maximum number of endpoints to distribute responsibility over
+	private int maxSources; 
 
 	// * Root node of the code tree
 	private Node root;
@@ -127,16 +132,18 @@ public class EM implements Serializable
 	 */
 	public EM(IFS<Similitude> initial, List<Point> data)
 	{
-		this(initial, data, 0.3, true);
+		this(initial, data, 3, 0.3, true);
 	}
 
 	/**
 	 * Sets up the EM algorithm with a given initial model.
 	 * 
 	 */
-	public EM(IFS<Similitude> initial, List<Point> data, double perturbVar,
+	public EM(IFS<Similitude> initial, List<Point> data, int maxSources, double perturbVar,
 			boolean useSphericalMVN)
 	{
+		this.maxSources = maxSources;
+		
 		this.numComponents = initial.size();
 		this.dimension = initial.dimension();
 		this.data = data;
@@ -367,7 +374,7 @@ public class EM implements Serializable
 		boolean isLeaf = false;
 
 		// * The points stored at this node
-		List<Point> points = new ArrayList<Point>();
+		Weighted<Point> points = WeightedLists.empty();
 
 		/**
 		 * Create a child node for the given symbol under this parent
@@ -455,6 +462,11 @@ public class EM implements Serializable
 		 *            The point to be observed.
 		 */
 		public void observe(List<Integer> codeSuffix, Point point)
+		{
+			observe(codeSuffix, point, 1.0);
+		}
+		
+		public void observe(List<Integer> codeSuffix, Point point, double weight)
 		{
 			points.add(point);
 			mvn = null; // signal that the mvn needs to be recomputed

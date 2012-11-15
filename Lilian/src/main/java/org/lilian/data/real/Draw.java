@@ -21,6 +21,7 @@ import java.util.List;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.fractal.Tools;
+import org.lilian.data.real.weighted.Weighted;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;
 import org.lilian.neural.NeuralNetworks;
@@ -503,6 +504,88 @@ public class Draw
 
 		return image;
 	}
+	
+	/**
+	 * Draws the component distribution in the codes of a three component 
+	 * classifier.
+	 * 
+	 * @param res The resolution of the smallest side of the image.
+	 */
+	public static <M extends AffineMap> 
+		BufferedImage drawMultiCodes(IFS<M> ifs, 
+											double[] xrange, 
+											double[] yrange, 
+											int res, int depth,
+											int bufferLimit)
+	{
+		if(ifs.size() > 3)
+			throw new IllegalArgumentException("IFS must have three components or less (had "+ifs.size()+").");
+		
+		double 	xDelta = xrange[1] - xrange[0],
+				yDelta = yrange[1] - yrange[0];
+		
+		double maxDelta = Math.max(xDelta, yDelta); 		
+		double minDelta = Math.min(xDelta, yDelta);
+		
+		double step = minDelta/(double) res;
+		
+		int xRes = (int) (xDelta / step);
+		int yRes = (int) (yDelta / step);
+		
+		BufferedImage image = 
+			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_RGB);		
+		
+		double x, y;
+		int classInt;
+		Point p;
+		
+		for(int i = 0; i < xRes; i++)
+		{
+			x =  xrange[0] + step*0.5 + step * i;
+			for(int j = 0; j < yRes; j++)				
+			{
+				y = yrange[0] + step*0.5 + step * j;
+				
+				BasicFrequencyModel<Integer> mod = 
+						new BasicFrequencyModel<Integer>();
+					
+				p = new Point(x, y);
+				IFS.SearchResult result = IFS.search(ifs, p, depth, new MVN(ifs.dimension()), bufferLimit);
+				
+			// 	System.out.println(result.codes().isEmpty() + " " + result.code());
+				if(result.codes().size() > 0)
+				{
+					Weighted<List<Integer>> codes = result.codes();
+					// System.out.println(codes);
+					for(int k : Series.series(codes.size()))
+						for(int symbol : codes.get(k))
+							mod.add(symbol, codes.weight(k));
+				} else {
+					mod.add(result.code());
+					// System.out.println(result.code());
+
+				}
+				
+				Color color = null;
+				
+				if(mod.total() == 0.)
+				{
+					color = Color.BLACK;
+				} else
+				{
+			
+					float red   = (float)mod.probability(0);
+					float green = (float)mod.probability(1);
+					float blue  = (float)mod.probability(2);
+					color = new Color(red, green, blue);
+				}
+				
+				image.setRGB(i, j, color.getRGB());			
+			}
+		}
+
+		return image;
+	}	
 		
 	public static <M extends AffineMap> BufferedImage drawDensities(
 			IFS<M> ifs,

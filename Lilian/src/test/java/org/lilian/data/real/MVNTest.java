@@ -2,11 +2,14 @@ package org.lilian.data.real;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
+import org.lilian.data.real.weighted.Weighted;
+import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.search.Builder;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
@@ -60,6 +63,34 @@ public class MVNTest
 		
 		MVN rec = MVN.findSpherical(source.generate(300));
 		System.out.println(rec);
+		
+		List<Point> points = new ArrayList<Point>();
+		Weighted<Point> weighted = WeightedLists.empty();
+		
+		Point p;
+		
+		p = new Point(10, 5, 1);
+		points.add(p);
+		points.add(p);
+		weighted.add(p, 2.0);
+		
+		p = new Point(1, 3, -5);
+		points.add(p);
+		points.add(p);
+		points.add(p);
+		weighted.add(p, 3.0);
+				
+		p = new Point(0.1, 3, 0);
+		points.add(p);
+		weighted.add(p, 1.0);
+		
+		p = new Point(1, 1, 1);
+		
+		System.out.println(MVN.findSpherical(points));
+		System.out.println(MVN.findSpherical(weighted));
+
+		assertEquals(MVN.findSpherical(points).density(p), MVN.findSpherical(weighted).density(p), 0.000001);
+
 	}
 	
 	@Test
@@ -121,6 +152,52 @@ public class MVNTest
 		MVN other = new MVN(2, 0.3);
 		System.out.println(other.map());
 		
+	}
+	
+	@Test
+	public void findTest()
+	{
+		MVN source = new MVN(new Point(5.0, 1.0), MatrixTools.identity(2).scalarMultiply(0.1));
+		
+		MVN rec = MVN.find(source.generate(300));
+		System.out.println(rec);
+		
+		List<Point> points = new ArrayList<Point>();
+		Weighted<Point> weighted = WeightedLists.empty();
+		
+		Point p;
+		
+		p = source.generate();
+		points.add(p);
+		points.add(p);
+		weighted.add(p, 2.0);
+		
+		p = source.generate();
+		points.add(p);
+		points.add(p);
+		points.add(p);
+		weighted.add(p, 3.0);
+				
+		p = source.generate();
+		points.add(p);
+		weighted.add(p, 1.0);
+		
+		p = source.generate();
+		points.add(p);
+		weighted.add(p, 1.0);		
+		
+		p = source.generate();
+		points.add(p);
+		weighted.add(p, 1.0);	
+
+		p = source.generate();
+		points.add(p);
+		weighted.add(p, 1.0);	
+		
+		System.out.println(MVN.find(points, true));
+		System.out.println(MVN.find(weighted));
+
+		assertEquals(MVN.find(points, true).density(p), MVN.find(weighted).density(p), 0.000001);
 	}
 	
 }

@@ -177,6 +177,35 @@ public class IFSTest
 		
 		System.out.println("codes-again: " + Functions.toc() + " seconds");
 	}
+    
+    
+    @Test
+	public void testCodeSmooth() throws IOException
+	{
+		int depth = 7;
+		double[] xrange = new double[]{-1.0, 1.0};
+		double[] yrange = new double[]{-1.0, 1.0};
+		
+		Functions.tic();		
+		
+		BufferedImage image = null;
+
+		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-smooth");
+		dir.mkdirs();
+
+		IFS<Similitude> ifs = IFSs.sierpinskiSim();
+		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
+		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
+		
+		for(int i : Series.series(3, 20))
+		{
+			image = Draw.drawMultiCodes(ifs, xrange, yrange, 100, depth, i);
+			ImageIO.write(image, "PNG", new File(dir, "codes-smooth-"+i+".png") );
+		}
+
+		
+		System.out.println("codes-again: " + Functions.toc() + " seconds");
+	}
 	
 	@Test
 	public void testDensities() throws IOException

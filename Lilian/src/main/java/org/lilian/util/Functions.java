@@ -436,7 +436,7 @@ public class Functions
 	/**
 	 * Simple random choice from a collection
 	 * 
-	 * If the input is a list, processing time is linear, otherwise the 
+	 * If the input is a list, processing time is constant, otherwise the 
 	 * collection is traversed to the randomly drawn index.
 	 * 
 	 * @param in

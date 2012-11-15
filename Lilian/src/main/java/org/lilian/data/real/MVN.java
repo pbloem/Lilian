@@ -21,6 +21,8 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.apache.commons.math.linear.SingularMatrixException;
 import org.lilian.Global;
+import org.lilian.data.real.weighted.Weighted;
+import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
@@ -244,7 +246,12 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 	{
 		return "[covariance=" + covariance() + ", mean=" + mean() + "]";
 	}
-
+	
+	public static MVN find(List<Point> points)
+	{
+		return find(points, false);
+		
+	}
 	/**
 	 * Takes a list of points of the same dimensionality and estimates a 
 	 * multivariate normal distribution for them.
@@ -253,7 +260,7 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 	 * 
 	 * @return
 	 */
-	public static MVN find(List<Point> points)
+	public static MVN find(List<Point> points, boolean biased)
 	{
 		int dim = points.get(0).dimensionality();
 		int size = points.size();
@@ -269,14 +276,13 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 		RealVector difference;
 		RealMatrix cov = MatrixTools.identity(dim);
 		
-		double xStdDev = 0.0;
 		for(Point x : points)
 		{
 			difference = x.getVector().subtract(mean);
 			cov = cov.add(difference.outerProduct(difference));
 		}
 		
-		cov = cov.scalarMultiply(1.0/(size-1));
+		cov = cov.scalarMultiply(1.0/(size-(biased?0:1)));
 		
 		return new MVN(new Point(mean), cov);
 	}
@@ -285,7 +291,7 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 	 * Takes a list of points of the same dimensionality and estimates a 
 	 * multivariate normal distribution for them.
 	 * 
-	 * The MVN is estimated as the sample mean and sample covariance matrix.
+	 * The MVN is estimated as the sample mean and the unbiased covariance matrix(!)
 	 * 
 	 * @param points
 	 * @param weights A list of nonnegative weights, with one value for each 
@@ -295,25 +301,26 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 	 */
 	public static MVN find(List<Point> points, List<Double> weights)
 	{
-		if(points.size() != weights.size())
-			throw new IllegalArgumentException("Size of points ("+points.size()+") and size of weights ("+weights.size()+") should match.");
-		
-		double sum = 0.0;
-		for(double weight : weights)
-			sum += weight;
+		return find(WeightedLists.combine(points, weights));
+	}
+	
+	public static MVN find(Weighted<Point> points)
+	{			
+		double sum = points.sum();
 		
 		double sqSum = 0.0;
-		for(double weight : weights)
-			sqSum += weight * weight;	
+		for(int i : series(points.size()))
+			sqSum += points.weight(i) * points.weight(i);	
 		
 		int dim = points.get(0).dimensionality();
-		int size = points.size();
 		
 		// * Calculate the mean
 		double[] mean = new double[dim];
 		for(int i : series(points.size()))
 			for(int j : series(dim))
-				mean[j] += points.get(i).get(j) * (weights.get(i) / sum);
+				mean[j] += points.get(i).get(j) * (points.weight(i));
+		for(int i : series(dim))
+			mean[i] /= sum;
 			
 		// * Calculate the covariance
 		RealVector difference;
@@ -323,12 +330,13 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 		{
 			Point x = points.get(i);
 			difference = x.getVector().subtract(mean);
-			difference.mapMultiplyToSelf(weights.get(i)/sum);
 			
-			cov = cov.add(difference.outerProduct(difference));
+			cov = cov.add(
+					difference.outerProduct(difference).scalarMultiply(points.weight(i))
+					);
 		}
 		
-		cov = cov.scalarMultiply(1.0/(1.0 - sqSum));
+		cov = cov.scalarMultiply(1.0/sum);
 		
 		return new MVN(new Point(mean), cov);
 	}
@@ -368,6 +376,42 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 		
 		return new MVN(new Point(mean), MatrixTools.identity(dim).scalarMultiply(s));
 	}
+	
+	/**
+	 * Takes a list of points of the same dimensionality and estimates a 
+	 * spherical multivariate normal distribution for them.
+	 * 
+	 * A spherical MVN is defined by a mean and a scalar s such that sI is 
+	 * the covariance matrix  
+	 * 
+	 * @return
+	 */
+	public static MVN findSpherical(Weighted<Point> points)
+	{
+		int dim = points.get(0).dimensionality();
+		int size = points.size();
+		
+		// * Calculate the mean
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector mean = new ArrayRealVector(dim);
+		for(int i : series(points.size()))
+			mean = mean.add(points.get(i).getVector().mapMultiply(points.weight(i)));
+		mean.mapMultiplyToSelf(1.0/points.sum());
+	
+		// * Calculate s
+		RealVector difference;
+		double sumQuadrance = 0.0;
+		
+		for(int i : series(points.size()))
+		{
+			difference = points.get(i).getVector().subtract(mean);
+			sumQuadrance += difference.dotProduct(difference) * points.weight(i);
+		}
+		
+		double s = sumQuadrance / (points.sum() * dim);
+		
+		return new MVN(new Point(mean), MatrixTools.identity(dim).scalarMultiply(s));
+	}	
 
 	@Override
 	public List<Double> parameters()

@@ -2,6 +2,7 @@ package org.lilian.data.real.fractal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.math.linear.ArrayRealVector;
@@ -16,6 +17,8 @@ import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.data.real.classification.Classified;
+import org.lilian.data.real.weighted.Weighted;
+import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
@@ -311,8 +314,29 @@ public class IFS<M extends Map & Parametrizable >
 	public static <M extends AffineMap> SearchResult search(
 			IFS<M> ifs, Point point, int depth, MVN basis)
 	{
+		return search(ifs, point, depth, basis, 1);
+	}
+	
+	/**
+	 * Performs a walk over all endpoint distributions of the given IFS. It 
+	 * collects information like codes and probability density for the given 
+	 * point.
+	 * 
+	 * @param ifs
+	 * @param point
+	 * @param depth
+	 * @param basis
+	 * @param bufferLimit The SearchResult object returns a weighted list of 
+	 * 	top codes. This parameter determines the maximum number of codes to 
+	 *  return
+	 * @return
+	 */
+	public static <M extends AffineMap> SearchResult search(
+			IFS<M> ifs, Point point, int depth, MVN basis, int bufferLimit)
+	{
+
 		SearchResult res = search(
-				ifs, point, depth, new SearchResultImpl(),
+				ifs, point, depth, new SearchResultImpl(bufferLimit),
 				new ArrayList<Integer>(depth), 0.0,
 				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
 				basis);
@@ -377,7 +401,7 @@ public class IFS<M extends Map & Parametrizable >
 		public double logProb();
 		
 		public List<Integer> code();
-		
+				
 		public Point mean();
 		
 		/**
@@ -399,15 +423,33 @@ public class IFS<M extends Map & Parametrizable >
 		 */
 		
 		public double approximation();
+		
+		/**
+		 * A weighted list of the codes with maximum responsibility for the 
+		 * given point. The weights are the responsibilities (likelihood of the 
+		 * point under the endpoint distribution).  
+		 * 
+		 * Only codes with definite likelihoods are counted. There is no 
+		 * fallback in distances (as with {@link code()}) 
+		 * 
+		 * @return
+		 */
+		public Weighted<List<Integer>> codes();
+
 	}
 	
 	private static class SearchResultImpl implements SearchResult
 	{
+		private int bufferLimit = 1;
 		private double logProb = Double.NEGATIVE_INFINITY;
 		private double codeApprox = Double.NEGATIVE_INFINITY;
 		
 		private List<Integer> code = null;
 		private List<Integer> codeFallback = null;
+		
+		private List<WCode> buffer = new ArrayList<WCode>();
+		private List<WCode> bufferFallback = new ArrayList<WCode>();
+
 		
 		private Point mean = null;
 		private Point meanFallback = null;
@@ -416,11 +458,29 @@ public class IFS<M extends Map & Parametrizable >
 		private double densityApprox = 0.0;
 		private int daTotal = 0;
 		
+		public SearchResultImpl()
+		{
+			
+		}
+		
+		public SearchResultImpl(int bufferLimit)
+		{
+			this.bufferLimit = bufferLimit;
+		}
+		
 		public void show(double logProb, List<Integer> code, double distance, Point mean, double logPrior)
 		{
 			if(!Double.isNaN(logProb) && !Double.isInfinite(logProb))
 			{
 				probSum += Math.exp(logProb);
+				
+				if(Math.exp(logProb) > 0.0 && bufferLimit > 1)
+				{
+					buffer.add(new WCode(code, Math.exp(logProb)));
+					Collections.sort(buffer);
+					while(buffer.size() > bufferLimit)
+						buffer.remove(buffer.size() - 1);
+				}
 			}
 			
 			if(!Double.isNaN(distance) && !Double.isInfinite(distance))
@@ -428,6 +488,14 @@ public class IFS<M extends Map & Parametrizable >
 				// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
 				double approx = Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
 				densityApprox = Math.max(densityApprox, approx);
+				
+				if(approx > 0.0 && bufferLimit > 1)
+				{
+					bufferFallback.add(new WCode(code, approx));
+					Collections.sort(bufferFallback);
+					while(bufferFallback.size() > bufferLimit)
+						bufferFallback.remove(bufferFallback.size() - 1);
+				}				
 			}			
 			
 			if(logProb > this.logProb && !Double.isNaN(logProb) && !Double.isInfinite(logProb))
@@ -476,6 +544,45 @@ public class IFS<M extends Map & Parametrizable >
 		{
 			// return Math.exp(0.5 * codeApprox);
 			return densityApprox;
+		}
+		
+		public Weighted<List<Integer>> codes()
+		{
+			List<WCode> buff = buffer.size() > 0 ? buffer : bufferFallback;
+			
+			Weighted<List<Integer>> codes = WeightedLists.empty();
+			for(WCode wc : buff)
+				codes.add(wc.code(), wc.weight());
+			
+			return codes;
+		}
+		
+		private class WCode implements Comparable<WCode>
+		{
+			private List<Integer> code;
+			private double weight;
+
+			public WCode(List<Integer> code, double weight)
+			{
+				this.code = code;
+				this.weight = weight;
+			}
+
+			@Override
+			public int compareTo(WCode other)
+			{
+				return - Double.compare(weight, other.weight);
+			}
+			
+			public List<Integer> code()
+			{
+				return code;
+			}
+			
+			public double weight()
+			{
+				return weight;
+			}
 		}
 	}	
 	
