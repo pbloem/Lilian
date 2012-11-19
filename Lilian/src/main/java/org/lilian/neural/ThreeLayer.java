@@ -278,6 +278,22 @@ public class ThreeLayer extends AbstractList<Double>
 		weights1 = weights1.add(weights1Delta);
 	}
 	
+	public void train(Point in, Point out, double learningRate)
+	{
+		Point mapped = map(in);
+		
+		List<Double> error = new ArrayList<Double>(mapped.size());
+		for(int j : series(out.size()))
+		{
+			double t = out.get(j),
+			       o = mapped.get(j); 
+			
+			error.add(o - t);
+		}
+			
+		train(error, learningRate);
+	}
+	
 	/** 
 	 * Runs a single epoch of backpropagation on the given input and output 
 	 * points. 
@@ -291,20 +307,8 @@ public class ThreeLayer extends AbstractList<Double>
 			throw new IllegalArgumentException("Input lists must be the same size (were "+in.size()+" and "+out.size()+").");
 		
 		for(int i : Series.series(in.size()))
-		{
-			Point mapped = map(in.get(i));
-			
-			List<Double> error = new ArrayList<Double>(mapped.size());
-			for(int j : series(out.get(i).size()))
-			{
-				double t = out.get(i).get(j),
-				       o = mapped.get(j); 
-				
-				error.add(o - t);
-			}
-				
-			train(error, learningRate);
-		}
+			train(in.get(i), out.get(i), learningRate);
+
 	}
 	
 	/** 

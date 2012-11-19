@@ -17,6 +17,7 @@ import org.lilian.data.real.Generator;
 import org.lilian.data.real.Generators;
 import org.lilian.data.real.Histogram2D;
 import org.lilian.data.real.MVN;
+import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.data.real.classification.Classification;
@@ -249,6 +250,12 @@ public class Resources
 	public static List<Point> rossler(@Name("size") int size)
 	{
 		return Generators.rossler().generate(size);
+	}		
+	
+	@Resource(name="henon")
+	public static List<Point> henon(@Name("size") int size)
+	{
+		return Generators.fromMap(Maps.henon(), new Point(2)).generate(size);
 	}		
 	
 	@Resource(name="magnet")
