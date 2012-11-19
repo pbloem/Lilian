@@ -11,6 +11,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 
 import static java.lang.Math.*;
+import static org.lilian.util.Series.series;
 
 /**
  * Some basic static matrix functions to provide functionality that Apache
@@ -181,5 +182,23 @@ public class MatrixTools
 	public static boolean isSingular(RealMatrix in)
 	{
 		return ! new LUDecompositionImpl(in).getSolver().isNonSingular();
+	}
+	
+	/**
+	 * Returns the matrix a * b^T
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static RealMatrix outer(RealVector a, RealVector b)
+	{
+		RealMatrix matrix =
+				new Array2DRowRealMatrix(a.getDimension(), b.getDimension());
+		
+		for(int row : series(a.getDimension()))
+			for(int column : series(b.getDimension()))
+				matrix.setEntry(row, column, a.getEntry(row) * b.getEntry(column));
+		
+		return matrix;
 	}
 }

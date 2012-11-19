@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.lilian.util.Series;
 
-class CompositeMap extends AbstractMap
+public class CompositeMap extends AbstractMap
 {
 	private static final long serialVersionUID = 3238841774125616289L;
 	private List<Map> components;

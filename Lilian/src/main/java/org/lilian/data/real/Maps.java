@@ -338,5 +338,108 @@ public class Maps
 		
 		return new AffineMap(rot, t);
 	}
+	
+	public static Map henon()
+	{
+		return new HenonMap();
+	}
+	
+	private static class HenonMap extends AbstractMap
+	{
+		double a, b;
+		
+		public HenonMap()
+		{
+			this(1.4, 0.3);
+		}
+		
+		public HenonMap(double a, double b)
+		{
+			this.a = a;
+			this.b = b;
+		}
+
+		@Override
+		public Point map(Point in)
+		{
+			double x = in.get(0);
+			double y = in.get(1);
+			
+			double xx = y + 1 - a * x * x,
+				   yy = b * x;
+				
+			x = xx;
+			y = yy;
+				
+			return new Point(x, y);
+		}
+
+		@Override
+		public boolean invertible()
+		{
+			return true;
+		}
+
+		@Override
+		public Map inverse()
+		{
+			return new HenonInvMap(a, b);
+		}
+
+		@Override
+		public int dimension()
+		{
+			return 2;
+		}	
+	}
+	
+	private static class HenonInvMap extends AbstractMap
+	{
+		double a, b;
+		
+		public HenonInvMap()
+		{
+			this(1.4, 0.3);
+		}
+		
+		public HenonInvMap(double a, double b)
+		{
+			this.a = a;
+			this.b = b;
+		}
+
+		@Override
+		public Point map(Point in)
+		{
+			double x = in.get(0);
+			double y = in.get(1);
+			
+			double xx = y / b,
+				   yy = x - 1.0 + a * y * y * (1.0 / (b * b));
+				
+			x = xx;
+			y = yy;
+				
+			return new Point(x, y);
+		}
+
+		@Override
+		public boolean invertible()
+		{
+			return true;
+		}
+
+		@Override
+		public Map inverse()
+		{
+			return new HenonMap(a, b);
+		}
+
+		@Override
+		public int dimension()
+		{
+			return 2;
+		}	
+	}	
 
 }

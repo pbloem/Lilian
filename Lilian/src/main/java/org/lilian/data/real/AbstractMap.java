@@ -12,7 +12,7 @@ public abstract class AbstractMap implements Map
 		List<Point> out = new ArrayList<Point>(in.size());
 		for(Point p : in)
 			out.add(map(p));
-		
+		 
 		return out;
 	}
 	

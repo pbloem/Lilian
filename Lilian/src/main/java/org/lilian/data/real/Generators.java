@@ -2,51 +2,22 @@ package org.lilian.data.real;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
+import static org.lilian.util.Series.series;
 
 import java.util.List;
 
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealVector;
+import org.lilian.util.Series;
 
 public class Generators
 {
 
 	public static Generator<Point> henon()
 	{
-		return new Henon();
+		return fromMap(Maps.henon(), new Point(2));
 	}
-	
-	private static class Henon extends AbstractGenerator<Point>
-	{
-		private static final int PRE = 50;
-		public double x = 0.0, y = 0.0, a, b;
-		
-		public Henon()
-		{
-			this(1.4, 0.3);
-		}
-		
-		public Henon(double a, double b)
-		{
-			this.a = a;
-			this.b = b; 
-			
-			generate(PRE);
-		}
-		
-		@Override
-		public Point generate()
-		{
-			double xx = y + 1 - a* x*x,
-			       yy = b * x;
-			
-			x = xx;
-			y = yy;
-			
-			return new Point(x, y);
-		}
-		
-	}
+
 	
 	public static Generator<Point> ikeda()
 	{
@@ -171,7 +142,7 @@ public class Generators
 		return new MappedGenerator(map, master);
 	}
 	
-	public static class MappedGenerator implements Generator<Point>
+	private static class MappedGenerator implements Generator<Point>
 	{
 		private Map map;
 		private Generator<Point> master;
@@ -196,4 +167,35 @@ public class Generators
 			return map.map(p);
 		}
 	}
+	
+	public static Generator<Point> fromMap(Map map, Point initial)
+	{
+		return new MapGenerator(map, initial);
+	}
+	
+	private static class MapGenerator extends AbstractGenerator<Point>
+	{
+		private Map map;
+		private Point initial;
+		private Point p; 
+		
+		public MapGenerator(Map map, Point initial)
+		{
+			this.map = map;
+			p = initial;
+			
+			for(int i : series(100))
+				generate();
+		}
+
+		@Override
+		public Point generate()
+		{
+			p = map.map(p);
+			return p;
+		}
+		
+		
+	}
+	
 }
