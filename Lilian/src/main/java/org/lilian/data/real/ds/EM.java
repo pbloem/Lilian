@@ -1,5 +1,6 @@
 package org.lilian.data.real.ds;
 
+import static org.lilian.util.Functions.choose;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.neural.Activations;
 import org.lilian.neural.ThreeLayer;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 
 /**
@@ -176,7 +178,17 @@ public class EM
 		{
 			return "[" + index + ", w=" + weight + "]";
 		}
+	}
+	
+	public static ThreeLayer initial(List<Point> data, int hidden, double learningRate, int iterations)
+	{
+		ThreeLayer map = 
+				ThreeLayer.random(data.get(0).dimensionality(), 
+						hidden, VAR, Activations.sigmoid());
 		
+		for(int i : Series.series(iterations))
+			map.train(choose(data), choose(data), learningRate);
 		
+		return map;
 	}
 }
