@@ -474,7 +474,7 @@ public class IFS<M extends Map & Parametrizable >
 			{
 				probSum += Math.exp(logProb);
 				
-				if(Math.exp(logProb) > 0.0 && bufferLimit > 1)
+				if(Math.exp(logProb) > 0.0 && bufferLimit >= 1)
 				{
 					buffer.add(new WCode(code, Math.exp(logProb)));
 					Collections.sort(buffer);
@@ -489,7 +489,7 @@ public class IFS<M extends Map & Parametrizable >
 				double approx = Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
 				densityApprox = Math.max(densityApprox, approx);
 				
-				if(approx > 0.0 && bufferLimit > 1)
+				if(approx > 0.0 && bufferLimit >= 1)
 				{
 					bufferFallback.add(new WCode(code, approx));
 					Collections.sort(bufferFallback);

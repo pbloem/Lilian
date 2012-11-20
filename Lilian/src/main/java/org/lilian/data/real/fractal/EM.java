@@ -188,13 +188,13 @@ public class EM implements Serializable
 
 		for (Point point : sample)
 		{
-			List<Integer> code = IFS.code(model, point, depth, basis());
-
-			if (code == null)
-				throw new RuntimeException(
-						"Could not find a code for the point (" + point + ").");
-
-			root.observe(code, point);
+			// List<Integer> code = IFS.code(model, point, depth, basis());
+			IFS.SearchResult result = 
+					IFS.search(model, point, depth, basis(), maxSources);
+			Weighted<List<Integer>> codes = result.codes();
+						
+			for(int i : series(codes.size()))
+				root.observe(codes.get(i), point, codes.probability(i));
 		}
 	}
 
