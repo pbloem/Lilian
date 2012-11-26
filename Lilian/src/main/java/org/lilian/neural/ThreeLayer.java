@@ -14,6 +14,7 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.lilian.data.real.CompositeMap;
+import org.lilian.data.real.MVN;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.Point;
 import org.lilian.search.Builder;
@@ -53,13 +54,13 @@ public class ThreeLayer extends AbstractList<Double>
 	{
 		List<Double> parameters = new ArrayList<Double>((n+1) * (h) + (h+1) * n);
 		
-		for(int i : series(n+1))
-			for(int j : series(h))
+		for(int i : series(h)) // to
+			for(int j : series(n+1)) // from
 				parameters.add(weights0.getEntry(i, j));
 		
 
-		for(int i : series(h+1))
-			for(int j : series(n))
+		for(int i : series(n)) // to
+			for(int j : series(h+1)) // from
 				parameters.add(weights1.getEntry(i, j));
 				
 		return parameters;
@@ -324,5 +325,24 @@ public class ThreeLayer extends AbstractList<Double>
 		
 		for(int i : Series.series(n))
 			train(in, out, learningRate);
+	}
+	
+	public static ThreeLayer copy(
+			Map map, int hidden, int examples, 
+			double learningRate, double initVar)
+	{
+		ThreeLayer copy = random(
+				map.dimension(), hidden, initVar, Activations.sigmoid());
+		
+		MVN source = new MVN(map.dimension());
+		for(int i : series(examples))
+		{
+			Point x = source.generate(),
+			      y = map.map(x);
+			
+			copy.train(x, y, learningRate);
+		}
+		
+		return copy;
 	}
 }

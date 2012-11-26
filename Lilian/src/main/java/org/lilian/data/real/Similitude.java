@@ -17,6 +17,9 @@ import org.lilian.util.Series;
  * A similitude (or similarity transform) consists of rotation, a uniform 
  * scaling and a translation. 
  * 
+ * In the parameter representation of a similitude the angles are normalized so 
+ * that 1.0 represents an angle of 360 degrees (or 2 pi radians). 
+ * 
  * @author Peter
  *
  */
@@ -62,8 +65,11 @@ public class Similitude extends AffineMap
 		dimension = translation.size();
 		
 		this.scalar	= scalar;
-		this.translation = MatrixTools.toVector(translation); 		
+		this.translation = MatrixTools.toVector(translation);
+		
 		this.angles = new ArrayList<Double>(angles);
+		for(int i : Series.series(angles.size()))
+			angles.set(i, angles.get(i) * 2.0 * Math.PI);
 		
 		RealMatrix rotation = Rotation.toRotationMatrix(angles);
 		this.transformation = rotation.scalarMultiply(scalar);
@@ -87,7 +93,8 @@ public class Similitude extends AffineMap
 		for(double d : translation.getData())
 			result.add(d);
 			
-		result.addAll(angles);
+		for(double angle : angles)
+			result.add(angle / (2.0 * Math.PI));
 			
 		return result;
 	}	

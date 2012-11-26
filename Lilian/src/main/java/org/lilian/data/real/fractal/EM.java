@@ -21,6 +21,7 @@ import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.search.Builder;
 import org.lilian.search.Parameters;
+import org.lilian.search.Parametrizable;
 import org.lilian.search.evo.Target;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
@@ -87,7 +88,7 @@ import org.lilian.util.Series;
  * @author Peter
  * 
  */
-public class EM implements Serializable
+public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> implements Serializable
 {
 	// * Serial ID
 	private static final long serialVersionUID = 774467486797440172L;
@@ -99,23 +100,27 @@ public class EM implements Serializable
 	// * If a code contains more than this number of points, we consider its
 	//   covariance (by fitting an MVN as described above).
 	private static final int COVARIANCE_THRESHOLD = 3;
+	
+	private static final boolean PERTURB_UNASSIGNED = true;
+	
+	private static final boolean UNIFORM_WEIGHTS = false;
 
 	// * Left-over components (with no data assigned) are given to
-	// perturbed copies of other components. They are perturbed by adding
-	// Gaussian noise with the given variance to their parameters.
+	//   perturbed copies of other components. They are perturbed by adding
+	//   Gaussian noise with the given variance to their parameters.
 	private double perturbVar;
 
 	// * This makes the algorithm a true MoG EM at depth=1 but may make it less
-	// good at finding rotations.
+	//   good at finding rotations.
 	private boolean useSphericalMVN;
 
 	private List<Point> data;
 	private MVN basis;
 
-	private IFS<Similitude> model;
+	protected IFS<M> model;
 
-	private int numComponents;
-	private int dimension;
+	protected int numComponents;
+	protected int dimension;
 	
 	// * The maximum number of endpoints to distribute responsibility over
 	private int maxSources; 
@@ -124,23 +129,26 @@ public class EM implements Serializable
 	private Node root;
 
 	// * Used for perturbing IFS models
-	public Builder<IFS<Similitude>> builder;
+	private Builder<M> mapBuilder;
+	protected Builder<IFS<M>> ifsBuilder;
+	
+	protected int lastDepth = -1;
 
 	/**
 	 * Sets up the EM algorithm with a given initial model.
 	 * 
 	 */
-	public EM(IFS<Similitude> initial, List<Point> data)
+	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder)
 	{
-		this(initial, data, 3, 0.3, true);
+		this(initial, data, numSources, 0.3, true, builder);
 	}
 
 	/**
 	 * Sets up the EM algorithm with a given initial model.
 	 * 
 	 */
-	public EM(IFS<Similitude> initial, List<Point> data, int maxSources, double perturbVar,
-			boolean useSphericalMVN)
+	public EM(IFS<M> initial, List<Point> data, int maxSources, double perturbVar,
+			boolean useSphericalMVN, Builder<M> builder)
 	{
 		this.maxSources = maxSources;
 		
@@ -159,8 +167,8 @@ public class EM implements Serializable
 
 		root = new Node(-1, null);
 
-		Builder<Similitude> sb = Similitude.similitudeBuilder(dimension);
-		builder = IFS.builder(numComponents, sb);
+		this.mapBuilder = builder;
+		this.ifsBuilder = IFS.builder(numComponents, mapBuilder);
 
 		basis = useSphericalMVN ? MVN.findSpherical(data) : MVN.find(data);
 	}
@@ -188,15 +196,19 @@ public class EM implements Serializable
 
 		for (Point point : sample)
 		{
-			// List<Integer> code = IFS.code(model, point, depth, basis());
-			IFS.SearchResult result = 
-					IFS.search(model, point, depth, basis(), maxSources);
-			Weighted<List<Integer>> codes = result.codes();
-						
+			Weighted<List<Integer>> codes = codes(point, model, depth, maxSources); 
+			
 			for(int i : series(codes.size()))
 				root.observe(codes.get(i), point, codes.probability(i));
 		}
+		
+		lastDepth = depth;
 	}
+	
+	protected abstract Weighted<List<Integer>> codes(
+			Point point, IFS<M> model, int depth, int sources);
+	
+	protected abstract M findMap(List<Point> from, List<Point> to, M old);
 
 	protected void codesToModel()
 	{
@@ -207,7 +219,7 @@ public class EM implements Serializable
 		BasicFrequencyModel<Integer> priors = new BasicFrequencyModel<Integer>();
 		root.count(priors);
 
-		List<Similitude> trans = new ArrayList<Similitude>(numComponents);
+		List<M> trans = new ArrayList<M>(numComponents);
 		for (int i : Series.series(numComponents))
 			trans.add(null);
 
@@ -226,20 +238,21 @@ public class EM implements Serializable
 			if (n != 0) // codes found containing this comp
 			{
 				// * Find the map for the point pairs
-				Similitude map = org.lilian.data.real.Maps.findMap(
-						maps.from(i), maps.to(i));
+				M map = findMap(maps.from(i), maps.to(i), model.get(i));
+				
+				
 				// * Find the weight for the frequency pairs
 				double weight = findScalar(maps.fromWeights(i),
 						maps.toWeights(i));
 
 				// * If the map contracts too much, we perturb it slightly
-				double det = MatrixTools
-						.getDeterminant(map.getTransformation());
-				if (Math.abs(det) < CONTRACTION_THRESHOLD || Double.isNaN(det))
-					map = Parameters
-							.perturb(map,
-									Similitude.similitudeBuilder(dimension),
-									perturbVar);
+//				double det = MatrixTools
+//						.getDeterminant(map.getTransformation());
+//				if (Math.abs(det) < CONTRACTION_THRESHOLD || Double.isNaN(det))
+//					map = Parameters
+//							.perturb(map,
+//									Similitude.similitudeBuilder(dimension),
+//									perturbVar);
 
 				trans.set(i, map);
 				weights.set(i, weight);
@@ -262,31 +275,38 @@ public class EM implements Serializable
 		// perturb it slightly.
 		for (int i : unassigned)
 		{
-
-			int j = assigned.get(Global.random.nextInt(assigned.size()));
-			Similitude source = trans.get(j);
-			double sourceWeight = weights.get(j);
-
-			Similitude perturbed0 = Parameters.perturb(source,
-					Similitude.similitudeBuilder(dimension), perturbVar);
-
-			Similitude perturbed1 = Parameters.perturb(source,
-					Similitude.similitudeBuilder(dimension), perturbVar);
-
-			// * Make sure that both are contractive
-			perturbed0 = perturbed0.scalar() > 1.0 ? perturbed0.inverse()
-					: perturbed0;
-			perturbed1 = perturbed1.scalar() > 1.0 ? perturbed1.inverse()
-					: perturbed1;
-
-			trans.set(i, perturbed0);
-			trans.set(j, perturbed1);
-
-			weights.set(i, sourceWeight / 2.0);
-			weights.set(j, sourceWeight / 2.0);
+			if(PERTURB_UNASSIGNED) 
+			{
+				int j = assigned.get(Global.random.nextInt(assigned.size()));
+				M source = trans.get(j);
+				double sourceWeight = weights.get(j);
+	
+				M perturbed0 = Parameters.perturb(source, mapBuilder, perturbVar);
+	
+				M perturbed1 = Parameters.perturb(source, mapBuilder, perturbVar);
+	
+	//			// * Make sure that both are contractive
+	//			perturbed0 = perturbed0.scalar() > 1.0 ? perturbed0.inverse()
+	//					: perturbed0;
+	//			perturbed1 = perturbed1.scalar() > 1.0 ? perturbed1.inverse()
+	//					: perturbed1;
+	
+				trans.set(i, perturbed0);
+				trans.set(j, perturbed1);
+	
+				weights.set(i, sourceWeight / 2.0);
+				weights.set(j, sourceWeight / 2.0);
+			} else {
+				trans.set(i, model.get(i));
+				weights.set(i, model.probability(i));
+			}
 		}
-
-		model = new IFS<Similitude>(trans.get(0), weights.get(0));
+				
+		if(UNIFORM_WEIGHTS)
+			for(int i : series(0, numComponents))
+				weights.set(i, 1.0/numComponents);
+				
+		model = new IFS<M>(trans.get(0), weights.get(0));
 		for (int i : series(1, numComponents))
 			model.addMap(trans.get(i), weights.get(i));
 	}
@@ -333,7 +353,7 @@ public class EM implements Serializable
 	/**
 	 * @return The current iteration's model.
 	 */
-	public IFS<Similitude> model()
+	public IFS<M> model()
 	{
 		return model;
 	}
@@ -346,7 +366,12 @@ public class EM implements Serializable
 	{
 		return basis;
 	}
-
+	
+	public List<Point> data()
+	{
+		return data;
+	}
+	
 	/**
 	 * A node in the code tree. Each code represents a path in this tree from
 	 * root to leaf. At each node, we store each point whose path visits that
@@ -843,7 +868,9 @@ public class EM implements Serializable
 	{
 		int dim = data.get(0).dimensionality();
 
-		EM em = new EM(IFSs.initialSphere(dim, components, 1.0, 0.5), data);
+		EM<Similitude> em = new SimEM(
+				IFSs.initialSphere(dim, components, 1.0, 0.5), 
+				data, 1, Similitude.similitudeBuilder(dim));
 
 		Target<IFS<Similitude>> target = new IFSTarget<Similitude>(eval, data);
 

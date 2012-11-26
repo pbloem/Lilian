@@ -29,11 +29,11 @@ public class EM
 {
 	public static final double VAR = 0.5;
 	
-	private int dim;
+	protected int dim;
 	
-	private List<Point> data;
-	private double sigma;
-	private int numSources;
+	protected List<Point> data;
+	protected double sigma;
+	protected int numSources;
 	
 	// * These lists represent point pairs so that each point in 'from' 
 	//   represents a possible source for the given point in 'to'
@@ -42,7 +42,7 @@ public class EM
 	
 	private List<Double> weights;
 	
-	private ThreeLayer map;
+	protected ThreeLayer map;
 	
 	public EM(List<Point> data, int hidden, double sigma, int numSources)
 	{

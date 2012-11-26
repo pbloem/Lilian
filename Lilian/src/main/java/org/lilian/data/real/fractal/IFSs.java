@@ -140,8 +140,8 @@ public class IFSs
 	{
 		Builder<IFS<AffineMap>> builder = IFS.builder(2, AffineMap.affineMapBuilder(2));
 		return builder.build(Arrays.asList(
-				.45,0.0, 0.0,.45,  .5, .5, 1.0,
-				.45,0.0, 0.0,.45, -.5,-.5, 1.0
+				.45, 0.0, 0.0,.45,  .5, .5, 1.0,
+				.45, 0.0, 0.0,.45, -.5,-.5, 1.0
 				));		
 	}
 
@@ -184,8 +184,8 @@ public class IFSs
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				scale, -x, -y, Math.PI + a, 1.0,
-				scale, +x, -y, Math.PI - a, 1.0
+				scale, -x, -y, (Math.PI + a) / (2.0 * Math.PI), 1.0,
+				scale, +x, -y, (Math.PI - a) / (2.0 * Math.PI), 1.0
 				));
 	}
 	
@@ -199,8 +199,8 @@ public class IFSs
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				scale, -x, -y, Math.PI + a, 1.0,
-				scale, +x, -y, Math.PI - a, 2.0
+				scale, -x, -y, (Math.PI + a) / (2.0 * Math.PI), 1.0,
+				scale, +x, -y, (Math.PI - a) / (2.0 * Math.PI), 2.0
 				));
 	}
 	
@@ -215,8 +215,8 @@ public class IFSs
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				a/2.0,  x1, -y, -(angle + Math.PI), 1.0,
-				a/2.0, -x2, -y,  (angle + Math.PI), 1.0
+				a/2.0,  x1, -y, -(angle + Math.PI) / (2.0 * Math.PI), 1.0,
+				a/2.0, -x2, -y,  (angle + Math.PI) / (2.0 * Math.PI), 1.0
 				));
 	}	
 	
@@ -346,7 +346,7 @@ public class IFSs
 
 		List<Double> parameters = new ArrayList<Double>();
 		for(int i = 0; i < np; i++)
-			parameters.add(Global.random.nextGaussian() * var);	
+			parameters.add(Global.random.nextDouble() * 2.0 - 1.0);	
 		
 		IFS<Similitude> model = new IFS<Similitude>(new Similitude(parameters), 1.0);
 		for(int i = 1; i < comp; i++)
