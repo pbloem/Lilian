@@ -26,11 +26,19 @@ public class Parameters
 	public static <M extends Parametrizable> M perturb(
 			M in, Builder<M> builder, double variance)
 	{
-		List<Double> params = new ArrayList<Double>(in.parameters());
-		
-		for(int i = 0; i < params.size(); i++)
-			params.set(i,  params.get(i) + Global.random.nextGaussian() * variance);
+		List<Double> params = perturb(in.parameters(), variance);
 		
 		return builder.build(params);
+	}
+	
+	public static List<Double> perturb(List<Double> in, double variance)
+	{
+		List<Double> params = new ArrayList<Double>(in.size());
+		
+		for(double d : in)
+			params.add(d + Global.random.nextGaussian() * variance);
+		
+		return params;
+		
 	}
 }
