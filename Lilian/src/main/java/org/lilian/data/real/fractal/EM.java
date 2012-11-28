@@ -133,14 +133,20 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	protected Builder<IFS<M>> ifsBuilder;
 	
 	protected int lastDepth = -1;
+	
+	// * The variance of the mvn from which the spanning point are sampled when 
+	//   there aremany points to a single code.
+	//   For high values the algorithm tends to behave more deterministically,
+	//   but some maps with strong rotation won't be found. 
+	protected double spanningPointsVariance;
 
 	/**
 	 * Sets up the EM algorithm with a given initial model.
 	 * 
 	 */
-	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder)
+	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder, double spanningPointsVariance)
 	{
-		this(initial, data, numSources, 0.3, false, builder);
+		this(initial, data, numSources, 0.3, false, builder, spanningPointsVariance);
 	}
 
 	/**
@@ -148,7 +154,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 * 
 	 */
 	public EM(IFS<M> initial, List<Point> data, int maxSources, double perturbVar,
-			boolean useSphericalMVN, Builder<M> builder)
+			boolean useSphericalMVN, Builder<M> builder, double spanningPointsVariance)
 	{
 		this.maxSources = maxSources;
 		
@@ -171,6 +177,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		this.ifsBuilder = IFS.builder(numComponents, mapBuilder);
 
 		basis = useSphericalMVN ? MVN.findSpherical(data) : MVN.find(data);
+		this.spanningPointsVariance = spanningPointsVariance;
 	}
 
 	public void iterate(int sampleSize, int depth)
@@ -662,7 +669,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 							// higher values the amount of points generated gives
 							// a sort of weight to this match in the codes among 
 							// the other points)
-							List<Point> points = new MVN(dimension, 0.01) // TODO: MAKE PARAMETER
+							List<Point> points = new MVN(dimension, spanningPointsVariance)
 									.generate(points().size());
 
 							List<Point> pf = from.map().map(points);
@@ -867,7 +874,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 		EM<Similitude> em = new SimEM(
 				IFSs.initialSphere(dim, components, 1.0, 0.5), 
-				data, 1, Similitude.similitudeBuilder(dim));
+				data, 1, Similitude.similitudeBuilder(dim), 0.01);
 
 		Target<IFS<Similitude>> target = new IFSTarget<Similitude>(eval, data);
 

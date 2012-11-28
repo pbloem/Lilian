@@ -34,9 +34,9 @@ public class BranchingEM extends SimEM
 	
 	public BranchingEM(IFS<Similitude> initial, List<Point> data,
 			int numSources, Builder<Similitude> builder,
-			double branchingVariance, int beamWidth, int sampleSize)
+			double branchingVariance, int beamWidth, int sampleSize, double spanningPointsVariance)
 	{
-		super(initial, data, numSources, builder);
+		super(initial, data, numSources, builder, spanningPointsVariance);
 		
 		this.branchingVariance = branchingVariance;
 		this.beamWidth = beamWidth;

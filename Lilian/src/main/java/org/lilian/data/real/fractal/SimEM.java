@@ -11,9 +11,9 @@ public class SimEM extends EM<Similitude>
 {
 
 	public SimEM(IFS<Similitude> initial, List<Point> data,
-			int numSources, Builder<Similitude> builder)
+			int numSources, Builder<Similitude> builder, double spanningPointsVariance)
 	{
-		super(initial, data, numSources,  builder);
+		super(initial, data, numSources,  builder, spanningPointsVariance);
 	}
 
 	@Override

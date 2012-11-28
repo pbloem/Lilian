@@ -26,7 +26,7 @@ public class NeuralEM extends EM<ThreeLayer>
 	public NeuralEM(IFS<ThreeLayer> initial, List<Point> data, int numSources,
 			Builder<ThreeLayer> builder, int epochs, double learningRate)
 	{
-		super(initial, data, numSources, 0.001, true, builder);
+		super(initial, data, numSources, 0.001, true, builder, 0.01);
 		
 		this.epochs = epochs;
 		this.learningRate = learningRate;
