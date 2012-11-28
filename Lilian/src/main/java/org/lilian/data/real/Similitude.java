@@ -30,8 +30,14 @@ public class Similitude extends AffineMap
 	protected int dimension;
 	
 	protected double scalar;
-	protected List<Double> angles;
+	protected List<Double> angles; // in radians
 	
+	/**
+	 * Note: the angles in this parameter vector are in radians div by 2 pi 
+	 * (that way all parameters are roughly the same scale)
+	 * 
+	 * @param parameters
+	 */
 	public Similitude(List<Double> parameters)
 	{
 		super();
@@ -49,6 +55,13 @@ public class Similitude extends AffineMap
 				parameters.subList(dimension + 1, parameters.size()));		
 	}	
 	
+	/**
+	 * 
+	 * 
+	 * @param scalar
+	 * @param translation
+	 * @param angles In radians
+	 */
 	public Similitude(double scalar, List<Double> translation, List<Double> angles)
 	{
 		int dim = translation.size();
@@ -57,7 +70,11 @@ public class Similitude extends AffineMap
 		if( (dim*dim - dim)/2 != a)
 			throw new IllegalArgumentException("Wrong number of angles ("+a+") for the given dimension (size of translation vector = "+dim+"). The number of angles should be (d*d - d) / 2");
 		
-		init(scalar, translation, angles);
+		List<Double> angs = new ArrayList<Double>(angles.size());
+		for(double angle : angles)
+			angs.add(angle / (2.0 * Math.PI));
+				
+		init(scalar, translation, angs);
 	}
 	
 	private void init(double scalar, List<Double> translation, List<Double> angles)
@@ -109,6 +126,12 @@ public class Similitude extends AffineMap
 		return scalar;	
 	}
 	
+	/**
+	 * Returns the angles that define the rotation part of this similitude 
+	 * (in radians)
+	 * 
+	 * @return
+	 */
 	public List<Double> angles() 
 	{
 		return Collections.unmodifiableList(angles);

@@ -140,7 +140,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 */
 	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder)
 	{
-		this(initial, data, numSources, 0.3, true, builder);
+		this(initial, data, numSources, 0.3, false, builder);
 	}
 
 	/**
@@ -639,7 +639,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 				if (nodeFrom != null)
 				{
 					int m = Math
-							.min(nodeFrom.points.size(), this.points.size());
+							.min(nodeFrom.points().size(), this.points().size());
 
 					MVN from = nodeFrom.mvn(), to = mvn();
 
@@ -648,7 +648,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 						if (m < COVARIANCE_THRESHOLD) // Not enough points to
 														// consider covariance
 						{
-							for (int i : series(m))
+							for (int i : series(points.size()))
 								maps.add(t, from.mean(), to.mean());
 						} else
 						{
@@ -659,13 +659,10 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 							// We generate as many points as are in the to node.
 							// (for depth one a handful would suffice, but for
-							// higher
-							// values the amount of points generated gives a
-							// sort
-							// of weight to this match in the codes among the
-							// other
-							// points)
-							List<Point> points = new MVN(dimension)
+							// higher values the amount of points generated gives
+							// a sort of weight to this match in the codes among 
+							// the other points)
+							List<Point> points = new MVN(dimension, 0.01) // TODO: MAKE PARAMETER
 									.generate(points().size());
 
 							List<Point> pf = from.map().map(points);

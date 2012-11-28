@@ -156,7 +156,7 @@ public class IFSTest
     @Test
 	public void testCode2() throws IOException
 	{
-		int depth = 2;
+		int depth = 6;
 		double[] xrange = new double[]{-1.0, 1.0};
 		double[] yrange = new double[]{-1.0, 1.0};
 		
@@ -167,7 +167,7 @@ public class IFSTest
 		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-again");
 		dir.mkdirs();
 
-		IFS<Similitude> ifs = IFSs.sierpinskiSim();
+		IFS<Similitude> ifs = IFSs.koch2Sim();
 		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
 		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
 		
@@ -182,7 +182,7 @@ public class IFSTest
     @Test
 	public void testCodeSmooth() throws IOException
 	{
-		int depth = 7;
+		int depth = 1;
 		double[] xrange = new double[]{-1.0, 1.0};
 		double[] yrange = new double[]{-1.0, 1.0};
 		
@@ -193,13 +193,13 @@ public class IFSTest
 		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-smooth");
 		dir.mkdirs();
 
-		IFS<Similitude> ifs = IFSs.sierpinskiSim();
+		IFS<Similitude> ifs = IFSs.koch2Sim();
 		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
 		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
 		
-		for(int i : Series.series(3, 20))
+		for(int i : Series.series(1, 2))
 		{
-			image = Draw.drawMultiCodes(ifs, xrange, yrange, 100, depth, i);
+			image = Draw.drawMultiCodes(ifs, xrange, yrange, 500, depth, i);
 			ImageIO.write(image, "PNG", new File(dir, "codes-smooth-"+i+".png") );
 		}
 
