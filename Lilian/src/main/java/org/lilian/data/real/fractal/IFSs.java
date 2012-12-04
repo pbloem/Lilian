@@ -12,6 +12,7 @@ import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Map;
+import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
@@ -358,6 +359,39 @@ public class IFSs
 		}
 		
 		return model;
+	}
+	
+	/**
+	 * Generates an IFS by sampling two subsets of the data, and finding the 
+	 * optimal map between them. 
+	 * 
+	 * @param data
+	 * @param comp
+	 * @return
+	 */
+	public static IFS<Similitude> initialMaps(List<Point> data, int comp, int perMap)
+	{
+		
+		IFS<Similitude> ifs = null;
+		
+		for(int i : Series.series(comp))
+		{
+			List<Point> x, y;
+			
+			x = Datasets.sample(data, perMap);
+			y = Datasets.sample(data, perMap);
+			
+			Similitude map = Maps.findMap(x, y);
+			if(map.scalar() > 1.0)
+				map = map.inverse();
+			
+			if(ifs == null)
+				ifs = new IFS<Similitude>(map, 1);
+			else
+				ifs.addMap(map, 1);
+		}
+		
+		return ifs;
 	}
 
 	/**
