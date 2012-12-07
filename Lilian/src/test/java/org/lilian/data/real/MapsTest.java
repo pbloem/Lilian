@@ -3,6 +3,7 @@ package org.lilian.data.real;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -179,6 +180,17 @@ public class MapsTest
 		}
 		
 		return points;
+	}
+	
+	@Test 
+	public void testUniformCentered()
+	{
+		List<Point> points = Arrays.asList(
+			new Point(1.0, 10.0),
+			new Point(10.0, 9.0)
+		);
+		
+		System.out.println(Maps.centerUniform(points).map(points));
 	}
 
 }

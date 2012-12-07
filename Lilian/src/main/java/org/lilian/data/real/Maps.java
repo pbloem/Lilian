@@ -2,6 +2,7 @@ package org.lilian.data.real;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -287,6 +288,52 @@ public class Maps
 		
 		return new AffineMap(rot, t);
 	}
+	
+	/**
+	 * Returns a map that scales the data uniformly to fit the bi-unit cube
+	 * @param data
+	 * @return
+	 */
+	public static AffineMap centerUniform(List<Point> data)
+	{
+		if(data.size() == 0)
+			throw new IllegalArgumentException("Cannot find centering map for empty dataset");
+		
+		int dim = data.get(0).dimensionality();
+		
+		double min[]  = new double[dim],
+		       max[]   = new double[dim],
+		       range[] = new double[dim],
+		       rmax = Double.NEGATIVE_INFINITY;
+		
+		for(int i : Series.series(dim))
+		{
+			min[i] = Double.POSITIVE_INFINITY;
+			max[i] = Double.NEGATIVE_INFINITY; 
+		}
+		
+		for(Point p : data)
+			for(int i : series(dim))
+			{
+				min[i] = min(min[i], p.get(i));
+				max[i] = max(max[i], p.get(i));
+			}
+		
+		for(int i : series(dim))
+		{
+			range[i] = max[i] - min[i];
+			rmax = max(range[i], rmax);
+		}
+		
+		List<Double> t = new ArrayList<Double>(dim);
+		for(int i : series(dim))
+			t.add(
+					(- (min[i] + 0.5 * range[i])) * (2.0 / rmax)
+				);
+		
+		int angles = (dim * dim - dim) / 2; 
+		return new Similitude(2.0 / rmax, t, new Point(angles));
+	}	
 	
 	/**
 	 * Returns a map that centers the center of mass of the dataset at the 
