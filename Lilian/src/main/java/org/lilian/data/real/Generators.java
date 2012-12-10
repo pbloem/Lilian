@@ -18,6 +18,11 @@ public class Generators
 		return fromMap(Maps.henon(), new Point(2));
 	}
 
+	public static Generator<Point> logistic()
+	{
+		double eoc = 3.0 + ((1+Math.sqrt(6)) - 3) * (1/(1 - (1/4.669201609102990671853203821578)));
+		return fromMap(Maps.logistic(eoc), new Point(0.5));
+	}
 	
 	public static Generator<Point> ikeda()
 	{

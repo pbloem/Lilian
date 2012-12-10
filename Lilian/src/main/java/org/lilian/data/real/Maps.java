@@ -386,6 +386,52 @@ public class Maps
 		return new AffineMap(rot, t);
 	}
 	
+	
+	public static Map logistic(double r)
+	{
+		return new LogisticMap(r);
+	}
+	
+	private static class LogisticMap extends AbstractMap
+	{
+		private static final long serialVersionUID = -1472793577322007041L;
+		private double r;
+		
+		public LogisticMap(double r)
+		{
+			this.r = r;
+		}
+
+		@Override
+		public Point map(Point in)
+		{
+			double x = in.get(0);
+			x = r * x * (1.0 - x);
+			return new Point(x);
+		}
+
+		@Override
+		public boolean invertible()
+		{
+			return false;
+		}
+
+		@Override
+		public Map inverse()
+		{
+			return null;
+		}
+
+		@Override
+		public int dimension()
+		{
+			return 1;
+		}
+		
+		
+	}
+	
+	
 	public static Map henon()
 	{
 		return new HenonMap();

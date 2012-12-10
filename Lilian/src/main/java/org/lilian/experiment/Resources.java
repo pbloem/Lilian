@@ -252,6 +252,12 @@ public class Resources
 		return Generators.rossler().generate(size);
 	}		
 	
+	@Resource(name="logistic")
+	public static List<Point> logisticr(@Name("size") int size)
+	{
+		return Generators.logistic().generate(size);
+	}			
+	
 	@Resource(name="henon")
 	public static List<Point> henon(@Name("size") int size)
 	{
