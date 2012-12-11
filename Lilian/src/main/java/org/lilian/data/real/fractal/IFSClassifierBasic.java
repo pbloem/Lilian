@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List; 
 
+import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Map;
@@ -82,7 +83,7 @@ public class IFSClassifierBasic extends AbstractClassifier implements Parametriz
 			probs.add(value);
 			backups.add(backup);
 			
-			allZero = allZero && (value == 0.0 || Double.isNaN(value));
+			allZero &= (value == 0.0 || Double.isNaN(value));
 			
 			// * sums for later normalization
 			bSum += backup;
@@ -97,6 +98,9 @@ public class IFSClassifierBasic extends AbstractClassifier implements Parametriz
 			else
 				probs.set(i, probs.get(i)/pSum);
 		}
+		
+		if(allZero)
+			Global.log().info("All zero probability density. Using backups: " + backups);
 		
 		if(allZero)
 			return backups;
