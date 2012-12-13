@@ -1,5 +1,7 @@
 package org.lilian.data.real.fractal;
 
+import static java.lang.Math.exp;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +42,8 @@ public class IFS<M extends Map & Parametrizable >
 	implements Serializable, Parametrizable
 {
 
+	private static final double KRIGING_SIGMA = 0.9;
+	
 	private static final long serialVersionUID = 8913224252890438800L;
 
 	// * the number of steps to take intially when generating points
@@ -336,7 +340,7 @@ public class IFS<M extends Map & Parametrizable >
 	{
 
 		SearchResult res = search(
-				ifs, point, depth, new SearchResultImpl(bufferLimit),
+				ifs, point, depth, new SearchResultImpl(depth, bufferLimit),
 				new ArrayList<Integer>(depth), 0.0,
 				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
 				basis);
@@ -366,10 +370,8 @@ public class IFS<M extends Map & Parametrizable >
 			} else { 
 				logProb = Double.NEGATIVE_INFINITY;
 			}
-			
-			double dist = dist(point, translate);
-			
-			result.show(logProb, new ArrayList<Integer>(current), dist, new Point(translate), logPrior);
+						
+			result.show(logProb, new ArrayList<Integer>(current), point, new Point(translate), logPrior);
 			return result;
 		}
 		
@@ -457,22 +459,25 @@ public class IFS<M extends Map & Parametrizable >
 		private double probSum = 0.0;
 		private double densityApprox = 0.0;
 		private int daTotal = 0;
+		private double mvnSigma;
 		
-		public SearchResultImpl()
+		public SearchResultImpl(int depth)
 		{
-			
+			mvnSigma = Math.pow(KRIGING_SIGMA, depth);
+
 		}
 		
-		public SearchResultImpl(int bufferLimit)
+		public SearchResultImpl(int depth, int bufferLimit)
 		{
+			this(depth);
 			this.bufferLimit = bufferLimit;
 		}
 		
-		public void show(double logProb, List<Integer> code, double distance, Point mean, double logPrior)
+		public void show(double logProb, List<Integer> code, Point point, Point mean, double logPrior)
 		{
 			if(!Double.isNaN(logProb) && !Double.isInfinite(logProb))
 			{
-				probSum += Math.exp(logProb);
+				probSum += exp(logProb);
 				
 				if(Math.exp(logProb) > 0.0 && bufferLimit >= 1)
 				{
@@ -483,20 +488,18 @@ public class IFS<M extends Map & Parametrizable >
 				}
 			}
 			
-			if(!Double.isNaN(distance) && !Double.isInfinite(distance))
+
+			// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
+			double approx = exp(logPrior) * new MVN(mean, mvnSigma).density(point);
+			densityApprox += approx;
+			
+			if(approx > 0.0 && bufferLimit >= 1)
 			{
-				// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
-				double approx = Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
-				densityApprox = Math.max(densityApprox, approx);
-				
-				if(approx > 0.0 && bufferLimit >= 1)
-				{
-					bufferFallback.add(new WCode(code, approx));
-					Collections.sort(bufferFallback);
-					while(bufferFallback.size() > bufferLimit)
-						bufferFallback.remove(bufferFallback.size() - 1);
-				}				
-			}			
+				bufferFallback.add(new WCode(code, approx));
+				Collections.sort(bufferFallback);
+				while(bufferFallback.size() > bufferLimit)
+					bufferFallback.remove(bufferFallback.size() - 1);
+			}	
 			
 			if(logProb > this.logProb && !Double.isNaN(logProb) && !Double.isInfinite(logProb))
 			{	
@@ -505,10 +508,9 @@ public class IFS<M extends Map & Parametrizable >
 				this.mean = mean;
 			}
 			
-			double app = - distance;
-			if(app > this.codeApprox && !Double.isNaN(distance) && !Double.isInfinite(distance))
+			if(approx > this.codeApprox && !Double.isNaN(approx) && !Double.isInfinite(approx))
 			{
-				this.codeApprox = app;
+				this.codeApprox = approx;
 				this.codeFallback = code;
 				this.meanFallback = mean;
 			}

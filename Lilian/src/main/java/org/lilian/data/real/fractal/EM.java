@@ -146,7 +146,9 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 */
 	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder, double spanningPointsVariance)
 	{
-		this(initial, data, numSources, 0.3, true, builder, spanningPointsVariance);
+		this(initial, data, numSources, 0.3, 
+				true, 
+			builder, spanningPointsVariance);
 	}
 
 	/**
