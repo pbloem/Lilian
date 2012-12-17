@@ -368,6 +368,17 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	}
 
 	/**
+	 * Set the internal IFS model to the given parameter. The next call of 
+	 * iterate or modelToCodes will use this model. 
+	 * 
+	 * @param model
+	 */
+	public void setModel(IFS<M> model)
+	{
+		this.model = model;
+	}
+	
+	/**
 	 * @return The multivariate Gaussian model (possibly spherical) that was
 	 *         fitted to the data.
 	 */
