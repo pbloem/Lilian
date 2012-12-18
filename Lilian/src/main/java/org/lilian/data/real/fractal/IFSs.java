@@ -115,6 +115,23 @@ public class IFSs
 	 * 
 	 * @return
 	 */
+	public static IFS<Similitude> sierpinskiOffSim(double p0, double p1, double p2)
+	{	
+	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.0, 0.5, 0.0, p0, 
+				0.5,  0.5,-0.5, 0.0, p1, 
+				0.5, -0.5,-0.5, 0.0, p2
+				));
+	}			
+	
+	/**
+	 * Generates a sierpinski gasket with non-uniform component weights
+	 * 
+	 * @return
+	 */
 	public static IFS<AffineMap> sierpinskiDown()
 	{	
 	

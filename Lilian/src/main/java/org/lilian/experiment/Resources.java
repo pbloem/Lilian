@@ -25,6 +25,7 @@ import org.lilian.data.real.classification.Classified;
 import org.lilian.data.real.classification.Classifier;
 import org.lilian.data.real.classification.Classifiers;
 import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.IFSClassifierBasic;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.grammars.Grammar;
 import org.lilian.grammars.TestGrammars;
@@ -245,6 +246,15 @@ public class Resources
 		
 		return Classification.combine(points, classes);
 	}	
+	
+	
+	@Resource(name="sierpinski classified")
+	public static Classified<Point> sierpinski(@Name("size") int size, @Name("depth") int depth)
+	{
+		List<Point> points = IFSs.sierpinskiOffSim(1.0, 1.0, 1.0).generator().generate(size);
+		
+		return Classification.combine(points, IFSClassifierBasic.sierpinski(depth).classify(points));
+	}
 	
 	@Resource(name="rossler")
 	public static List<Point> rossler(@Name("size") int size)

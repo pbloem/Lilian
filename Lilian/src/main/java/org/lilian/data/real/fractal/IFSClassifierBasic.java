@@ -99,9 +99,9 @@ public class IFSClassifierBasic extends AbstractClassifier implements Parametriz
 				probs.set(i, probs.get(i)/pSum);
 		}
 		
-		if(allZero)
-			Global.log().info("All zero probability density. Using backups: " + backups);
-		
+//		if(allZero)
+//			Global.log().info("All zero probability density. Using backups: " + backups);
+//		
 		if(allZero)
 			return backups;
 		
@@ -243,5 +243,20 @@ public class IFSClassifierBasic extends AbstractClassifier implements Parametriz
 		return model;
 	}
 	
+	/**
+	 * @return
+	 */
+	public static IFSClassifierBasic sierpinski(int depth)
+	{
+		IFS<Similitude> ifs0 = IFSs.sierpinskiOffSim(2.0, 1.0, 1.0);
+		IFS<Similitude> ifs1 = IFSs.sierpinskiOffSim(1.0, 2.0, 1.0);
+		IFS<Similitude> ifs2 = IFSs.sierpinskiOffSim(1.0, 1.0, 2.0);
+	
+		IFSClassifierBasic ifsc = new IFSClassifierBasic(ifs0, 1.0, AffineMap.identity(2), new MVN(2), depth);
+		ifsc.add(ifs1, 1.0,  AffineMap.identity(2), new MVN(2));
+		ifsc.add(ifs2, 1.0,  AffineMap.identity(2), new MVN(2));
+		
+		return ifsc;
+	}
 	
 }
