@@ -1,5 +1,7 @@
 package org.lilian.data.real.fractal;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import static org.lilian.util.Series.series;
 
 import java.util.AbstractList;
@@ -28,6 +30,9 @@ import org.lilian.util.Series;
  * @author Peter
  *
  */
+
+// * REMEMBER: Angles in parameters are on a scale of 0.0-1.0, with 1.0 being a 
+//   full revolution.  
 public class IFSs
 {
 	/**
@@ -191,6 +196,39 @@ public class IFSs
 				));		
 	}
 	
+	public static IFS<Similitude> koch4Sim()
+	{		
+		double
+			scale = 1.0/3.0,
+			a = Math.PI/3.0,
+			y = sin(a) * (1/3.0),
+			x = (1/3.0) - cos(a) * (1/3.0);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -2/3.0, 0.0, 0.0, 1.0,
+				scale, -x, -y, a / (Math.PI * 2), 1.0,
+				scale, x, -y, -a / (Math.PI * 2), 1.0,
+				scale, 2/3.0, 0.0, 0.0, 1.0
+				));
+	}
+	
+	public static IFS<Similitude> koch4DownSim()
+	{
+		double
+			scale = 1.0/3.0,
+			a = Math.PI/3.0,
+			y = sin(a) * (1/3.0),
+			x = (1/3.0) - cos(a) * (1/3.0);
+	
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -2/3.0, 0.0, 0.0, 1.0,
+				scale, -x, y, -a / (Math.PI * 2), 1.0,
+				scale, x, y,   a / (Math.PI * 2), 1.0,
+				scale, 2/3.0, 0.0, 0.0, 1.0
+				));
+	}	
 	
 	public static IFS<Similitude> koch2Sim()
 	{		
@@ -207,7 +245,7 @@ public class IFSs
 				));
 	}
 	
-	public static IFS<Similitude> koch2SimOff()
+	public static IFS<Similitude> koch2SimOff(double p, double q)
 	{		
 		double
 			scale = 1.0/Math.sqrt(3.0),
@@ -217,24 +255,39 @@ public class IFSs
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				scale, -x, -y, (Math.PI + a) / (2.0 * Math.PI), 1.0,
-				scale, +x, -y, (Math.PI - a) / (2.0 * Math.PI), 2.0
+				scale, -x, -y, (Math.PI + a) / (2.0 * Math.PI), p,
+				scale, +x, -y, (Math.PI - a) / (2.0 * Math.PI), q
+				));
+	}
+	
+	public static IFS<Similitude> koch2SimDownOff(double p, double q)
+	{		
+		double
+			scale = 1.0/Math.sqrt(3.0),
+			a = Math.acos(Math.sqrt(3.0)/2.0),
+			y = Math.sin(a) * scale,
+			x = (1.0 - scale) + (scale - Math.cos(a) * scale);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -x, y, (Math.PI - a) / (2.0 * Math.PI), p,
+				scale, +x, y, (Math.PI + a) / (2.0 * Math.PI), q
 				));
 	}
 	
 	
 	public static IFS<Similitude> koch2DownSim()
 	{
-		double 	a = Math.sqrt(13.0/9.0),
-				angle = Math.atan(2.0/3.0),
-				y = - 0.5 * a * Math.sin(angle),
-				x1 = - 1.0 + 0.5 * a * Math.cos(angle),
-				x2 =   1.0 - 0.5 * a * Math.cos(angle);
+		double
+			scale = 1.0/Math.sqrt(3.0),
+			a = Math.acos(Math.sqrt(3.0)/2.0),
+			y = Math.sin(a) * scale,
+			x = (1.0 - scale) + (scale - Math.cos(a) * scale);
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				a/2.0,  x1, -y, -(angle + Math.PI) / (2.0 * Math.PI), 1.0,
-				a/2.0, -x2, -y,  (angle + Math.PI) / (2.0 * Math.PI), 1.0
+				scale, -x, y, (Math.PI - a) / (2.0 * Math.PI), 1.0,
+				scale, +x, y, (Math.PI + a) / (2.0 * Math.PI), 1.0
 				));
 	}	
 	

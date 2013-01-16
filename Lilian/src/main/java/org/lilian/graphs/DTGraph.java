@@ -1,5 +1,7 @@
 package org.lilian.graphs;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -11,7 +13,7 @@ import java.util.Set;
  * @param <L>
  * @param <T>
  */
-public interface DTGraph<L, T>
+public interface DTGraph<L, T> extends DGraph<L>, TGraph<L, T>
 {
 	/**
 	 * Returns the first node in the Graph which has the given label 
@@ -21,12 +23,16 @@ public interface DTGraph<L, T>
 	 */
 	public DTNode<L, T> node(L label);
 	
-	public Set<DTNode<L, T>> nodes(L label);
+	public Set<? extends DTNode<L, T>> nodes(L label);
+	
+	public List<? extends DTNode<L, T>> nodes();
+	
+	public Collection<? extends DTLink<L, T>> links();	
 	
 	/**
 	 * Adds a new node with the given label 
 	 */
-	public DTNode<L, T> addNode(L label);
+	public DTNode<L, T> add(L label);
 	
 	public int numLinks();
 	

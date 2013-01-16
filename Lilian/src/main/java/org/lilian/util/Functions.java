@@ -1,5 +1,8 @@
 package org.lilian.util;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+
 import java.util.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -580,5 +583,20 @@ public class Functions
 			return Double.compare(n1.doubleValue(), n2.doubleValue());
 		}
 	
+	}
+	
+	/**
+	 * Probabilistically rounds the input. The result of this 
+	 * method is at least floor(in), and is ceil(in) with probability
+	 * (in - floor(in)) 
+	 * 
+	 * @param in
+	 */
+	public static double probRound(double in)
+	{
+		if(Global.random.nextDouble() < in - floor(in))
+			return ceil(in);
+		
+		return(floor(in));
 	}
 }

@@ -205,6 +205,13 @@ public class Draw
 	}
 	
 	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, int res, boolean log)
+	{
+		return draw(ifs, samples, new double[]{-1.0, 1.0}, new double[]{-1.0, 1.0}, 
+				res, res, log, -1, null);
+	}
+	
+	public static <M extends Map & Parametrizable> BufferedImage draw(
 			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
 			int xRes, int yRes, boolean log)
 	{

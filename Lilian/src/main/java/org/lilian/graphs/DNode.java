@@ -1,22 +1,23 @@
 package org.lilian.graphs;
 
+import java.util.Collection;
 import java.util.Set;
 
-public interface DNode<L>
+public interface DNode<L> extends Node<L> 
 {
-	public Set<DNode<L>> neighbors();
+	public Collection<? extends DNode<L>> neighbors();
 	
-	public DNode<L> neighbour(L label);
+	public DNode<L> neighbor(L label);
 
-	public Set<DNode<L>> neighbours(L label);
+	public Collection<? extends DNode<L>> neighbors(L label);
 	
-	public Set<DNode<L>> to();
+	public Collection<? extends DNode<L>> to();
 	
-	public Set<DNode<L>> to(L label);	
+	public Collection<? extends DNode<L>> to(L label);	
 	
-	public Set<DNode<L>> from();
+	public Collection<? extends DNode<L>> from();
 	
-	public Set<DNode<L>> from(L label);		
+	public Collection<? extends DNode<L>> from(L label);		
 	
 	/** 
 	 * <p>Connects this node to another node. </p>
@@ -30,11 +31,11 @@ public interface DNode<L>
 	 *  
 	 * @param other
 	 */
-	public void connect(DNode<L> to);
+	public void connect(Node<L> to);
 	
-	public void disconnect(DNode<L> other);
+	public void disconnect(Node<L> other);
 	
-	public boolean connected(DNode<L> to);
+	public boolean connected(Node<L> to);
 	
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 

@@ -1,9 +1,10 @@
 package org.lilian.graphs;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public interface DGraph<L>extends List<DNode<L>>
+public interface DGraph<L> extends Graph<L>
 {
 	/**
 	 * Returns the first node in the Graph which has the given label 
@@ -13,15 +14,17 @@ public interface DGraph<L>extends List<DNode<L>>
 	 */
 	public DNode<L> node(L label);
 	
-	public Set<Node<L>> nodes(L label);
+	public Set<? extends DNode<L>> nodes(L label);
+	
+	public List<? extends DNode<L>> nodes();
+	
+	public Collection<? extends DLink<L>> links();
 	
 	/**
 	 * Adds a new node with the given label 
 	 */
-	public DNode<L> addNode(L label);
-	
-	public int numLinks();
-	
+	public DNode<L> add(L label);
+		
 	/**
 	 * Returns the node labels
 	 * @return
