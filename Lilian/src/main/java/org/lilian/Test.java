@@ -2,43 +2,48 @@ package org.lilian;
 
 public class Test
 {
-
+	// * First level
 	
 	public interface Container 
 	{
-		public Element element();
-	}
-
-	public interface BottomContainer1 extends Container 
-	{
-		public BottomElement1 element();
-	}
-	public interface BottomContainer2 extends Container 
-	{
-		public BottomElement2 element();
-	}
-
-	public interface SubContainer extends BottomContainer1, BottomContainer2
-	{
-		public SubElement element();
-	}
-	
-	public interface Element
-	{
 		public Container container();
-	}
-
-	public interface BottomElement1 extends Element 
-	{
-		public BottomContainer1 container();
-	}
-	public interface BottomElement2 extends Element
-	{
-		public BottomContainer2 container();
-	}
+	}	
 	
-	public interface SubElement extends BottomElement1, BottomElement2
+//	public interface Element
+//	{
+//		public Container container();
+//	}
+
+	// * Second level
+
+	public interface AContainer extends Container 
+	{
+		public AContainer container();
+	}
+	public interface BContainer extends Container 
+	{
+		public BContainer container();
+	}
+//	
+//	public interface AElement extends Element 
+//	{
+//		public AContainer container();
+//	}
+//	
+//	public interface BElement extends Element
+//	{
+//		public BContainer container();
+//	}
+	
+	// * Third level
+	
+	public interface SubContainer extends AContainer, BContainer
 	{
 		public SubContainer container();
 	}
+	
+//	public interface SubElement extends AElement, BElement
+//	{
+//		public SubContainer container();
+//	}
 }
