@@ -41,4 +41,6 @@ public interface RIFS<M extends Map & Parametrizable> {
 	public List<Point> randomInstance(int n, int depth, long seed);	
 
 	public List<Point> meanInstance(int n, int depth);	
+	
+	public int dimension();
 }

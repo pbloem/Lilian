@@ -4,21 +4,21 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class MapGraphTest
+public class MapUTGraphTest
 {
 
 	@Test
-	public void testMapDTGraph()
+	public void testMapUTGraph()
 	{
-		DTGraph<String, Double> graph = new MapDTGraph<String, Double>();
+		UTGraph<String, Double> graph = new MapUTGraph<String, Double>();
 	}
 
 	@Test
 	public void testToString()
 	{
-		DTGraph<String, Double> graph = new MapDTGraph<String, Double>();
+		UTGraph<String, Double> graph = new MapUTGraph<String, Double>();
 		
-		DTNode<String, Double> a = graph.add("a"),
+		UTNode<String, Double> a = graph.add("a"),
 		                       b = graph.add("b"),
 		                       c = graph.add("c");
 	
@@ -30,9 +30,9 @@ public class MapGraphTest
 	@Test
 	public void starTest()
 	{
-		DTGraph<String, Double> graph = new MapDTGraph<String, Double>();
+		UTGraph<String, Double> graph = new MapUTGraph<String, Double>();
 		
-		DTNode<String, Double> a = graph.add("a"),
+		UTNode<String, Double> a = graph.add("a"),
 		                       b = graph.add("b"),
 		                       c = graph.add("c"),
 		                       d = graph.add("d"),
@@ -45,7 +45,7 @@ public class MapGraphTest
 		
 		System.out.println(graph);
 		
-		e.disconnect(a);
+		a.disconnect(b);
 		
 		System.out.println(graph);
 		
@@ -57,9 +57,9 @@ public class MapGraphTest
 	@Test
 	public void testRemove()
 	{
-		DTGraph<String, Double> graph = new MapDTGraph<String, Double>();
+		UTGraph<String, Double> graph = new MapUTGraph<String, Double>();
 		
-		DTNode<String, Double> a = graph.add("a"),
+		UTNode<String, Double> a = graph.add("a"),
 		                       b = graph.add("b"),
 		                       c = graph.add("c"),
 		                       d = graph.add("d"),

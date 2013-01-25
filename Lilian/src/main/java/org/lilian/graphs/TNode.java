@@ -42,9 +42,9 @@ public interface TNode<L, T> extends Node<L>
 	 * @param other
 	 * @return
 	 */
-	public DTLink<L, T> link(TNode<L, T> other);
+	public TLink<L, T> link(TNode<L, T> other);
 	
-	public Collection<? extends DTLink<L, T>> links(TNode<L, T> other);
+	public Collection<? extends TLink<L, T>> links(TNode<L, T> other);
 	
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 

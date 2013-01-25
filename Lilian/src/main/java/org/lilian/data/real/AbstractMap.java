@@ -16,8 +16,10 @@ public abstract class AbstractMap implements Map
 		return out;
 	}
 	
+	@Override
 	public Map compose(Map other)
 	{
+		// * return this(other(x))
 		return new CompositeMap(this, other);
 	}
 }

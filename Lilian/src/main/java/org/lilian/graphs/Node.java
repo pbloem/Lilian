@@ -65,4 +65,12 @@ public interface Node<L>
 	 * @return
 	 */
 	public boolean dead();	
+	
+	/**
+	 * Returns the degree of the node, ie. the number of connections to other 
+	 * nodes. Note that this value will differ from neighbors.size() if there
+	 * are multiple links between this node and one of its neighbors.
+	 * @return
+	 */
+	public int degree();
 }

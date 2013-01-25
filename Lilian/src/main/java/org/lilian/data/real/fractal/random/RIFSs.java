@@ -4,10 +4,12 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+import org.lilian.data.real.Draw;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
+import org.lilian.search.Parametrizable;
 
 /**
  * Provides utility functions for dealing with random fractal models. 
@@ -37,6 +39,76 @@ public class RIFSs {
 		
 		return d;
 	}
+
+	public static BufferedImage draw(DiscreteRIFS<Similitude> model, int res,
+			int numRandom)
+	{
+		return draw(model, res, numRandom, 1000000, 10, true);
+	}	
+	
+	/**
+	 * Returns a BufferedImage that is a concatenation, from left to right, of 
+	 * the mean instance, and several random instances. 
+	 * 
+	 * @param model The random IFS model to draw from
+	 * @param res	The width and height of each individual image.
+	 * @param numRandom The number of random instances to include
+	 * @param samples The number of samples to use per image
+	 * @param depth The depth to use when generating the dataset
+	 * @param log When true, a log plot is created, giving low hitting 
+	 * 	probabilities more dynamic range. 
+	 * @return A buffered image representing the given random IFS model.
+	 */
+	public static BufferedImage draw(
+						RIFS<?> model, int res, 
+						int numRandom, int samples, int depth, boolean log)
+	{
+		BufferedImage result = new BufferedImage(
+				res * (numRandom + 1), res, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = result.createGraphics();
+		
+		BufferedImage current = Draw.draw(
+				model.meanInstance(samples, depth), res, log);
+		graphics.drawImage(current, 0, 0, null);		
+		
+		for(int i = 1; i < numRandom + 1; i++)
+		{
+			current = Draw.draw(model.randomInstance(samples, depth), res, log);			
+			graphics.drawImage(current, i*res, 0, null);
+		}
+		
+		return result;
+	}
+	
+	public static <M extends org.lilian.data.real.Map & Parametrizable> BufferedImage draw(
+			DiscreteRIFS<M> model, int res, 
+			int numRandom, int samples, int depth, boolean log)
+	{
+		int width = 1 + model.size() + numRandom;
+		
+		BufferedImage result = new BufferedImage(
+				width * res, res, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = result.createGraphics();
+
+		BufferedImage current = Draw.draw(
+				model.meanInstance(samples, depth), res, log);
+		graphics.drawImage(current, 0, 0, null);
+		
+		List<IFS<M>> models = model.models();
+		for(int i = 0; i < models.size(); i++)
+		{
+			current = Draw.draw(models.get(i), samples, res, log);			
+			graphics.drawImage(current, (i+1) * res, 0, null);
+		}		
+
+		for(int i = 0; i < numRandom; i++)
+		{
+			current = Draw.draw(model.randomInstance(samples, depth), res, log);			
+			graphics.drawImage(current, (i + 1 + models.size()) *res, 0, null);
+		}
+
+		return result;
+	}	
 	
 //	public static DiscreteRIFSModel kochUpDownSquare()
 //	{

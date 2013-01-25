@@ -128,8 +128,8 @@ public class IFSTest
 		Map m = ifs.compose(code);
 		
 		Point source = new Point(2), p = source;
-		for(int i : code)
-			p = ifs.get(i).map(p);
+		for(int i : Series.series(code.size() - 1, -1))
+			p = ifs.get(code.get(i)).map(p);
 		
 		System.out.println(p + " " + m.map(source));
 		assertEquals(p, m.map(source));

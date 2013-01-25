@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 
 import org.junit.Test;
-import org.lilian.graphs.rdf.RDF;
+import org.lilian.graphs.data.RDF;
 
 public class RDFTest
 {

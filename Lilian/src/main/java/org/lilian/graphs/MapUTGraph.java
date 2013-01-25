@@ -27,8 +27,8 @@ import org.lilian.util.graphs.old.algorithms.UndirectedVF2;
 
 /**
  * <p>
- * DTGraph implementation based on hashmaps. Each node stores its neighbours in a
- * hashmap. 
+ * UTGraph (undirected tagged graph) implementation based on hashmaps. Each 
+ * node stores its neighbours in a hashmap. 
  * </p><p>
  * Graph traversal by labels is close to linear (in the same sense that retrieval
  * from a hasmap is close to constant). Memory usage is relatively inefficient.  
@@ -44,15 +44,15 @@ import org.lilian.util.graphs.old.algorithms.UndirectedVF2;
  *
  * @param <L>
  */
-public class MapDTGraph<L, T> implements DTGraph<L, T>
+public class MapUTGraph<L, T> implements UTGraph<L, T>
 {
-	protected List<MapDTNode> nodeList = new ArrayList<MapDTNode>();
-	protected Map<L, Set<MapDTNode>> nodes = new LinkedHashMap<L, Set<MapDTNode>>();
+	protected List<MapUTNode> nodeList = new ArrayList<MapUTNode>();
+	protected Map<L, Set<MapUTNode>> nodes = new LinkedHashMap<L, Set<MapUTNode>>();
 
 	protected int numEdges = 0;
 	protected long modCount = 0;
 	
-	public MapDTGraph()
+	public MapUTGraph()
 	{
 	}
 	
@@ -63,13 +63,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	 * @param graph
 	 * @return
 	 */
-	public static <L, T> MapDTGraph<L, T> copy(DTGraph<L, T> graph)
+	public static <L, T> MapUTGraph<L, T> copy(UTGraph<L, T> graph)
 	{	
-		MapDTGraph<L, T> copy = new MapDTGraph<L, T>();
-		for(DTNode<L, T> node : graph.nodes())
+		MapUTGraph<L, T> copy = new MapUTGraph<L, T>();
+		for(UTNode<L, T> node : graph.nodes())
 			copy.add(node.label());
 
-		for(DTLink<L, T> link : graph.links())
+		for(UTLink<L, T> link : graph.links())
 		{
 			int i = link.first().index(), 
 			    j = link.second().index();
@@ -80,13 +80,11 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		return copy;
 	}
 	
-	private class MapDTNode implements DTNode<L, T>
+	private class MapUTNode implements UTNode<L, T>
 	{
-		private Map<T, List<MapDTLink>> linksTo = new LinkedHashMap<T, List<MapDTLink>>();
-		private Map<T, List<MapDTLink>> linksFrom = new LinkedHashMap<T, List<MapDTLink>>();
+		private Map<T, List<MapUTLink>> links = new LinkedHashMap<T, List<MapUTLink>>();
 		
-		private Set<MapDTNode> neighborsTo = new LinkedHashSet<MapDTNode>();
-		private Set<MapDTNode> neighborsFrom = new LinkedHashSet<MapDTNode>();
+		private Set<MapUTNode> neighbors = new LinkedHashSet<MapUTNode>();
 		
 		private L label;
 		
@@ -99,7 +97,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		private Long labelIdMod;
 		private int index;
 
-		public MapDTNode(L label)
+		public MapUTNode(L label)
 		{
 			this.label = label;
 			
@@ -109,33 +107,24 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			nodeList.add(this);
 			
 			if(! nodes.containsKey(label))
-				nodes.put(label, new LinkedHashSet<MapDTNode>());
+				nodes.put(label, new LinkedHashSet<MapUTNode>());
 			nodes.get(label).add(this);
 		}
 
 		@Override
-		public Collection<MapDTNode> neighbors()
+		public Collection<MapUTNode> neighbors()
 		{
-			LinkedHashSet<MapDTNode> set = new LinkedHashSet<MapDTNode>();
-			set.addAll(neighborsTo);
-			set.addAll(neighborsFrom);
-			
-			return set;
+			return Collections.unmodifiableSet(neighbors);
 		}
 
 		@Override
-		public MapDTNode neighbor(L label)
+		public MapUTNode neighbor(L label)
 		{
-			for(MapDTNode node : neighborsTo)
+			for(MapUTNode node : neighbors)
 				if((label == null && node.label == null)
 						|| (label != null && node.label().equals(label)))
 					return node;
 
-			for(MapDTNode node : neighborsFrom)
-				if((label == null && node.label == null) 
-						|| (label != null && node.label().equals(label)))
-					return node;
-			
 			return null;
 		}
 
@@ -146,15 +135,11 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public Set<MapDTNode> neighbors(L label)
+		public Set<MapUTNode> neighbors(L label)
 		{
-			Set<MapDTNode> result = new LinkedHashSet<MapDTNode>();
-			for(MapDTNode node : neighborsTo)
+			Set<MapUTNode> result = new LinkedHashSet<MapUTNode>();
+			for(MapUTNode node : neighbors)
 				if((label == null && node.label == null)
-						|| (label != null && label.equals(node.label)))
-					result.add(node);
-			for(MapDTNode node : neighborsFrom)
-				if((label == null && node.label == null) 
 						|| (label != null && label.equals(node.label)))
 					result.add(node);
 			
@@ -165,7 +150,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public void connect(Node<L> other)
 		{
-			if(MapDTGraph.this != other.graph())
+			if(MapUTGraph.this != other.graph())
 				throw new IllegalArgumentException("Can only connect nodes that belong to the same graph.");
 			
 			// - This cast is safe because we know the node belongs to this 
@@ -180,25 +165,25 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 				throw new IllegalArgumentException("Can only connect to nodes from the same graph (arguments: this="+this+", other="+other+")");
 			
 			// * This graph can only contain MapDTNodes, so this is a safe cast
-			MapDTNode mdtOther = (MapDTNode)other;
+			MapUTNode mdtOther = (MapUTNode)other;
 			
 			if(connected(mdtOther, tag))
 				return;
 			
-			MapDTLink link = new MapDTLink(tag, this, mdtOther);
+			MapUTLink link = new MapUTLink(tag, this, mdtOther);
 			
-			// * Add other as a 'to' node in this node's neighbors
-			if(! linksTo.containsKey(tag))
-				linksTo.put(tag, new LinkedList<MapDTLink>());
-			linksTo.get(tag).add(link);
+			// * Add to this node's neighbors
+			if(! links.containsKey(tag))
+				links.put(tag, new LinkedList<MapUTLink>());
+			links.get(tag).add(link);
 			
-			// * Add this as a 'from' node in other's neighbors
-			if(! mdtOther.linksFrom.containsKey(tag))
-				mdtOther.linksFrom.put(tag, new LinkedList<MapDTLink>());
-			mdtOther.linksFrom.get(tag).add(link);
+			// * Add this  in other's neighbors
+			if(! mdtOther.links.containsKey(tag))
+				mdtOther.links.put(tag, new LinkedList<MapUTLink>());
+			mdtOther.links.get(tag).add(link);
 			
-			neighborsTo.add(mdtOther);
-			mdtOther.neighborsFrom.add(this);
+			neighbors.add(mdtOther);
+			mdtOther.neighbors.add(this);
 			
 			numEdges++;
 			modCount++;
@@ -207,25 +192,25 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public void disconnect(Node<L> other)
 		{	
-			if(MapDTGraph.this != other.graph())
+			if(MapUTGraph.this != other.graph())
 				throw new IllegalArgumentException("Can only disconnect nodes that belong to the same graph.");
 
 			if(!connected(other))
 				return;
 			
-			MapDTNode mdtOther = (MapDTNode)other;
+			MapUTNode mdtOther = (MapUTNode)other;
 			
 			int removed = 0;
 			
-			List<MapDTLink> toRemove = new LinkedList<MapDTLink>();
-			for(T tag : linksTo.keySet())
+			List<MapUTLink> toRemove = new LinkedList<MapUTLink>();
+			for(T tag : links.keySet())
 			{
-				for(MapDTLink link : linksTo.get(tag))
-					if(link.second().equals(mdtOther))
+				for(MapUTLink link : links.get(tag))
+					if(link.other(this).equals(mdtOther))
 						toRemove.add(link);
 			}
 			
-			for(MapDTLink link : toRemove)
+			for(MapUTLink link : toRemove)
 				link.remove();
 			
 			numEdges -= toRemove.size();
@@ -237,13 +222,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public boolean connected(Node<L> other)
 		{
-			return neighborsTo.contains(other);
+			return neighbors.contains(other);
 		}
 
 		@Override
-		public DTGraph<L, T> graph()
+		public UTGraph<L, T> graph()
 		{
-			return MapDTGraph.this;
+			return MapUTGraph.this;
 		}
 		
 		public int id()
@@ -259,10 +244,10 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		{
 			if(labelIdMod == null || labelIdMod != modCount)
 			{
-				Collection<MapDTNode> others = nodes.get(label);
+				Collection<MapUTNode> others = nodes.get(label);
 				
 				int i = 0;
-				for(MapDTNode other : others)
+				for(MapUTNode other : others)
 				{
 					if(other.equals(this))
 					{
@@ -307,13 +292,11 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		{	
 			// * Disconnect from the graph
 			
-			// * Copy the nodes over to avoid a concurrentmodificationexception
-			List<MapDTNode> ns = new ArrayList<MapDTNode>(neighborsTo);
-			for(MapDTNode to: ns)
+			// * Copy the nodes over to avoid a ConcurrentModificationException
+			List<MapUTNode> ns = new ArrayList<MapUTNode>(neighbors);
+			
+			for(MapUTNode to: ns)
 				disconnect(to);
-			ns = new ArrayList<MapDTNode>(neighborsFrom);
-			for(MapDTNode from : ns)
-				from.disconnect(this);
 			
 			nodeList.remove(this);
 			nodes.get(label).remove(this);
@@ -328,40 +311,6 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			modCount ++;
 		}
 
-		@Override
-		public Set<MapDTNode> to()
-		{
-			return Collections.unmodifiableSet(neighborsTo);
-		}
-
-		@Override
-		public Set<MapDTNode> to(L label)
-		{
-			Set<MapDTNode> set = new LinkedHashSet<MapDTNode>();
-			for(MapDTNode node : neighborsTo)
-				if( (label == null && node.label() == null) 
-						|| (label != null && label.equals(node.label)))
-					set.add(node);
-					
-			return set; 
-		}
-
-		@Override
-		public Set<? extends DNode<L>> from()
-		{
-			return Collections.unmodifiableSet(neighborsFrom);
-		}
-
-		@Override
-		public Set<? extends DNode<L>> from(L label)
-		{
-			Set<MapDTNode> set = new LinkedHashSet<MapDTNode>();
-			for(MapDTNode node : neighborsFrom)
-				if( (label == null && node.label() == null) || (label != null && label.equals(node.label)))
-					set.add(node);
-					
-			return set; 
-		}
 
 		@Override
 		public int index()
@@ -370,111 +319,68 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public DTLink<L, T> link(TNode<L, T> other)
+		public TLink<L, T> link(TNode<L, T> other)
 		{			
-			MapDTNode o = (MapDTNode) other;
+			MapUTNode o = (MapUTNode) other;
 			
 			if(!connected(o))
 				return null;
 			
-			for(T tag : linksTo.keySet())
-				for(MapDTLink link : linksTo.get(tag))
+			for(T tag : links.keySet())
+				for(MapUTLink link : links.get(tag))
 					if(link.second().equals(o))
 						return link;
+			
 			return null;
 		}
 
 		@Override
-		public Collection<? extends DTLink<L, T>> links(TNode<L, T> other)
+		public Collection<? extends TLink<L, T>> links(TNode<L, T> other)
 		{
-			MapDTNode o = (MapDTNode) other;
+			MapUTNode o = (MapUTNode) other;
 			
 			if(!connected(o))
 				return null;
 			
-			List<MapDTLink> links = new LinkedList<MapDTLink>();
-			for(T tag : linksTo.keySet())
-				for(MapDTLink link : linksTo.get(tag))
+			List<MapUTLink> result = new LinkedList<MapUTLink>();
+			for(T tag : links.keySet())
+				for(MapUTLink link : links.get(tag))
 					if(link.second().equals(o))
-						links.add(link);
+						result.add(link);
 			
-			return links;
+			return result;
 		}
 
 		@Override
 		public boolean connected(TNode<L, T> other, T tag)
 		{
-			if(! linksTo.containsKey(tag))
+			if(! links.containsKey(tag))
 				return false;
 			
-			for(MapDTLink link : linksTo.get(tag))
+			for(MapUTLink link : links.get(tag))
 				if(link.second().equals(other));
 				
 			return false;
 		}
 
 		@Override
-		public Collection<MapDTNode> toTag(T tag)
-		{
-			List<MapDTNode> nodes = new LinkedList<MapDTNode>();
-			
-			if(! linksTo.containsKey(tag))
-				return nodes;
-			
-			for(MapDTLink link : linksTo.get(tag))
-				nodes.add((MapDTNode)link.second());
-				
-			return nodes;
-		}
-
-		@Override
-		public Collection<MapDTNode> fromTag(T tag)
-		{
-			List<MapDTNode> nodes = new LinkedList<MapDTNode>();
-			
-			if(! linksFrom.containsKey(tag))
-				return nodes;
-			
-			for(MapDTLink link : linksFrom.get(tag))
-				nodes.add((MapDTNode)link.first());
-				
-			return nodes;
-		}
-
-		@Override
-		public int inDegree()
-		{
-			int n = 0;
-			for(T tag : linksFrom.keySet())
-				n += linksFrom.get(tag).size();
-			
-			return n;
-		}
-
-		@Override
-		public int outDegree()
-		{
-			int n = 0;
-			for(T tag : linksTo.keySet())
-				n += linksTo.get(tag).size();
-			
-			return n;
-		}
-
-		@Override
 		public int degree()
 		{
-			return inDegree() + outDegree();
+			int n = 0;
+			for(T tag : links.keySet())
+				n += links.get(tag).size();
+			
+			return n;
 		}
 	}
 
-	private final class MapDTLink implements DTLink<L, T>
+	private final class MapUTLink implements UTLink<L, T>
 	{
 		private T tag;
-		private MapDTNode first, second;
+		private MapUTNode first, second;
 		private boolean dead = false;
 		
-		public MapDTLink(T tag, MapDTNode first, MapDTNode second)
+		public MapUTLink(T tag, MapUTNode first, MapUTNode second)
 		{
 			this.tag = tag;
 			this.first = first;
@@ -488,57 +394,57 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 	
 		@Override
-		public DNode<L> first()
+		public UTNode<L, T> first()
 		{
 			return first;
 		}
 	
 		@Override
-		public DNode<L> second()
+		public UTNode<L, T> second()
 		{
 			return second;
 		}
 	
 		@SuppressWarnings("unchecked")
 		@Override
-		public Collection<? extends DTNode<L, T>> nodes()
+		public Collection<? extends UTNode<L, T>> nodes()
 		{
 			return Arrays.asList(first, second);
 		}
 	
 		@Override
-		public DTGraph<L, T> graph()
+		public UTGraph<L, T> graph()
 		{
-			return MapDTGraph.this;
+			return MapUTGraph.this;
 		}
 	
 		@Override
 		public void remove()
 		{
-			first.linksTo.get(tag).remove(this);
-			second.linksFrom.get(tag).remove(this);
+			first.links.get(tag).remove(this);
+			second.links.get(tag).remove(this);
 			
 			// * check whether second should be removed from first.neighborsTo
 			boolean occurs = false;
-			for(T tag : first.linksTo.keySet())
-				for(MapDTLink link : first.linksTo.get(tag))
+			for(T tag : first.links.keySet())
+				for(MapUTLink link : first.links.get(tag))
 					if(link.second().equals(second))
 						occurs = true;
 			if(! occurs)
-				first.neighborsTo.remove(second);
+				first.neighbors.remove(second);
 			
 			// * check whether first should be removed from second.neighborsFrom
 			occurs = false;
-			for(T tag : second.linksFrom.keySet())
-				for(MapDTLink link : second.linksFrom.get(tag))
+			for(T tag : second.links.keySet())
+				for(MapUTLink link : second.links.get(tag))
 					if(link.first().equals(first))
 						occurs = true;
 			if(! occurs)
-				second.neighborsFrom.remove(first);
+				second.neighbors.remove(first);
 			
 			dead = true;
 			
-			modCount ++;
+			modCount++;
 		}
 
 		@Override
@@ -549,14 +455,22 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		
 		public String toString()
 		{
-			return first + " -> " + second + " [label="+tag+"]";
+			return first + " -- " + second + " [label="+tag+"]";
+		}
+
+		@Override
+		public UTNode<L, T> other(UTNode<L, T> current)
+		{
+			if(first != current)
+				return first;
+			return second;
 		}
 	}
 
 	@Override
-	public DTNode<L, T> node(L label)
+	public UTNode<L, T> node(L label)
 	{
-		Set<MapDTNode> n = nodes.get(label);
+		Set<MapUTNode> n = nodes.get(label);
 		if(n == null)
 			return null;
 	
@@ -569,9 +483,9 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	}
 
 	@Override
-	public Set<? extends DTNode<L, T>> nodes(L label)
+	public Set<? extends UTNode<L, T>> nodes(L label)
 	{
-		Set<MapDTNode> n = nodes.get(label);
+		Set<MapUTNode> n = nodes.get(label);
 		if(n == null)
 			return Collections.emptySet();
 		
@@ -579,10 +493,10 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	}
 
 	@Override
-	public DTNode<L, T> add(L label)
+	public UTNode<L, T> add(L label)
 	{
 		// * Create the new node. It will add itself to the nodes map and list
-		DTNode<L, T> node = new MapDTNode(label);
+		UTNode<L, T> node = new MapUTNode(label);
 		
 		modCount++;
 
@@ -611,10 +525,10 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		StringBuffer sb = new StringBuffer();
 		sb.append("graph {");
 		
-		Set<MapDTNode> nodes = new HashSet<MapDTNode>(nodeList);
+		Set<MapUTNode> nodes = new HashSet<MapUTNode>(nodeList);
 		
 		boolean first = true;
-		for(MapDTLink link : links())
+		for(MapUTLink link : links())
 		{
 			if(first) 
 				first = false;
@@ -627,8 +541,15 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			nodes.remove(link.second());
 		}
 		
-		for(MapDTNode node : nodes)
-			sb.append("; " + node);
+		for(MapUTNode node : nodes)
+		{
+			if(first) 
+				first = false;
+			else 
+				sb.append("; ");
+			
+			sb.append(node);
+		}
 		
 		sb.append("}");
 		
@@ -638,8 +559,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	@Override
 	public boolean connected(L first, L second)
 	{
-		for(MapDTNode f : nodes.get(first))
-			for(MapDTNode s : nodes.get(second))
+		for(MapUTNode f : nodes.get(first))
+			for(MapUTNode s : nodes.get(second))
 				if(f.connected(s))
 					return true;
 		return false;
@@ -664,22 +585,22 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	}
 
 	@Override
-	public List<? extends DTNode<L, T>> nodes()
+	public List<? extends UTNode<L, T>> nodes()
 	{
 		return Collections.unmodifiableList(nodeList);
 	}
 
 	@Override
-	public Collection<MapDTLink> links()
+	public Collection<MapUTLink> links()
 	{
 		return new LinkCollection();
 	}
 	
-	private class LinkCollection extends AbstractCollection<MapDTLink>
+	private class LinkCollection extends AbstractCollection<MapUTLink>
 	{
 
 		@Override
-		public Iterator<MapDTLink> iterator()
+		public Iterator<MapUTLink> iterator()
 		{
 			return new LCIterator();
 		}
@@ -690,15 +611,15 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			return numLinks();
 		}
 		
-		private class LCIterator implements Iterator<MapDTLink>
+		private class LCIterator implements Iterator<MapUTLink>
 		{
 			private static final int BUFFER_SIZE = 5;
-			private LinkedList<MapDTLink> buffer = new LinkedList<MapDTLink>();
-			private MapDTLink last = null;
+			private LinkedList<MapUTLink> buffer = new LinkedList<MapUTLink>();
+			private MapUTLink last = null;
 			
-			private MapDTNode current = null;
-			private Iterator<MapDTNode> nodeIt = nodeList.iterator();
-			private Iterator<MapDTNode> neighborIt;
+			private MapUTNode current = null;
+			private Iterator<MapUTNode> nodeIt = nodeList.iterator();
+			private Iterator<MapUTNode> neighborIt;
 
 			LCIterator()
 			{
@@ -713,7 +634,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			}
 
 			@Override
-			public MapDTLink next()
+			public MapUTLink next()
 			{
 				buffer();
 				last = buffer.poll();
@@ -735,9 +656,19 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 					
 					current = nodeIt.next();
 					
-					for(T tag : current.linksTo.keySet())
-						for(MapDTLink link : current.linksTo.get(tag))
-							buffer.add(link);
+					for(T tag : current.links.keySet())
+						for(MapUTLink link : current.links.get(tag))
+						{
+							int curr = current.index(), oth;
+							
+							if(current == link.first())
+								oth = link.second().index();
+							else
+								oth = link.first().index();
+							 
+							if(curr <= oth)
+								buffer.add(link);
+						}
 				}
 			}
 		}
@@ -748,7 +679,6 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	 */
 	protected void updateIndices()
 	{
-		
 		for(int i : series(nodeList.size()))
 			nodeList.get(i).index = i;
 	}

@@ -160,15 +160,17 @@ public class Similitude extends AffineMap
 		
 		if(other instanceof Similitude)
 		{
+			// * return t(o(x)) = <s_ts_o, R_tR_o, s_t * R_t * t_o + t_t> 
 			Similitude sim = (Similitude) other;
 			
 			double newScalar = this.scalar * sim.scalar;
 
 			List<Double> newAngles = new ArrayList<Double>(angles.size());
 			for(int i = 0; i < angles.size(); i++)
-				newAngles.add(angles.get(i) + sim.angles.get(i));
+				newAngles.add(this.angles.get(i) + sim.angles.get(i));
 			
-			RealVector newTrans = sim.transformation.operate(this.translation).add(sim.translation);
+			// * note that this.transformation contains both the scaling an the rotation
+			RealVector newTrans = this.transformation.operate(sim.translation).add(sim.translation);
 			
 			return new Similitude(newScalar, new Point(newTrans), newAngles);
 		}

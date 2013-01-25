@@ -29,12 +29,10 @@ import org.lilian.data.real.fractal.IFSClassifierBasic;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.grammars.Grammar;
 import org.lilian.grammars.TestGrammars;
+import org.lilian.graphs.DTGraph;
+import org.lilian.graphs.Graph;
 import org.lilian.search.Builder;
 import org.lilian.util.Series;
-import org.lilian.util.graphs.jung.Graphs;
-
-import edu.uci.ics.jung.graph.DirectedGraph;
-import edu.uci.ics.jung.graph.Graph;
 
 /**
  * These functions manage the resources embedded in the Lilian library. 
@@ -333,79 +331,77 @@ public class Resources
 	}
 	
 	@Resource(name="rdf graph")
-	public static DirectedGraph<Vertex<String>, Edge<String>> rdfGraph(
-			@Name("file") File file, 
-			@Name("vertex whitelist") List<String> vertexWhiteList, 
-			@Name("edge whitelist") List<String> edgeWhiteList)
+	public static DTGraph<String, String> rdfGraph(
+			@Name("file") File file)
 	{
-		return org.data2semantics.tools.graphs.Graphs.graphFromRDF(file);
+		return org.lilian.graphs.data.RDF.read(file);
 	}
 	
 	@Resource(name="gml graph")
-	public static Graph<GML.LVertex, Edge<String>> gmlGraph(@Name("file") File file) 
+	public static Graph<String> gmlGraph(@Name("file") File file) 
 		throws IOException
 	{
-		return org.data2semantics.tools.graphs.GML.read(file);	
+		return org.lilian.graphs.data.GML.read(file);	
 	}
 	
-	@Resource(name="text graph")
-	public static Graph<Vertex<String>, Edge<String>> txtGraph(
-			@Name("file") File file, 
-			@Name("directed") boolean directed) 
-		throws IOException
-	{
-		return org.data2semantics.tools.graphs.Graphs.graphFromTSV(file);	
-	}
-
-	@Resource(name="line graph")
-	public static Graph<Integer, Integer> lineGraph(
-			@Name("file") File file) 
-		throws IOException
-	{
-		return org.data2semantics.tools.graphs.Graphs.singLine(file);
-	}
-	
-	@Resource(name="integer graph") 
-	public static Graph<Vertex<Integer>, Edge<Integer>> txtIntegerGraph(
-			@Name("file") File file, 
-			@Name("directed")boolean directed) 
-		throws IOException
-	{
-		return org.data2semantics.tools.graphs.Graphs.intDirectedGraphFromTSV(file);	
-	}
-	
-	@Resource(name="random graph")
-	public static Graph<Integer, Integer> random(
-		@Name("number of nodes") int nodes,
-		@Name("edge probability") double edgeProb)
-	{
-		return Graphs.random(nodes, edgeProb);
-	}
-	
-	@Resource(name="ba random graph")
-	public static Graph<Integer, Integer> abRandom(
-		@Name("number of nodes") int nodes,
-		@Name("number to attach") int toAttach)
-	{
-		return Graphs.abRandom(nodes, 3, toAttach);
-	}
-	
-	@Resource(name="random graph lilian")
-	public static org.lilian.util.graphs.old.BaseGraph<String> randomLilian(
-		@Name("number of nodes") int nodes,
-		@Name("edge probability") double edgeProb)
-	{
-		return org.lilian.util.graphs.old.Graphs.random(nodes, edgeProb);
-	}
-	
-	@Resource(name="ba random graph lilian")
-	public static org.lilian.util.graphs.old.BaseGraph<String> abRandomLilian(
-		@Name("number of nodes") int nodes,
-		@Name("number to attach") int toAttach)
-	{
-		return org.lilian.util.graphs.old.Graphs.ba(nodes, 3, toAttach);
-	}
-	
+//	@Resource(name="text graph")
+//	public static Graph<Vertex<String>, Edge<String>> txtGraph(
+//			@Name("file") File file, 
+//			@Name("directed") boolean directed) 
+//		throws IOException
+//	{
+//		return org.data2semantics.tools.graphs.Graphs.graphFromTSV(file);	
+//	}
+//
+//	@Resource(name="line graph")
+//	public static Graph<Integer, Integer> lineGraph(
+//			@Name("file") File file) 
+//		throws IOException
+//	{
+//		return org.data2semantics.tools.graphs.Graphs.singLine(file);
+//	}
+//	
+//	@Resource(name="integer graph") 
+//	public static Graph<Vertex<Integer>, Edge<Integer>> txtIntegerGraph(
+//			@Name("file") File file, 
+//			@Name("directed")boolean directed) 
+//		throws IOException
+//	{
+//		return org.data2semantics.tools.graphs.Graphs.intDirectedGraphFromTSV(file);	
+//	}
+//	
+//	@Resource(name="random graph")
+//	public static Graph<Integer, Integer> random(
+//		@Name("number of nodes") int nodes,
+//		@Name("edge probability") double edgeProb)
+//	{
+//		return Graphs.random(nodes, edgeProb);
+//	}
+//	
+//	@Resource(name="ba random graph")
+//	public static Graph<Integer, Integer> abRandom(
+//		@Name("number of nodes") int nodes,
+//		@Name("number to attach") int toAttach)
+//	{
+//		return Graphs.abRandom(nodes, 3, toAttach);
+//	}
+//	
+//	@Resource(name="random graph lilian")
+//	public static org.lilian.util.graphs.old.BaseGraph<String> randomLilian(
+//		@Name("number of nodes") int nodes,
+//		@Name("edge probability") double edgeProb)
+//	{
+//		return org.lilian.util.graphs.old.Graphs.random(nodes, edgeProb);
+//	}
+//	
+//	@Resource(name="ba random graph lilian")
+//	public static org.lilian.util.graphs.old.BaseGraph<String> abRandomLilian(
+//		@Name("number of nodes") int nodes,
+//		@Name("number to attach") int toAttach)
+//	{
+//		return org.lilian.util.graphs.old.Graphs.ba(nodes, 3, toAttach);
+//	}
+//	
 	
 	@Resource(name="csv file")
 	public static List<Point> csvFile(@Name("file") File file) 

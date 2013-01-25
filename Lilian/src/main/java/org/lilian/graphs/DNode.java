@@ -49,4 +49,8 @@ public interface DNode<L> extends Node<L>
 	 * @return
 	 */
 	public int index();
+	
+	public int inDegree();
+	
+	public int outDegree();
 }

@@ -11,7 +11,10 @@ import java.util.Collection;
  */
 public interface Link<L>
 {
-
+	public Node<L> first();
+	
+	public Node<L> second();
+	
 	public Collection<? extends Node<L>> nodes();
 	
 	public Graph<L> graph();

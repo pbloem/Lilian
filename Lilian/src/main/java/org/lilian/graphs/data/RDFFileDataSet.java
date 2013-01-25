@@ -1,4 +1,4 @@
-package org.lilian.graphs.rdf;
+package org.lilian.graphs.data;
 
 import java.io.File;
 import java.util.ArrayList;

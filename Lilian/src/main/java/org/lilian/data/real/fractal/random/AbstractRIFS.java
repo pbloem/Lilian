@@ -102,4 +102,9 @@ public abstract class AbstractRIFS<M extends Map & Parametrizable> implements RI
 	}
 	
 	public abstract IFS<M> random(Random rand);
+	
+	public int dimension() 
+	{
+		return dim;
+	}
 }

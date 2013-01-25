@@ -1,11 +1,14 @@
 package org.lilian.data.real.fractal.random;
 
+import static java.lang.Math.max;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.lilian.Global;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.Similitude;
+import org.lilian.models.BasicFrequencyModel;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.Series;
 
@@ -20,13 +23,18 @@ public class ChoiceTree
 {
 
 	// * The number of IFS models
-	private int max;
+	private int max = -1;
 	// * The number of components per IFS
 	private int branching;
 	
 	private int depth;
 	
 	private Node root;
+	
+//	public ChoiceTree(int firstSymbol)
+//	{
+//		root = new Node(firstSymbol, null);
+//	}
 	
 	private <M extends Map & Parametrizable> ChoiceTree(DiscreteRIFS<M> model, int depth)
 	{
@@ -52,7 +60,7 @@ public class ChoiceTree
 		
 		for(Node child : parent.children())
 			fill(choices, i, d - 1, child);
-			
+
 	}
 	
 	public Node root()
@@ -60,9 +68,43 @@ public class ChoiceTree
 		return root;
 	}
 	
+	public int depth()
+	{
+		return depth;
+	}
+	
 	public int branching()
 	{
 		return branching;
+	}
+	
+	/**
+	 * Returns the node denoted by this code. NOTE: The last element in this code 
+	 * refers to one of the components of the _parent_ of the Node returned.
+	 * 
+	 * @param code
+	 * @return
+	 */
+	public Node get(List<Integer> code)
+	{
+		return root.get(code);
+	}
+	
+	/**
+	 * Sets the symbol at the node corresponding to the given code. If any nodes
+	 * don't exist, they are created with symbol -1  
+	 * 
+	 * @param code
+	 * @param symbol
+	 */
+	public void set(List<Integer> code, int symbol)
+	{
+		root.set(code, symbol);
+	}
+	
+	public void count(BasicFrequencyModel<Integer> model)
+	{
+		root.count(model);
 	}
 	
 	public class Node 
@@ -76,9 +118,19 @@ public class ChoiceTree
 			this.parent = parent;
 			this.codon = codon;
 			
+			max = max(max, codon);
+			
 			children = new ArrayList<Node>(branching);
 		}
 		
+		public void count(BasicFrequencyModel<Integer> model)
+		{
+			model.add(codon);
+			
+			for(Node child : children)
+				child.count(model);
+		}
+
 		protected <M extends Map & Parametrizable>
 			Node(DiscreteRIFS<M> model, Node parent, int depth)
 		{
@@ -98,10 +150,7 @@ public class ChoiceTree
 		}
 		
 		public Node child(int codon)
-		{
-			if(children.size() >= branching)
-				throw new RuntimeException("Node is full. No further children allowed.");
-			
+		{	
 			Node child = new Node(codon, this);
 			children.add(child);
 			
@@ -113,6 +162,12 @@ public class ChoiceTree
 			return children.isEmpty();
 		}
 		
+		/**
+		 * The codon is the choice of IFS component at this node. If it is -1, 
+		 * then no choice information exists at this node.
+		 * 
+		 * @return
+		 */
 		public int codon()
 		{
 			return codon;
@@ -127,7 +182,32 @@ public class ChoiceTree
 		{
 			
 			return codon + " _ " + children.toString();
-		}	
+		}
+		
+		public Node get(List<Integer> code)
+		{
+			if(code.isEmpty())
+				return this;
+			
+			return get(code.subList(1, code.size()));
+		}
+		
+		public void set(List<Integer> code, int symbol)
+		{
+			if(code.isEmpty())
+			{
+				codon = symbol;
+				max = max(max, codon);
+				return;
+			}
+			
+			int c = code.get(0);
+			
+			while(children.size() <= c)
+				child(-1);
+			
+			children.get(c).set(code.subList(1, code.size()), symbol);
+		}
 	}
 	
 	public String toString()
@@ -148,7 +228,8 @@ public class ChoiceTree
 	public static <M extends Map & Parametrizable> ChoiceTree 
 							random(DiscreteRIFS<M> model, int depth)
 	{
-		return new ChoiceTree(model, depth);
-		
+		return new ChoiceTree(model, depth);	
 	}
+
+
 }

@@ -24,6 +24,7 @@ import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Series;
 
 /**
  * Represents an Iterated Function System, a collection of weighted maps.
@@ -154,11 +155,11 @@ public class IFS<M extends Map & Parametrizable >
 	 */
 	public Map compose(List<Integer> code)
 	{
-		Map m = null;
+		Map m = get(code.get(code.size() - 1));
 		
-		for(int i : code)
-			m = m == null? get(i) : m.compose(get(i));
-			
+		for(int i : Series.series(code.size() - 2, -1))
+			m = get(code.get(i)).compose(m);
+		
 		return m;
 	}
 

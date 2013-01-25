@@ -228,6 +228,16 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 		return transform.dimension();
 	}
 	
+	public MVN transform(AffineMap map)
+	{
+		// TODO: UNIT TESTS
+		
+		AffineMap map0 = this.map();
+		AffineMap combo = (AffineMap) (map.compose(map0));
+		
+		return new MVN(combo);
+	}
+	
 	/**
 	 * Returns a standard normal distribution (zero mean and the identity matrix as covariance matrix)
 	 * with the given number of dimensions

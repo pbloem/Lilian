@@ -633,14 +633,14 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * This method implements the search algorithm for finding code pairs
 		 * where the second is a rightshifted version of the first.
 		 * 
-		 * Start at the leaves of this node, take its code and find the node
-		 * whose code that that shares its tail, save for the last symbol t. Any
-		 * such pairs are added to the Maps object.
+		 * This method is executed first for all descendants of this node, and 
+		 * then for the node itself.
 		 * 
-		 * This method is recursively executed at all depths.
-		 * 
-		 * @param maps
-		 */
+		 * It takes this nodes' code and retrieves the node that has the same code, 
+		 * but with the first element removed. It then knows that the points of 
+		 * that node should map to the points of this node under the 
+		 * transformation denoted by the first element of this node's code.
+		 */ 
 		public void findPairs(Maps maps)
 		{
 			if (children.size() > 0) // * Recurse

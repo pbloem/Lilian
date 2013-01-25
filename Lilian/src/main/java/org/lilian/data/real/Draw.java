@@ -21,6 +21,8 @@ import java.util.List;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.fractal.Tools;
+import org.lilian.data.real.fractal.random.ChoiceTree;
+import org.lilian.data.real.fractal.random.DiscreteRIFS;
 import org.lilian.data.real.weighted.Weighted;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;
@@ -668,6 +670,80 @@ public class Draw
 		return image;
 	}
 	
+	
+	public static <M extends AffineMap> BufferedImage drawDensities(
+			DiscreteRIFS<M> rifs,
+			ChoiceTree tree,
+			double[] xrange, 
+			double[] yrange, 
+			int res,
+			boolean useApproximation)
+	{		
+		double 	xDelta = xrange[1] - xrange[0],
+				yDelta = yrange[1] - yrange[0];
+		
+		double maxDelta = Math.max(xDelta, yDelta); 		
+		double minDelta = Math.min(xDelta, yDelta);
+		
+		double step = minDelta/(double) res;
+		
+		int xRes = (int) (xDelta / step);
+		int yRes = (int) (yDelta / step);
+		
+		BufferedImage image = 
+			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_RGB);		
+		
+		double x, y;
+		Point p;
+		
+		float max = Float.NEGATIVE_INFINITY,
+		      min = Float.POSITIVE_INFINITY;
+		
+		float[][] values = new float[xRes][];
+		for(int i = 0; i < xRes; i++)
+		{
+			values[i] = new float[yRes];
+			for(int j = 0; j < yRes; j++)
+				values[i][j] = 0.0f;
+		}
+				
+		
+		for(int i = 0; i < xRes; i++)
+		{
+			x =  xrange[0] + step*0.5 + step * i;
+			for(int j = 0; j < yRes; j++)				
+			{
+				y = yrange[0] + step*0.5 + step * j;
+				
+				p = new Point(x, y);
+				float density = (float) (
+						useApproximation ?
+						DiscreteRIFS.search(rifs, tree, p).approximation():
+						DiscreteRIFS.search(rifs, tree, p).probSum());
+				
+				values[i][j] =density;
+						
+				max = Math.max(density, max);
+				min = Math.min(density, min);
+			}
+		}
+		
+		for(int i = 0; i < xRes; i++)
+			for(int j = 0; j < yRes; j++)				
+			{
+				float density = values[i][j];
+				
+				Color color = null;
+				
+				float gray = (density - min) / (max - min);
+
+				color = new Color(gray, gray, gray);
+				
+				image.setRGB(i, j, color.getRGB());			
+			}
+
+		return image;
+	}
 	
 //	/**
 //	 * Draws multidimensional classed data.
