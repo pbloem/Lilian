@@ -2,9 +2,11 @@ package org.lilian.data.real.fractal.random;
 
 import static org.lilian.util.Functions.log2;
 import static org.lilian.util.Series.series;
+import static org.lilian.data.real.fractal.random.DiscreteRIFS.Codon;
 
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +51,7 @@ public class RIFSEM
 	private List<ChoiceTree> trees;
 		
 	// * A code tree for each dataset. This list holds the root nodes.
-	private List<Node> codeTrees;
+	private Node codeTree;
 	
 	private int compPerIFS, depth, sampleSize;
 	
@@ -80,7 +82,7 @@ public class RIFSEM
 				throw new IllegalArgumentException("All component IFSs of the initial model should have the sam enumber of component transformations.");
 				
 		dataSample = new ArrayList<List<Point>>(data.size());
-		codeTrees = new ArrayList<Node>(data.size());
+		codeTree = new Node(null, null);
 		
 		resample();
 		
@@ -98,8 +100,13 @@ public class RIFSEM
 	{
 		resample();
 		
-		findTrees();
-		findCodes();
+		for(int i: series(50))
+		{
+			System.out.println(".");
+			findCodes();
+			codeTree.print(System.out, 0);
+			findTrees();
+		}
 		findModel();
 	}
 	
@@ -114,7 +121,7 @@ public class RIFSEM
 	public void findModel()
 	{	
 		// * Look for matching codes in the code tree
-		List<Maps> mapsList = findMaps();
+		Maps maps = findMaps();
 
 		// * Frequency model for all component IFSs
 		BasicFrequencyModel<Integer> freqs = new BasicFrequencyModel<Integer>(); 
@@ -127,7 +134,6 @@ public class RIFSEM
 		{
 			IFS<Similitude> component = model.models().get(h);
 			int numComponents = component.size();
-			Maps maps = mapsList.get(h);
 			
 			List<Similitude> trans = new ArrayList<Similitude>(numComponents);
 			for (int i : Series.series(numComponents))
@@ -143,7 +149,8 @@ public class RIFSEM
 	
 			for (int i : series(numComponents))
 			{
-				int n = maps.size(i);
+				Codon c = new Codon(h, i);
+				int n = maps.size(c);
 	
 				if (n != 0) // codes found containing this comp
 				{
@@ -178,10 +185,7 @@ public class RIFSEM
 				Global.log().info("unassigned: " + unassigned);
 			
 			if (assigned.isEmpty())
-			{
-				for(Node root : codeTrees)
-					for(int i : series(3))
-						System.out.println(root.random().code());
+			{				
 				throw new IllegalStateException(
 						"No points were assigned to any components");
 			}
@@ -243,19 +247,29 @@ public class RIFSEM
 	 */
 	public void findCodes()
 	{
-		codeTrees.clear();
+		System.out.println("----------------");
+		codeTree = new Node(null, null);
 		
 		for(int i : Series.series(dataSample.size()))
 		{
 			List<Point> points = dataSample.get(i);
 			ChoiceTree tree = trees.get(i);
-			Node root = new Node(-1, null, i);
 			
 			for(Point point : points)
-				root.observe(DiscreteRIFS.code(model, tree, point), point);
-			
-			codeTrees.add(root);
+			{
+				List<Codon> code = DiscreteRIFS.code(model, tree, point);
+				codeTree.observe(code, point);
+				
+				// Global.log().info("" + code);
+
+			}
 		}
+			
+		
+//		for(int j : series(20))
+//
+//			System.out.println(codeTree.random().code());
+		
 	}
 	
 	/**
@@ -271,8 +285,9 @@ public class RIFSEM
 			//   out from the data.
 			ChoiceTree tree = ChoiceTree.random(model(), depth);
 			
-			codeTrees.get(i).build(tree);
+			codeTree.build(tree);
 			trees.add(tree);
+			// System.out.println(tree);
 		}
 	}	
 	
@@ -281,17 +296,12 @@ public class RIFSEM
 	 * @return A list of maps so that Maps i in the list represents the 
 	 * maps for component IFS i.
 	 */
-	private List<Maps> findMaps()
-	{
-		List<Maps> mapsList = new ArrayList<Maps>(model.size());
+	private Maps findMaps()
+	{	
+		Maps maps = new Maps();
+		codeTree.findPairs(maps);
 		
-		for(int i : series(model.size()))
-			mapsList.add(new Maps());
-		
-		for(Node root : codeTrees)
-			root.findPairs(mapsList);
-		
-		return mapsList;
+		return maps;
 	}
 	
 	/**
@@ -305,8 +315,6 @@ public class RIFSEM
 	protected class Node implements Serializable
 	{
 		private static final long serialVersionUID = -6512700670917962320L;
-
-		private int dataset; 
 		
 		// * An MVN fitted to the point stored in this node
 		MVN mvn = null;
@@ -314,12 +322,12 @@ public class RIFSEM
 		// * The parent in the tree
 		Node parent;
 		// * The child nodes for each symbol (represented by an Integer)
-		Map<Integer, Node> children;
+		Map<Codon, Node> children;
 		// * How deep this node is in the tree
 		int depth = 0;
 
 		// * This node's code
-		List<Integer> code;
+		List<Codon> code;
 
 		// * Whether this node represents a leaf node
 		boolean isLeaf = false;
@@ -333,23 +341,22 @@ public class RIFSEM
 		 * @param symbol
 		 * @param parent
 		 */
-		public Node(int symbol, Node parent, int dataset)
+		public Node(Codon symbol, Node parent)
 		{
 			this.parent = parent;
-			code = new ArrayList<Integer>(
+			code = new ArrayList<Codon>(
 					parent != null ? parent.code().size() + 1 : 1);
 
 			if (parent != null)
 				code.addAll(parent.code());
-			if (symbol >= 0)
+			
+			if (symbol != null)
 				code.add(symbol);
 
 			if (parent != null)
 				depth = parent.depth + 1;
-
-			children = new HashMap<Integer, Node>();
 			
-			this.dataset = dataset;
+			children = new HashMap<Codon, Node>();
 		}
 
 		/**
@@ -358,13 +365,28 @@ public class RIFSEM
 		 * 
 		 * @param model
 		 */
-		public void count(BasicFrequencyModel<Integer> model)
+		public void count(BasicFrequencyModel<Codon> model)
 		{
 			if (!isRoot())
 				model.add(symbol());
 
-			for (int i : children.keySet())
+			for (Codon i : children.keySet())
 				children.get(i).count(model);
+		}
+		
+		/**
+		 * Add the symbols of this node and the subtree below it to the given
+		 * frequency model.
+		 * 
+		 * @param model
+		 */
+		public void countIFS(BasicFrequencyModel<Integer> model)
+		{
+			if (!isRoot())
+				model.add(symbol().ifs());
+
+			for (Codon i : children.keySet())
+				children.get(i).countIFS(model);
 		}
 
 		/**
@@ -390,17 +412,18 @@ public class RIFSEM
 		/**
 		 * The code represented by this node
 		 */
-		public List<Integer> code()
+		public List<Codon> code()
 		{
 			return code;
 		}
+		
 
 		/**
 		 * The symbol for this node (ie. the last symbol in its code).
 		 * 
 		 * @return
 		 */
-		public int symbol()
+		public Codon symbol()
 		{
 			return code.get(code.size() - 1);
 		}
@@ -414,13 +437,16 @@ public class RIFSEM
 		 * @param point
 		 *            The point to be observed.
 		 */
-		public void observe(List<Integer> codeSuffix, Point point)
+		public void observe(List<Codon> codeSuffix, Point point)
 		{
 			observe(codeSuffix, point, 1.0);
 		}
 		
-		public void observe(List<Integer> codeSuffix, Point point, double weight)
+		public void observe(List<Codon> codeSuffix, Point point, double weight)
 		{
+//			if(parent == null)
+//				System.out.println(codeSuffix);
+//			
 			points.add(point);
 			mvn = null; // signal that the mvn needs to be recomputed
 
@@ -430,9 +456,9 @@ public class RIFSEM
 				return;
 			}
 
-			int symbol = codeSuffix.get(0);
+			Codon symbol = codeSuffix.get(0);
 			if (!children.containsKey(symbol))
-				children.put(symbol, new Node(symbol, this, dataset));
+				children.put(symbol, new Node(symbol, this));
 
 			children.get(symbol).observe(
 					codeSuffix.subList(1, codeSuffix.size()), point);
@@ -508,11 +534,11 @@ public class RIFSEM
 				ind += "\t";
 
 			String code = "";
-			for (int i : code())
-				code += i;
+			for (Codon codon : code())
+				code += codon + " ";
 
-			out.println(ind + code + " f:" + frequency() + ", p: " + points());
-			for (int symbol : children.keySet())
+			out.println(ind + code + " f:" + frequency() + ", p: ...");
+			for (Codon symbol : children.keySet())
 				children.get(symbol).print(out, indent + 1);
 		}
 
@@ -525,13 +551,13 @@ public class RIFSEM
 		 *            the current node.
 		 * @return the requested Node if it exists. null otherwise.
 		 */
-		public Node find(List<Integer> code)
+		public Node find(List<Codon> code)
 		{
 			if (code.size() == 0)
 				return this;
 
-			int symbol = code.get(0);
-			if (!children.containsKey(symbol))
+			Codon symbol = code.get(0);
+			if (! children.containsKey(symbol))
 				return null;
 
 			return children.get(symbol).find(code.subList(1, code.size()));
@@ -552,25 +578,20 @@ public class RIFSEM
 		 * 
 		 * @param maps
 		 */
-		public void findPairs(List<Maps> maps)
+		public void findPairs(Maps maps)
 		{
 			if (children.size() > 0) // * Recurse
-			{
-				for (int i : children.keySet())
-					children.get(i).findPairs(maps);
-			}
+				for (Codon codon : children.keySet())
+					children.get(codon).findPairs(maps);
 
 			if (code().size() > 0) // * Execute for this node
 			{
-				List<Integer> codeFrom = new ArrayList<Integer>(code);
+				List<Codon> codeFrom = new ArrayList<Codon>(code);
 				
-				// * t is the symbol of the transformation
-				int t = codeFrom.remove(0);
-				// * c is the symbol of the component IFS to which t belongs
-				int c = trees.get(dataset).get(codeFrom).codon();
-
+				Codon codon = codeFrom.remove(0);
+			
 				// * Find the node that matches
-				Node nodeFrom = codeTrees.get(dataset).find(codeFrom);
+				Node nodeFrom = codeTree.find(codeFrom);
 				
 				if (nodeFrom != null)
 				{
@@ -585,7 +606,7 @@ public class RIFSEM
 														// consider covariance
 						{
 							for (int i : series(points.size()))
-								maps.get(c).add(t, from.mean(), to.mean());
+								maps.add(codon, from.mean(), to.mean());
 						} else
 						{
 							// * Consider the covariance by taking not just the
@@ -605,7 +626,7 @@ public class RIFSEM
 							List<Point> pt = to.map().map(points);
 
 							for (int i = 0; i < points.size(); i++)
-								maps.get(c).add(t, pf.get(i), pt.get(i));
+								maps.add(codon, pf.get(i), pt.get(i));
 						}
 					} else
 					{
@@ -615,7 +636,7 @@ public class RIFSEM
 
 					// * Register the drop in frequency as the symbol t gets added
 					//   to the code
-					maps.get(c).weight(t, nodeFrom.frequency(), this.frequency());
+					maps.weight(codon, nodeFrom.frequency(), this.frequency());
 				}
 			}
 		}
@@ -648,6 +669,7 @@ public class RIFSEM
 				
 				for(int j : series(component.size()))
 				{
+					// System.out.println(j);
 					MVN mapped = mvn.transform(component.get(j));
 					
 					if(! children.containsKey(i))
@@ -667,7 +689,7 @@ public class RIFSEM
 			}
 			
 			// * Submit to the choice tree
-			tree.set(code(), best);
+			tree.set(mapCode(code()), best);
 			
 			// * Recurse
 			for(Node child : children.values())
@@ -677,8 +699,8 @@ public class RIFSEM
 		public String toString()
 		{
 			String code = depth() + ") ";
-			for (int i : code())
-				code += i;
+			for (Codon c : code())
+				code += c;
 			return code;
 		}
 
@@ -687,9 +709,10 @@ public class RIFSEM
 			if(children.size() == 0)
 				return this;
 			
-			List<Integer> keys = new ArrayList<Integer>(children.keySet());
+			List<Codon> keys = new ArrayList<Codon>(children.keySet());
+			Codon k = keys.get(Global.random.nextInt(keys.size()));
 			
-			return children.get(keys.get(Global.random.nextInt(keys.size())));
+			return children.get(k).random();
 		}
 		
 	}
@@ -703,14 +726,14 @@ public class RIFSEM
 	{
 		// * The inner list stores all 'from' points. We store one such list for
 		// each component
-		private List<List<Point>> from = new ArrayList<List<Point>>();
+		private Map<Codon, List<Point>> from = new HashMap<Codon, List<Point>>();
 		// * The inner list stores all 'to' points. We store one such list for
 		// each component
-		private List<List<Point>> to = new ArrayList<List<Point>>();
+		private Map<Codon, List<Point>> to   = new HashMap<Codon, List<Point>>();
 
 		// * The same but for the weights (inner lists store frequencies)
-		private List<List<Double>> fromWeights = new ArrayList<List<Double>>();
-		private List<List<Double>> toWeights = new ArrayList<List<Double>>();
+		private Map<Codon, List<Double>> fromWeights = new HashMap<Codon, List<Double>>();
+		private Map<Codon, List<Double>> toWeights   = new HashMap<Codon, List<Double>>();
 
 		/**
 		 * The number of point pairs stored for a given component
@@ -719,10 +742,10 @@ public class RIFSEM
 		 *            The component index
 		 * @return The number of point pairs stored for component i
 		 */
-		public int size(int i)
+		public int size(Codon c)
 		{
-			ensure(i);
-			return from.get(i).size();
+			ensure(c);
+			return from.get(c).size();
 		}
 
 		/**
@@ -735,7 +758,7 @@ public class RIFSEM
 		 * @param to
 		 *            The to point
 		 */
-		public void add(int component, Point from, Point to)
+		public void add(Codon component, Point from, Point to)
 		{
 			ensure(component);
 			this.from.get(component).add(from);
@@ -753,7 +776,7 @@ public class RIFSEM
 		 * @param to
 		 *            The to frequency
 		 */
-		public void weight(int component, double from, double to)
+		public void weight(Codon component, double from, double to)
 		{
 			ensure(component);
 			this.fromWeights.get(component).add(from);
@@ -763,17 +786,17 @@ public class RIFSEM
 		/**
 		 * Ensure that lists exist for the given component (and below)
 		 */
-		private void ensure(int component)
+		private void ensure(Codon codon)
 		{
-			while (from.size() <= component)
-				from.add(new ArrayList<Point>());
-			while (to.size() <= component)
-				to.add(new ArrayList<Point>());
-
-			while (fromWeights.size() <= component)
-				fromWeights.add(new ArrayList<Double>());
-			while (toWeights.size() <= component)
-				toWeights.add(new ArrayList<Double>());
+			if(! from.containsKey(codon))
+				from.put(codon, new ArrayList<Point>());
+			if(! to.containsKey(codon))
+				to.put(codon, new ArrayList<Point>());	
+			
+			if(! fromWeights.containsKey(codon))
+				fromWeights.put(codon, new ArrayList<Double>());
+			if(! toWeights.containsKey(codon))
+				toWeights.put(codon, new ArrayList<Double>());
 		}
 
 		/**
@@ -867,5 +890,39 @@ public class RIFSEM
 		}
 
 		return sumYX / sumXX;
+	}
+	
+	public static List<Integer> ifsCode(List<Codon> code)
+	{
+		return new Wrapper(code, true);
+	}
+	
+	public static List<Integer> mapCode(List<Codon> code)
+	{
+		return new Wrapper(code, false);		
+	}
+	
+	private static class Wrapper extends AbstractList<Integer>
+	{
+		List<Codon> master;
+		boolean ifs;
+
+		public Wrapper(List<Codon> master, boolean ifs)
+		{
+			this.master = master;
+			this.ifs = ifs;
+		}
+
+		@Override
+		public Integer get(int index)
+		{
+			return ifs ? master.get(index).ifs() : master.get(index).map();
+		}
+
+		@Override
+		public int size()
+		{
+			return master.size();
+		}	
 	}
 }

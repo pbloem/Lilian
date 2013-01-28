@@ -219,13 +219,13 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 	 * a density to this point that is too low to be represented as a double
 	 * 
 	 */
-	public static <M extends AffineMap> List<Integer> code(
+	public static <M extends AffineMap> List<Codon> code(
 			DiscreteRIFS<M> rifs, ChoiceTree tree, Point point)
 	{
 		return code(rifs,tree,  point, new MVN(rifs.dimension()));
 	}
 		
-	public static <M extends AffineMap> List<Integer> code(
+	public static <M extends AffineMap> List<Codon> code(
 			DiscreteRIFS<M> rifs, ChoiceTree tree, Point point,  MVN basis)
 	{		
 		SearchResult res = search(
@@ -265,7 +265,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 
 		SearchResult res = search(
 				rifs, tree.root(), point,new SearchResultImpl(tree.depth(), bufferLimit),
-				new ArrayList<Integer>(tree.depth()), 0.0,
+				new ArrayList<Codon>(tree.depth()), 0.0,
 				MatrixTools.identity(rifs.dimension()), new ArrayRealVector(rifs.dimension()),
 				basis);
 		return res;
@@ -273,7 +273,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 	
 	private static <M extends AffineMap> SearchResult search(
 			DiscreteRIFS<M> rifs, ChoiceTree.Node node, Point point,
-			SearchResultImpl result, List<Integer> current, 
+			SearchResultImpl result, List<Codon> current, 
 			double logPrior, 
 			RealMatrix transform, RealVector translate,
 			MVN basis)	
@@ -295,7 +295,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 				logProb = Double.NEGATIVE_INFINITY;
 			}
 						
-			result.show(logProb, new ArrayList<Integer>(current), point, new Point(translate), logPrior);
+			result.show(logProb, new ArrayList<Codon>(current), point, new Point(translate), logPrior);
 			return result;
 		}
 		
@@ -304,7 +304,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 		
 		for(int i = 0; i < ifs.size(); i ++)
 		{
-			current.add(i);
+			current.add(new Codon(choice, i));
 			ChoiceTree.Node newNode = node.leaf() ? null : node.children().get(i);
 			
 			RealMatrix cr = transform.multiply(ifs.get(i).getTransformation());
@@ -330,7 +330,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 	{
 		public double logProb();
 		
-		public List<Integer> code();
+		public List<Codon> code();
 				
 		public Point mean();
 		
@@ -364,7 +364,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 		 * 
 		 * @return
 		 */
-		public Weighted<List<Integer>> codes();
+		public Weighted<List<Codon>> codes();
 
 	}
 	
@@ -375,8 +375,8 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 		private double logProb = Double.NEGATIVE_INFINITY;
 		private double codeApprox = Double.NEGATIVE_INFINITY;
 		
-		private List<Integer> code = null;
-		private List<Integer> codeFallback = null;
+		private List<Codon> code = null;
+		private List<Codon> codeFallback = null;
 		
 		private List<WCode> buffer = new ArrayList<WCode>();
 		private List<WCode> bufferFallback = new ArrayList<WCode>();
@@ -402,7 +402,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 			this.bufferLimit = bufferLimit;
 		}
 		
-		public void show(double logProb, List<Integer> code, Point point, Point mean, double logPrior)
+		public void show(double logProb, List<Codon> code, Point point, Point mean, double logPrior)
 		{
 			if(!Double.isNaN(logProb) && !Double.isInfinite(logProb))
 			{
@@ -450,7 +450,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 			return logProb;
 		}
 		
-		public List<Integer> code()
+		public List<Codon> code()
 		{
 			return code != null ? code : codeFallback;
 		}
@@ -477,11 +477,11 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 			return densityApprox;
 		}
 		
-		public Weighted<List<Integer>> codes()
+		public Weighted<List<Codon>> codes()
 		{
 			List<WCode> buff = buffer.size() > 0 ? buffer : bufferFallback;
 			
-			Weighted<List<Integer>> codes = WeightedLists.empty();
+			Weighted<List<Codon>> codes = WeightedLists.empty();
 			for(WCode wc : buff)
 				codes.add(wc.code(), wc.weight());
 			
@@ -490,10 +490,10 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 		
 		private class WCode implements Comparable<WCode>
 		{
-			private List<Integer> code;
+			private List<Codon> code;
 			private double weight;
 
-			public WCode(List<Integer> code, double weight)
+			public WCode(List<Codon> code, double weight)
 			{
 				this.code = code;
 				this.weight = weight;
@@ -505,7 +505,7 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 				return - Double.compare(weight, other.weight);
 			}
 			
-			public List<Integer> code()
+			public List<Codon> code()
 			{
 				return code;
 			}
@@ -534,15 +534,75 @@ public class DiscreteRIFS<M extends Map & Parametrizable> extends AbstractRIFS<M
 		return dist;
 	}
 
-	public static List<List<Integer>> codes(DiscreteRIFS<Similitude> rifs,
+	public static List<List<Codon>> codes(DiscreteRIFS<Similitude> rifs,
 			ChoiceTree tree, List<Point> points, int depth)
 	{
-		List<List<Integer>> codes = new ArrayList<List<Integer>>(points.size());
+		List<List<Codon>> codes = new ArrayList<List<Codon>>(points.size());
 		
 		for(Point point : points)	
 			codes.add(code(rifs, tree, point));
 		
 		return codes;
+	}
+	
+	/**
+	 * A single step in a derivation of a given point under a discrete RIFS
+	 * model. It consists of a choice of ifs and a choice of map.
+	 * @author Peter
+	 *
+	 */
+	public static final class Codon
+	{
+		private int ifs;
+		private int map;
+		
+		public Codon(int ifs, int map)
+		{
+			this.ifs = ifs;
+			this.map = map;
+		}
+
+		public int ifs()
+		{
+			return ifs;
+		}
+
+		public int map()
+		{
+			return map;
+		}
+		
+		public String toString()
+		{
+			return ifs + "." + map;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ifs;
+			result = prime * result + map;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Codon other = (Codon) obj;
+			if (ifs != other.ifs)
+				return false;
+			if (map != other.map)
+				return false;
+			return true;
+		}
 	}
 
 //	public static List<Point> endpoints(IFS<Similitude> ifs,
