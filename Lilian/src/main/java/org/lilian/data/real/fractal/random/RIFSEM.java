@@ -1,6 +1,8 @@
 package org.lilian.data.real.fractal.random;
 
 import static org.lilian.util.Functions.log2;
+import static org.lilian.util.Functions.tic;
+import static org.lilian.util.Functions.toc;
 import static org.lilian.util.Series.series;
 import static org.lilian.data.real.fractal.random.DiscreteRIFS.Codon;
 
@@ -8,10 +10,13 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.lilian.Global;
 import org.lilian.data.real.Datasets;
@@ -51,7 +56,7 @@ public class RIFSEM
 	private List<ChoiceTree> trees;
 		
 	// * A code tree for each dataset. This list holds the root nodes.
-	private Node codeTree;
+	private List<Node> codeTrees;
 	
 	private int compPerIFS, depth, sampleSize;
 	
@@ -82,7 +87,10 @@ public class RIFSEM
 				throw new IllegalArgumentException("All component IFSs of the initial model should have the sam enumber of component transformations.");
 				
 		dataSample = new ArrayList<List<Point>>(data.size());
-		codeTree = new Node(null, null);
+		
+		codeTrees = new ArrayList<Node>();
+		for(int i : series(dataSample.size()))
+			codeTrees.add(new Node(null, null));
 		
 		resample();
 		
@@ -99,14 +107,15 @@ public class RIFSEM
 	public void iteration()
 	{
 		resample();
+
+		tic();
+		findCodes();
+		Global.log().info("Finished finding codes. " + toc() + " seconds.");
 		
-		for(int i: series(50))
-		{
-			System.out.println(".");
-			findCodes();
-			codeTree.print(System.out, 0);
-			findTrees();
-		}
+		tic();
+		findTrees();
+		Global.log().info("Finished finding trees. " + toc() + " seconds.");
+
 		findModel();
 	}
 	
@@ -155,12 +164,12 @@ public class RIFSEM
 				if (n != 0) // codes found containing this comp
 				{
 					// * Find the map for the point pairs
-					Similitude map = findMap(maps.from(i), maps.to(i), component.get(i));
+					Similitude map = findMap(maps.from(c), maps.to(c), component.get(i));
 					
 					
 					// * Find the weight for the frequency pairs
-					double weight = findScalar(maps.fromWeights(i),
-							maps.toWeights(i));
+					double weight = findScalar(maps.fromWeights(c),
+							maps.toWeights(c));
 	
 					// * If the map contracts too much, we perturb it slightly
 	//				double det = MatrixTools
@@ -187,7 +196,7 @@ public class RIFSEM
 			if (assigned.isEmpty())
 			{				
 				throw new IllegalStateException(
-						"No points were assigned to any components");
+						"No points were assigned to any components. Component IFS ("+h+")");
 			}
 	
 			// * For each unassigned component, take a random assigned component and
@@ -247,18 +256,20 @@ public class RIFSEM
 	 */
 	public void findCodes()
 	{
-		System.out.println("----------------");
-		codeTree = new Node(null, null);
+		codeTrees.clear();
 		
 		for(int i : Series.series(dataSample.size()))
 		{
 			List<Point> points = dataSample.get(i);
 			ChoiceTree tree = trees.get(i);
 			
+			Node root = new Node(null, null);
+			codeTrees.add(root);
+
 			for(Point point : points)
 			{
 				List<Codon> code = DiscreteRIFS.code(model, tree, point);
-				codeTree.observe(code, point);
+				root.observe(code, point);
 				
 				// Global.log().info("" + code);
 
@@ -285,7 +296,9 @@ public class RIFSEM
 			//   out from the data.
 			ChoiceTree tree = ChoiceTree.random(model(), depth);
 			
-			codeTree.build(tree);
+			codeTrees.get(i).build(tree);
+			
+			
 			trees.add(tree);
 			// System.out.println(tree);
 		}
@@ -297,11 +310,94 @@ public class RIFSEM
 	 * maps for component IFS i.
 	 */
 	private Maps findMaps()
-	{	
+	{
 		Maps maps = new Maps();
-		codeTree.findPairs(maps);
+
+		// * Collect all observed codes
+		Set<List<Codon>> allCodes = new LinkedHashSet<List<Codon>>();
+		for(Node root : codeTrees)
+			root.collectCodes(allCodes);
+		
+		// * For each observed code ...
+		for (List<Codon> toCode : allCodes)
+		{
+			if(toCode.size() < 1)
+				continue;
+			
+			// * find the pre-code (the code for the points that are mapped to this 
+			//   code by its first symbol.
+			List<Codon> fromCode = new ArrayList<Codon>(toCode);
+			Codon codon = fromCode.remove(0);
+
+			// * Collect the to and from set for each code
+			List<Point> to = new ArrayList<Point>(),
+			            from = new ArrayList<Point>();
+			
+			for(Node root : codeTrees)
+			{
+				to.addAll(root.points(toCode));
+				from.addAll(root.points(fromCode));
+			}
+			
+			
+			int m = Math.min(to.size(), from.size());
+			MVN toMVN = mvn(to), fromMVN = mvn(from);
+			
+			
+			if (fromMVN != null & toMVN != null)
+			{
+				if (m < COVARIANCE_THRESHOLD) // Not enough points to
+				                              // consider covariance
+				{
+					for (int i : series(from.size()))
+						maps.add(codon, fromMVN.mean(), toMVN.mean());
+				} else
+				{
+						// * Consider the covariance by taking not just the
+						//   means,
+						//   but points close to zero mapped to both
+						//   distributions
+
+						//   We generate as many points as are in the to node.
+						//   (for depth one a handful would suffice, but for
+						//   higher values the amount of points generated gives
+						//   a sort of weight to this match in the codes among 
+						//   the other points)
+						List<Point> points = 
+								new MVN(model.dimension(), spanningPointsVariance)
+								.generate(from.size());
+
+						List<Point> pf = fromMVN.map().map(points);
+						List<Point> pt = toMVN.map().map(points);
+
+						for (int i = 0; i < points.size(); i++)
+							maps.add(codon, pf.get(i), pt.get(i));
+				}
+			} else
+			{
+					// Global.log().info("Points for code " + code +
+					// " formed deficient MVN. No points added to pairs.");
+			}
+
+			// * Register the drop in frequency as the symbol t gets added
+			//   to the code
+			maps.weight(codon, from.size(), to.size());
+		}
 		
 		return maps;
+	}
+
+	private MVN mvn(List<Point> points)
+	{
+		try
+		{
+			return useSphericalMVN ? MVN.findSpherical(points) : 
+				MVN.find(points);
+		} catch (RuntimeException e)
+		{
+			// * Could not find proper MVN model
+			return null;
+		}
 	}
 	
 	/**
@@ -473,7 +569,38 @@ public class RIFSEM
 		{
 			return points;
 		}
+		
+		/**
+		 * Returns the points associated with the node at the given code-suffix 
+		 * (ie. the path from this node).
+		 * 
+		 * @param code
+		 * @return
+		 */
+		public List<Point> points(List<Codon> code)
+		{
+			if (code.isEmpty())
+				return points();
+			
+			Codon head = code.get(0);
+			if(! children.containsKey(head))
+				return Collections.emptyList();
+			
+			return children.get(head).points(code.subList(1, code.size()));
+		}
 
+		/**
+		 * Add all codes at and below this node to the given collection
+		 * @param codes
+		 */
+		public void collectCodes(Collection<List<Codon>> codes)
+		{
+			codes.add(code());
+			
+			for(Node child : children.values())
+				child.collectCodes(codes);
+		}
+		
 		/**
 		 * The number of times this node was visited (ie. the number of points
 		 * stored here)
@@ -562,84 +689,6 @@ public class RIFSEM
 
 			return children.get(symbol).find(code.subList(1, code.size()));
 		}
-
-		/**
-		 * This method implements the search algorithm for finding code pairs
-		 * where the second is a rightshifted version of the first.
-		 * 
-		 * This method is executed first for all descendants of this node, and 
-		 * then for the node itself.
-		 * 
-		 * It takes this nodes' code and retrieves the node that has the same code, 
-		 * but with the first element removed. It then knows that the points of 
-		 * that node should map to the points of this node under the 
-		 * transformation denoted by the first element of this node's code. 
-		 * 
-		 * 
-		 * @param maps
-		 */
-		public void findPairs(Maps maps)
-		{
-			if (children.size() > 0) // * Recurse
-				for (Codon codon : children.keySet())
-					children.get(codon).findPairs(maps);
-
-			if (code().size() > 0) // * Execute for this node
-			{
-				List<Codon> codeFrom = new ArrayList<Codon>(code);
-				
-				Codon codon = codeFrom.remove(0);
-			
-				// * Find the node that matches
-				Node nodeFrom = codeTree.find(codeFrom);
-				
-				if (nodeFrom != null)
-				{
-					int m = Math
-							.min(nodeFrom.points().size(), this.points().size());
-
-					MVN from = nodeFrom.mvn(), to = mvn();
-
-					if (from != null & to != null)
-					{
-						if (m < COVARIANCE_THRESHOLD) // Not enough points to
-														// consider covariance
-						{
-							for (int i : series(points.size()))
-								maps.add(codon, from.mean(), to.mean());
-						} else
-						{
-							// * Consider the covariance by taking not just the
-							//   means,
-							//   but points close to zero mapped to both
-							//   distributions
-
-							//   We generate as many points as are in the to node.
-							//   (for depth one a handful would suffice, but for
-							//   higher values the amount of points generated gives
-							//   a sort of weight to this match in the codes among 
-							//   the other points)
-							List<Point> points = new MVN(model.dimension(), spanningPointsVariance)
-									.generate(points().size());
-
-							List<Point> pf = from.map().map(points);
-							List<Point> pt = to.map().map(points);
-
-							for (int i = 0; i < points.size(); i++)
-								maps.add(codon, pf.get(i), pt.get(i));
-						}
-					} else
-					{
-						// Global.log().info("Points for code " + code +
-						// " formed deficient MVN. No points added to pairs.");
-					}
-
-					// * Register the drop in frequency as the symbol t gets added
-					//   to the code
-					maps.weight(codon, nodeFrom.frequency(), this.frequency());
-				}
-			}
-		}
 		
 		public void build(ChoiceTree tree)
 		{
@@ -672,13 +721,17 @@ public class RIFSEM
 					// System.out.println(j);
 					MVN mapped = mvn.transform(component.get(j));
 					
-					if(! children.containsKey(i))
+					Codon codon = new Codon(i, j);
+					if(! children.containsKey(codon))
 						continue;
 					
-					List<Point> to = children.get(i).points();
+					List<Point> to = children.get(codon).points();
 					
 					for(Point point : to)
-						score += log2(mapped.density(point));
+					{
+						double d = mapped.density(point);
+						score += log2(d);
+					}
 				}
 				
 				if(score >= bestScore)
@@ -686,6 +739,8 @@ public class RIFSEM
 					bestScore = score;
 					best = i;
 				}
+				
+				// System.out.println(best + " " + bestScore);
 			}
 			
 			// * Submit to the choice tree
@@ -806,10 +861,10 @@ public class RIFSEM
 		 * @param component
 		 * @return
 		 */
-		public List<Point> from(int component)
+		public List<Point> from(Codon codon)
 		{
-			if (component < from.size())
-				return from.get(component);
+			if(from.containsKey(codon))
+				return from.get(codon);
 
 			return Collections.emptyList();
 		}
@@ -821,10 +876,10 @@ public class RIFSEM
 		 * @param component
 		 * @return
 		 */
-		public List<Point> to(int component)
+		public List<Point> to(Codon codon)
 		{
-			if (component < to.size())
-				return to.get(component);
+			if (to.containsKey(codon))
+				return to.get(codon);
 
 			return Collections.emptyList();
 		}
@@ -836,10 +891,10 @@ public class RIFSEM
 		 * @param component
 		 * @return
 		 */
-		public List<Double> fromWeights(int component)
+		public List<Double> fromWeights(Codon codon)
 		{
-			if (component < fromWeights.size())
-				return fromWeights.get(component);
+			if (fromWeights.containsKey(codon))
+				return fromWeights.get(codon);
 
 			return Collections.emptyList();
 		}
@@ -851,10 +906,10 @@ public class RIFSEM
 		 * @param component
 		 * @return
 		 */
-		public List<Double> toWeights(int component)
+		public List<Double> toWeights(Codon codon)
 		{
-			if (component < toWeights.size())
-				return toWeights.get(component);
+			if (toWeights.containsKey(codon))
+				return toWeights.get(codon);
 
 			return Collections.emptyList();
 		}
@@ -864,9 +919,9 @@ public class RIFSEM
 		{
 			String out = "";
 
-			for (int i : Series.series(from.size()))
+			for (Codon codon : from.keySet())
 			{
-				out += i + ":" + from(i).size() + "_" + to(i).size() + " ";
+				out += codon + ":" + from(codon).size() + "_" + to(codon).size() + " ";
 			}
 
 			return out;

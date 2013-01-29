@@ -1,5 +1,7 @@
 package org.lilian.data.real.fractal.random;
 
+import static org.lilian.util.Series.series;
+
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.*;
@@ -10,6 +12,7 @@ import org.lilian.data.real.Similitude;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.search.Parametrizable;
+import org.lilian.util.Series;
 
 /**
  * Provides utility functions for dealing with random fractal models. 
@@ -43,7 +46,7 @@ public class RIFSs {
 	public static BufferedImage draw(DiscreteRIFS<Similitude> model, int res,
 			int numRandom)
 	{
-		return draw(model, res, numRandom, 1000000, 10, true);
+		return draw(model, res, numRandom, 10000, 10, true);
 	}	
 	
 	/**
@@ -595,4 +598,19 @@ public class RIFSs {
 //
 //		return result;
 //	}	
+	
+	public static DiscreteRIFS<Similitude> initialSphere(int dim, int compIFS, int compMaps, double radius, double scale)
+	{
+		DiscreteRIFS<Similitude> rifs = null;
+		for(int i : series(compIFS))
+		{
+			IFS<Similitude> ifs =  IFSs.initialSphere(dim, compMaps, radius, scale);
+			if(rifs == null)
+				rifs = new DiscreteRIFS<Similitude>(ifs, 1.0);
+			else
+				rifs.addModel(ifs, 1.0);
+		}
+		
+		return rifs;
+	}
 }
