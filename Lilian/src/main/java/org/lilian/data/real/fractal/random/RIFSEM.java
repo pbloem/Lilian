@@ -125,16 +125,17 @@ public class RIFSEM
 	{
 		resample();
 
-		for(int i : series(5))
-		{
-			tic();
-			findCodes();
-			Global.log().info("Finished finding codes. " + toc() + " seconds.");
-			
-			tic();
-			findTrees();
-			Global.log().info("Finished finding trees. " + toc() + " seconds.");
-		}
+
+		tic();
+		findCodes();
+		Global.log().info("Finished finding codes. " + toc() + " seconds.");
+		
+		tic();
+		findTrees();
+		Global.log().info("Finished finding trees. " + toc() + " seconds.");
+		
+		for(ChoiceTree tree : trees)
+			System.out.println(tree);
 		
 		tic();
 		findModel();
