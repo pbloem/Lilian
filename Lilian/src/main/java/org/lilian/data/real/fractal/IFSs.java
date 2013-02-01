@@ -169,14 +169,14 @@ public class IFSs
 	}
 
 	
-	public static IFS<Similitude> cantorASim()
-	{
-		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
-		return builder.build(Arrays.asList(
-				.45,  .5, .5, 0.0, 1.0,
-				.45, -.5,-.5, 0.0, 1.0
-				));		
-	}	
+//	public static IFS<Similitude> cantorASim()
+//	{
+//		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+//		return builder.build(Arrays.asList(
+//				.45,  .5, .5, 0.0, 1.0,
+//				.45, -.5,-.5, 0.0, 1.0
+//				));		
+//	}	
 
 	public static IFS<Similitude> cantor1D()
 	{
@@ -193,6 +193,30 @@ public class IFSs
 		return builder.build(Arrays.asList(
 				.45,0.0, 0.0,.45, -.5, .5, 1.0,
 				.45,0.0, 0.0,.45,  .5,-.5, 1.0
+				));		
+	}
+	
+
+	public static IFS<Similitude> cantorASim()
+	{
+		double th = 1.0/3.0, tth = 2.0/3.0;
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				th,  tth,  tth, 0.0, 1.0, 
+				th, -tth, -tth, 0.0, 1.0
+				));		
+	}
+	
+	
+	public static IFS<Similitude> cantorBSim()
+	{
+		double th = 1.0/3.0, tth = 2.0/3.0;
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				th, -tth,  tth, 0.0, 1.0,
+				th,  tth, -tth, 0.0, 1.0
 				));		
 	}
 	

@@ -33,7 +33,7 @@ public class Similitude extends AffineMap
 	protected List<Double> angles; // in radians
 	
 	/**
-	 * Note: the angles in this parameter vector are in radians div by 2 pi 
+	 * NOTE: the angles in this parameter vector are in radians div by 2 pi 
 	 * (that way all parameters are roughly the same scale)
 	 * 
 	 * @param parameters

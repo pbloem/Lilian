@@ -18,6 +18,15 @@ import org.lilian.util.Series;
  * Provides utility functions for dealing with random fractal models. 
  */
 public class RIFSs {
+	
+	public static DiscreteRIFS<Similitude> cantor()
+	{
+		DiscreteRIFS<Similitude> d = new DiscreteRIFS<Similitude>(IFSs.cantorASim(), 1.0);
+		d.addModel(IFSs.cantorBSim(), 1.0);
+		
+		return d;
+	
+	}
 
 	public static DiscreteRIFS<Similitude> kochUpDown()
 	{

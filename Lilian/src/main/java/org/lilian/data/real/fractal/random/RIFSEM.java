@@ -20,6 +20,8 @@ import java.util.Set;
 
 import org.lilian.Global;
 import org.lilian.data.real.Datasets;
+import org.lilian.data.real.Density;
+import org.lilian.data.real.KernelDensity;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
@@ -31,6 +33,9 @@ import org.lilian.search.Builder;
 import org.lilian.search.Parameters;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
+import org.lilian.util.distance.Distance;
+import org.lilian.util.distance.EuclideanDistance;
+import org.lilian.util.distance.HausdorffDistance;
 
 /**
  * 
@@ -41,7 +46,12 @@ import org.lilian.util.Series;
  */
 public class RIFSEM
 {
-	private static boolean useSphericalMVN = true;
+	
+	private static double KERNEL_VAR = 0.5;
+	private static Distance<List<Point>> hausdorffDistance = 
+			new HausdorffDistance<Point>(new EuclideanDistance());
+	
+	private static boolean useSphericalMVN = false;
 	private static final int COVARIANCE_THRESHOLD = 5;
 	private static final boolean PERTURB_UNASSIGNED = true;
 	// * If a code has fewer than this number of points, it is not
@@ -104,19 +114,32 @@ public class RIFSEM
 		builder = Similitude.similitudeBuilder(model.dimension());
 	}
 	
+	public RIFSEM(DiscreteRIFS<Similitude> initial, List<List<Point>> data,
+			List<ChoiceTree> dataTrees, int depth, int sampleSize, double spanningPointsVariance, double perturbVar)
+	{
+		this(initial, data, depth, sampleSize, spanningPointsVariance, perturbVar);
+		this.trees = dataTrees;
+	}
+
 	public void iteration()
 	{
 		resample();
 
-		tic();
-		findCodes();
-		Global.log().info("Finished finding codes. " + toc() + " seconds.");
+		for(int i : series(5))
+		{
+			tic();
+			findCodes();
+			Global.log().info("Finished finding codes. " + toc() + " seconds.");
+			
+			tic();
+			findTrees();
+			Global.log().info("Finished finding trees. " + toc() + " seconds.");
+		}
 		
 		tic();
-		findTrees();
-		Global.log().info("Finished finding trees. " + toc() + " seconds.");
-
 		findModel();
+		Global.log().info("Finished finding model. " + toc() + " seconds.");
+
 	}
 	
 	public DiscreteRIFS<Similitude> model()
@@ -384,6 +407,8 @@ public class RIFSEM
 			maps.weight(codon, from.size(), to.size());
 		}
 		
+		
+		Global.log().info("Maps found.");
 		return maps;
 	}
 
@@ -704,44 +729,61 @@ public class RIFSEM
 			//   of this node, mapping it by each component transformation, and 
 			//   taking the log probability of the points of the matching node.
 			int best = -1;
-			double bestScore = Double.NEGATIVE_INFINITY;
+			double bestScore = Double.POSITIVE_INFINITY;
+			
+			List<Double> probs = new ArrayList<Double>(model.size());
+			for(int i : series(model.size()))
+				probs.add(Double.NaN);
 			
 			for(int i : series(model.size()))
 			{
 				IFS<Similitude> component = model.models().get(i);
 				double logIFSPrior = log2(model.probability(i));
 			
-				double score = logIFSPrior;
-				MVN mvn = mvn();
+				double score = -1.0; // logIFSPrior;
+				// MVN mvn = mvn();
+				List<Point> from = points();
 				
 				// System.out.println(code() + " " + points() + " " + mvn);
 				
 				for(int j : series(component.size()))
 				{
 					// System.out.println(j);
-					MVN mapped = mvn.transform(component.get(j));
+					// MVN mapped = mvn.transform(component.get(j));
 					
-					Codon codon = new Codon(i, j);
-					if(! children.containsKey(codon))
+					List<Point> mapped = component.get(j).map(from);
+					// Density density = new KernelDensity(mapped, KERNEL_VAR);
+					
+					// * Retrieve all points from children with map component j
+					List<Point> to = new ArrayList<Point>();
+					for(int k : series(model.size()))
+					{
+						Codon codon = new Codon(k, j);
+						if(children.containsKey(codon))
+							to.addAll(children.get(codon).points());
+					}
+					
+					if(to.isEmpty())
 						continue;
 					
-					List<Point> to = children.get(codon).points();
+					if(score < 0.0)
+						score = 0.0;
 					
-					for(Point point : to)
-					{
-						double d = mapped.density(point);
-						score += log2(d);
-					}
+					score += hausdorffDistance.distance(mapped, to);
+					// for(Point point : to)
+					//	score += log2(density.density(point));
 				}
 				
-				if(score >= bestScore)
+				probs.set(i, score);
+				
+				if(score >= 0.0 && score <= bestScore)
 				{
 					bestScore = score;
 					best = i;
 				}
-				
-				// System.out.println(best + " " + bestScore);
 			}
+			
+			System.out.println(depth() + " " + best + " " + bestScore + " " + probs);
 			
 			// * Submit to the choice tree
 			tree.set(mapCode(code()), best);
