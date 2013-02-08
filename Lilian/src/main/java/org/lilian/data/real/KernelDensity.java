@@ -5,6 +5,7 @@ import java.util.List;
 
 public class KernelDensity implements Density
 {
+	private static final long serialVersionUID = -1576741835502637155L;
 	private List<MVN> mvns;
 
 	public KernelDensity(List<Point> data, double variance)

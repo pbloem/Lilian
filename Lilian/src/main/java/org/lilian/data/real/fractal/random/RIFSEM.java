@@ -63,7 +63,7 @@ public class RIFSEM
 	
 	// * The three main components of an EM iteration
 	private DiscreteRIFS<Similitude> model;
-	private List<ChoiceTree> trees;
+	private List<SChoiceTree> trees;
 		
 	// * A code tree for each dataset. This list holds the root nodes.
 	private List<Node> codeTrees;
@@ -104,22 +104,22 @@ public class RIFSEM
 		
 		resample();
 		
-		// * Add random trees
-		trees = new ArrayList<ChoiceTree>(data.size());
+		// * Add trees
+		trees = new ArrayList<SChoiceTree>(data.size());
 		for(int i : Series.series(dataSample.size()))
-			trees.add(model.randomInstance(depth));
+			trees.add(new SChoiceTree(compPerIFS, model.size(), depth));
 		
 		findCodes();		
 		
 		builder = Similitude.similitudeBuilder(model.dimension());
 	}
 	
-	public RIFSEM(DiscreteRIFS<Similitude> initial, List<List<Point>> data,
-			List<ChoiceTree> dataTrees, int depth, int sampleSize, double spanningPointsVariance, double perturbVar)
-	{
-		this(initial, data, depth, sampleSize, spanningPointsVariance, perturbVar);
-		this.trees = dataTrees;
-	}
+//	public RIFSEM(DiscreteRIFS<Similitude> initial, List<List<Point>> data,
+//			List<ChoiceTree> dataTrees, int depth, int sampleSize, double spanningPointsVariance, double perturbVar)
+//	{
+//		this(initial, data, depth, sampleSize, spanningPointsVariance, perturbVar);
+//		this.trees = dataTrees;
+//	}
 
 	public void iteration()
 	{
@@ -134,7 +134,7 @@ public class RIFSEM
 		findTrees();
 		Global.log().info("Finished finding trees. " + toc() + " seconds.");
 		
-		for(ChoiceTree tree : trees)
+		for(SChoiceTree tree : trees)
 			System.out.println(tree);
 		
 		tic();
@@ -158,7 +158,7 @@ public class RIFSEM
 
 		// * Frequency model for all component IFSs
 		BasicFrequencyModel<Integer> freqs = new BasicFrequencyModel<Integer>(); 
-		for(ChoiceTree tree : trees)
+		for(SChoiceTree tree : trees)
 			tree.count(freqs);
 		
 		DiscreteRIFS<Similitude> newModel = null;
@@ -285,18 +285,15 @@ public class RIFSEM
 		for(int i : Series.series(dataSample.size()))
 		{
 			List<Point> points = dataSample.get(i);
-			ChoiceTree tree = trees.get(i);
+			SChoiceTree tree = trees.get(i);
 			
 			Node root = new Node(null, null);
 			codeTrees.add(root);
 
 			for(Point point : points)
 			{
-				List<Codon> code = DiscreteRIFS.code(model, tree, point);
+				List<Codon> code = SearchStochastic.code(model, tree, point);
 				root.observe(code, point);
-				
-				// Global.log().info("" + code);
-
 			}
 		}
 			
@@ -308,7 +305,7 @@ public class RIFSEM
 	}
 	
 	/**
-	 * Finds new choicetrees given the current model and coding
+	 * Finds new ChoiceTrees given the current model and coding
 	 */
 	public void findTrees()
 	{
@@ -318,7 +315,7 @@ public class RIFSEM
 		{
 			// * We start with a random tree, and add the choices we can figure
 			//   out from the data.
-			ChoiceTree tree = ChoiceTree.random(model(), depth);
+			SChoiceTree tree = new SChoiceTree(compPerIFS, model.size(), depth);
 			
 			codeTrees.get(i).build(tree);
 			
@@ -716,7 +713,7 @@ public class RIFSEM
 			return children.get(symbol).find(code.subList(1, code.size()));
 		}
 		
-		public void build(ChoiceTree tree)
+		public void build(SChoiceTree tree)
 		{
 			if(children == null || children.size() == 0)
 				return;
@@ -730,7 +727,7 @@ public class RIFSEM
 			//   of this node, mapping it by each component transformation, and 
 			//   taking the log probability of the points of the matching node.
 			int best = -1;
-			double bestScore = Double.POSITIVE_INFINITY;
+			double bestScore = Double.NEGATIVE_INFINITY;
 			
 			List<Double> probs = new ArrayList<Double>(model.size());
 			for(int i : series(model.size()))
@@ -741,7 +738,7 @@ public class RIFSEM
 				IFS<Similitude> component = model.models().get(i);
 				double logIFSPrior = log2(model.probability(i));
 			
-				double score = -1.0; // logIFSPrior;
+				double score = logIFSPrior;
 				// MVN mvn = mvn();
 				List<Point> from = points();
 				
@@ -753,7 +750,7 @@ public class RIFSEM
 					// MVN mapped = mvn.transform(component.get(j));
 					
 					List<Point> mapped = component.get(j).map(from);
-					// Density density = new KernelDensity(mapped, KERNEL_VAR);
+					Density density = new KernelDensity(mapped, KERNEL_VAR);
 					
 					// * Retrieve all points from children with map component j
 					List<Point> to = new ArrayList<Point>();
@@ -767,27 +764,34 @@ public class RIFSEM
 					if(to.isEmpty())
 						continue;
 					
-					if(score < 0.0)
-						score = 0.0;
-					
-					score += hausdorffDistance.distance(mapped, to);
-					// for(Point point : to)
-					//	score += log2(density.density(point));
+					// score += hausdorffDistance.distance(mapped, to);
+					for(Point point : to)
+						score += log2(density.density(point));
 				}
 				
 				probs.set(i, score);
 				
-				if(score >= 0.0 && score <= bestScore)
+				if(score >= bestScore)
 				{
 					bestScore = score;
 					best = i;
 				}
 			}
 			
-			System.out.println(depth() + " " + best + " " + bestScore + " " + probs);
+		//	System.out.println(depth() + " " + best + " " + bestScore + " " + probs);
 			
 			// * Submit to the choice tree
-			tree.set(mapCode(code()), best);
+			if(best != -1)
+			{
+				SChoiceTree.Node node = tree.get(mapCode(code()));
+				node.clear();
+				
+				for(int i : Series.series(probs.size()))
+				{
+					if(! Double.isNaN(probs.get(i)))
+					node.set(i, probs.get(i));
+				}
+			}
 			
 			// * Recurse
 			for(Node child : children.values())
