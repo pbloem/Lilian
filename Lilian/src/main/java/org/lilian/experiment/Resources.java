@@ -1,5 +1,7 @@
 package org.lilian.experiment;
 
+import static org.lilian.util.Series.series;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import org.lilian.data.real.classification.Classifiers;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSClassifierBasic;
 import org.lilian.data.real.fractal.IFSs;
+import org.lilian.data.real.fractal.random.RIFSs;
 import org.lilian.grammars.Grammar;
 import org.lilian.grammars.TestGrammars;
 import org.lilian.graphs.DTGraph;
@@ -472,7 +475,7 @@ public class Resources
 		Grammar<String> grammar = toyGrammar(name);
 		System.out.println(grammar);
 		List<List<String>> data = new ArrayList<List<String>>(size);
-		for(int i : Series.series(size))
+		for(int i : series(size))
 			data.add(grammar.generateSentence("S", 0, 25));
 		
 		return data;
@@ -484,4 +487,28 @@ public class Resources
 	{
 		return new File(file);
 	}
+	
+	@Resource(name="cantor RIFS")
+	public static List<List<Point>> cantorRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
+	{
+		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+		
+		for(int i : series(numSets))
+			data.add(RIFSs.cantor().randomInstance(perSet, depth));
+	
+		return data;
+	}
+	
+	@Resource(name="koch RIFS")
+	public static List<List<Point>> kochRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
+	{
+		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+		
+		for(int i : series(numSets))
+			data.add(RIFSs.koch2UpDown().randomInstance(perSet, depth));
+	
+		return data;
+	}
 }
+
+
