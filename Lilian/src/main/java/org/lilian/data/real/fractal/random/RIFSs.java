@@ -19,6 +19,16 @@ import org.lilian.util.Series;
  */
 public class RIFSs {
 	
+	
+	public static DiscreteRIFS<Similitude> sierpinski()
+	{
+		DiscreteRIFS<Similitude> d = new DiscreteRIFS<Similitude>(IFSs.sierpinskiSim(), 1.0);
+		d.addModel(IFSs.sierpinskiDownSim(), 1.0);
+		
+		return d;
+	}
+
+	
 	public static DiscreteRIFS<Similitude> cantor()
 	{
 		DiscreteRIFS<Similitude> d = new DiscreteRIFS<Similitude>(IFSs.cantorASim(), 1.0);

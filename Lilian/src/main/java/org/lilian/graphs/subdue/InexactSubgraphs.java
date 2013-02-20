@@ -12,23 +12,34 @@ import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.lilian.graphs.MapUTGraph;
+import org.lilian.graphs.TGraph;
+import org.lilian.graphs.TNode;
+import org.lilian.graphs.UTGraph;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
-import org.lilian.util.graphs.old.BaseGraph;
-import org.lilian.util.graphs.old.Graph;
-import org.lilian.util.graphs.old.Node;
 
-public class InexactSubgraphs<L, N extends Node<L, N>>
+/**
+ * Searches for inexact subgraphs of a given template in a larger graph.
+ * 
+ * NOTE: We assume that the input graphs are undirected.
+ * 
+ * @author Peter
+ *
+ * @param <L>
+ * @param <N>
+ */
+public class InexactSubgraphs<L, T>
 {
 	
-	private BaseGraph<L> graph1; 
-	private Graph<L, N> graph2;
+	private MapUTGraph<L, T> graph1; 
+	private TGraph<L, T> graph2;
 	 
 	private double threshold;
 	private boolean returnBest;
 	
-	private List<BaseGraph<L>.Node> nodeList1;
-	private List<N> nodeList2; 
+	private List<TNode<L, T>> nodeList1;
+	private List<TNode<L, T>> nodeList2; 
 	
 	private InexactCost<L> costFunction;
 	
@@ -37,17 +48,17 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	// * The transformation cost connected with each substructure
 	public List<Integer> transCosts = new ArrayList<Integer>();
 
-	public InexactSubgraphs(Graph<L, N> graph1, Graph<L, N> graph2,
+	public InexactSubgraphs(UTGraph<L, T> graph1, UTGraph<L, T> graph2,
 			InexactCost<L> cost, double threshold, boolean returnBest)
 	{
-		this.graph1 = BaseGraph.copy(graph1);
+		this.graph1 = MapUTGraph.copy(graph1);
 		this.graph2 = graph2;
 		
 		this.threshold = threshold;
 		this.returnBest = returnBest;
 		
-		nodeList1 = new ArrayList<BaseGraph<L>.Node>(this.graph1);
-		nodeList2 = new ArrayList<N>(graph2);
+		nodeList1 = new ArrayList<TNode<L, T>>(this.graph1.nodes());
+		nodeList2 = new ArrayList<TNode<L, T>>(this.graph2.nodes());
 		
 		this.costFunction = cost;
 		
@@ -71,18 +82,18 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				
 				Collections.sort(rm, Collections.reverseOrder());
 				
-				Set<BaseGraph<L>.Node> nodes = new HashSet<BaseGraph<L>.Node>();
+				Set<TNode<L, T>> nodes = new HashSet<TNode<L, T>>();
 				for(int i : rm)
 					if(i >= 0)
 					{
-						BaseGraph<L>.Node node = nodeList1.remove(i);
+						TNode<L, T> node = nodeList1.remove(i);
 						nodes.add(node);
 					}
 				
 				// * record transformation cost and linking cost
 				int links = 0;
-				for(BaseGraph<L>.Node node : nodes)
-					for(BaseGraph<L>.Node neighbour : node.neighbours())
+				for(TNode<L, T> node : nodes)
+					for(TNode<L, T> neighbour : node.neighbors())
 						if(! nodes.contains(neighbour))
 							links++;
 				
@@ -91,13 +102,13 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 				transCosts.add((int)best.cost());
 				
 				// * remove the nodes from the graph
-				for(BaseGraph<L>.Node node : nodes)
-					this.graph1.remove(node);
+				for(TNode<L, T> node : nodes)
+					node.remove();
 			}
-//			
+
 //			 System.out.println(nodeList1);
 //			 System.out.println(this.graph1 + " " + this.graph1.size());
-		} while(best != null && ! this.graph1.isEmpty());
+		} while(best != null && ! this.graph1.nodes().isEmpty());
 	}
 
 	private State search()
@@ -151,9 +162,10 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 	
 	/** 
 	 * The graph with all substructures removed
+	 * 
 	 * @return
 	 */
-	public BaseGraph<L> silhouette()
+	public UTGraph<L, T> silhouette()
 	{
 		return graph1;
 	}
@@ -228,8 +240,8 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			double cost = 0.0;
 			
 			// * The nodes that are currently paired
-			Set<BaseGraph<L>.Node> a1 = new HashSet<BaseGraph<L>.Node>();
-			Set<N> a2 = new HashSet<N>();
+			Set<TNode<L, T>> a1 = new HashSet<TNode<L, T>>();
+			Set<TNode<L, T>> a2 = new HashSet<TNode<L, T>>();
 			
 			for(int i : series(nodes1.length))
 				if(node1(i) != null)
@@ -239,16 +251,16 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 					a2.add(node2(i));
 			
 			// * The shells around a1 and a2
-			Set<BaseGraph<L>.Node> b1 = new LinkedHashSet<BaseGraph<L>.Node>();
-			Set<N> b2 = new LinkedHashSet<N>();
+			Set<TNode<L, T>> b1 = new LinkedHashSet<TNode<L, T>>();
+			Set<TNode<L, T>> b2 = new LinkedHashSet<TNode<L, T>>();
 			
-			for(BaseGraph<L>.Node node : a1)
-				for(BaseGraph<L>.Node neighbour : node.neighbours())
+			for(TNode<L, T> node : a1)
+				for(TNode<L, T> neighbour : node.neighbors())
 					if(!a1.contains(neighbour))
 						b1.add(neighbour);
 			
-			for(N node : a2)
-				for(N neighbour : node.neighbours())
+			for(TNode<L, T> node : a2)
+				for(TNode<L, T> neighbour : node.neighbors())
 					if(!a2.contains(neighbour))
 						b2.add(neighbour);
 			if(b2.size() > b1.size())
@@ -257,13 +269,13 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			// * NOTE: The 1983 paper is not absolutely clear on this step
 			//   this may not be right
 			int b1Links = 0, b2Links = 0;
-			for(BaseGraph<L>.Node node : b1)
-				b1Links += node.neighbours().size();
-			for(N node : b2)
-				b2Links += node.neighbours().size();
+			for(TNode<L, T> node : b1)
+				b1Links += node.neighbors().size();
+			for(TNode<L, T> node : b2)
+				b2Links += node.neighbors().size();
 						
 			// * We need to be optimistic so we assume that every link addition 
-			//   fixes two of the missing neighbours counted above.
+			//   fixes two of the missing neighbors counted above.
 			if(b2Links > b1Links)
 				cost += Math.abs(b1Links - b2Links) / 2.0;
 			
@@ -313,8 +325,8 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			for(int i : series(size()))
 				for(int j : series(i+1, size()))
 				{
-					BaseGraph<L>.Node n1i = node1(i), n1j = node1(j); 
-					 N n2i = node2(i), n2j = node2(j);
+					TNode<L, T> n1i = node1(i), n1j = node1(j); 
+					TNode<L, T> n2i = node2(i), n2j = node2(j);
 					
 					boolean n1connected;
 					if(n1i == null || n1j == null)
@@ -342,7 +354,7 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			return cost;
 		}
 		
-		public BaseGraph<L>.Node node1(int i)
+		public TNode<L, T> node1(int i)
 		{
 			if(nodes1[i] < 0)
 				return null;
@@ -350,10 +362,11 @@ public class InexactSubgraphs<L, N extends Node<L, N>>
 			return nodeList1.get(nodes1[i]);
 		}
 		
-		public N node2(int i)
+		public TNode<L, T> node2(int i)
 		{
 			if(nodes2[i] < 0)
 				return null;
+			
 			return nodeList2.get(nodes2[i]);
 		}
 		

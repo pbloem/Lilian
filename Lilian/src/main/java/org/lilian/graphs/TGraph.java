@@ -36,13 +36,10 @@ public interface TGraph<L, T> extends Graph<L>
 	
 	public int numLinks();
 	
-	/**
-	 * Returns the node labels
-	 * @return
-	 */
-	public Set<L> labels();
+	public Set<T> tags();
 	
 	/**
+	 *
 	 * Checks whether two nodes exist with the given labels that are connected.
 	 * 
 	 * If multiple pairs of nodes exist with these labels, only one of them 

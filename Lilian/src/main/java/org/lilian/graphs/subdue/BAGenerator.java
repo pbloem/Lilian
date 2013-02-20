@@ -39,7 +39,6 @@ public class BAGenerator
 	{
 		Node<String> node = graph.add(LABEL);
 		
-		// System.out.println(neighbours);
 		for(int i : series(attach))
 		{
 			Node<String> neighbor =

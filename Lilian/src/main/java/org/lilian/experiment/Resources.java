@@ -509,6 +509,17 @@ public class Resources
 	
 		return data;
 	}
+	
+	@Resource(name="sierpinski RIFS")
+	public static List<List<Point>> sierpinskiRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
+	{
+		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+		
+		for(int i : series(numSets))
+			data.add(RIFSs.sierpinski().randomInstance(perSet, depth));
+	
+		return data;
+	}
 }
 
 

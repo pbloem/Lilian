@@ -752,4 +752,14 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		for(int i : series(nodeList.size()))
 			nodeList.get(i).index = i;
 	}
+	
+	@Override
+	public Set<T> tags()
+ 	{
+		Set<T> tags = new HashSet<T>();
+		for(DTLink<L, T> link : links())
+			tags.add(link.tag());
+		
+		return tags;
+	}
 }

@@ -11,27 +11,45 @@ import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.lilian.graphs.TGraph;
+import org.lilian.graphs.TNode;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
-import org.lilian.util.graphs.old.Graph;
-import org.lilian.util.graphs.old.Node;
 
-public class InexactMatch<L, N extends Node<L, N>>
+/**
+ * Searches for an (inexact) isomorphism between two graphs.
+ * 
+ * The cost of an inexact match is determined by a cost function.
+ *  
+ * @author Peter
+ *
+ * @param <L>
+ * @param <N>
+ */
+public class InexactMatch<L, T>
 {
 	
-	private Graph<L, N> graph1, graph2;
+	private TGraph<L, T> graph1, graph2;
 	
 	private State best;
 	private double bestCost = Double.POSITIVE_INFINITY;
 	
 	private double threshold;
 	
-	private List<N> nodeList1, nodeList2; 
+	private List<TNode<L, T>> nodeList1, nodeList2; 
 	private InexactCost<L> costFunction;
 	
 	private PriorityQueue<State> buffer = new PriorityQueue<State>();
 	
-	public InexactMatch(Graph<L, N> graph1, Graph<L, N> graph2,
+	/**
+	 * Creates a match object, and performs the search
+	 * 
+	 * @param graph1
+	 * @param graph2
+	 * @param cost The cost function that determines the cost of an inexact match
+	 * @param threshold
+	 */
+	public InexactMatch(TGraph<L, T> graph1, TGraph<L, T> graph2,
 			InexactCost<L> cost, double threshold)
 	{
 		this.graph1 = graph1;
@@ -39,8 +57,8 @@ public class InexactMatch<L, N extends Node<L, N>>
 		
 		this.threshold = threshold;
 		
-		nodeList1 = new ArrayList<N>(graph1);
-		nodeList2 = new ArrayList<N>(graph2);
+		nodeList1 = new ArrayList<TNode<L, T>>(graph1.nodes());
+		nodeList2 = new ArrayList<TNode<L, T>>(graph2.nodes());
 		
 		this.costFunction = cost;
 		
@@ -52,16 +70,12 @@ public class InexactMatch<L, N extends Node<L, N>>
 	{
 		while(! buffer.isEmpty())
 		{
-//			for(State state : buffer)
-//				System.out.println(state);
-//			System.out.println();
-//			
 			State top = buffer.poll();
 			
 			// * If the lowest state has cost higher than threshold, we 
 			//   will never reach a state below it.
 			if(top.cost() > threshold)
-				return;
+				return; 
 			
 			// * Cost estimation is optimistic so if our current cost is worse 
 			//   than the best yet observed, it'll never get better.
@@ -102,6 +116,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 	 * The found distance. Note that if matches is true is is the first match
 	 * found below the given threshold. If not, this is the absolute best 
 	 * distance.
+	 * 
 	 * @return
 	 */
 	public double distance()
@@ -117,15 +132,15 @@ public class InexactMatch<L, N extends Node<L, N>>
 	 * with cost at or below the threshold. If not, it is the match with absolute 
 	 * lowest cost.
 	 *  
-	 * @return
+	 * @return The best match found, null if none was found.
 	 */
-	public Pair<List<N>, List<N>> bestMatch()
+	public Pair<List<TNode<L, T>>, List<TNode<L, T>>> bestMatch()
 	{
 		if(best == null)
 			return null;
 			
-		List<N> l1 = new ArrayList<N>();
-		List<N> l2 = new ArrayList<N>();
+		List<TNode<L, T>> l1 = new ArrayList<TNode<L, T>>();
+		List<TNode<L, T>> l2 = new ArrayList<TNode<L, T>>();
 		
 		for(int i : Series.series(best.size()))
 		{
@@ -133,9 +148,15 @@ public class InexactMatch<L, N extends Node<L, N>>
 			l2.add(best.node2(i));
 		}
 			
-		return new Pair<List<N>, List<N>>(l1, l2);			
+		return new Pair<List<TNode<L, T>>, List<TNode<L, T>>>(l1, l2);	
 	}
-
+	
+	/**
+	 * A state in the search graph. It contains incomplete mappings of nodes of
+	 * the two graphs. 
+	 *
+	 * @author Peter
+	 */
 	private class State implements Iterable<State>, Comparable<State>
 	{
 		// * representation of the pairs
@@ -159,7 +180,8 @@ public class InexactMatch<L, N extends Node<L, N>>
 		}
 		
 		/**
-		 * creates a child state of the given state with the givebn pair added.
+		 * Creates a child state of the given state with the given pair added.
+		 * 
 		 * @param parent
 		 * @param g1Node
 		 * @param g2Node
@@ -187,8 +209,8 @@ public class InexactMatch<L, N extends Node<L, N>>
 			double cost = 0.0;
 			
 			// * The nodes that are currently paired
-			Set<N> a1 = new HashSet<N>();
-			Set<N> a2 = new HashSet<N>();
+			Set<TNode<L, T>> a1 = new HashSet<TNode<L, T>>();
+			Set<TNode<L, T>> a2 = new HashSet<TNode<L, T>>();
 			
 			for(int i : series(nodes1.length))
 				if(node1(i) != null)
@@ -198,16 +220,16 @@ public class InexactMatch<L, N extends Node<L, N>>
 					a2.add(node2(i));
 			
 			// * The shells around a1 and a2
-			Set<N> b1 = new LinkedHashSet<N>();
-			Set<N> b2 = new LinkedHashSet<N>();
+			Set<TNode<L, T>> b1 = new LinkedHashSet<TNode<L, T>>();
+			Set<TNode<L, T>> b2 = new LinkedHashSet<TNode<L, T>>();
 			
-			for(N node : a1)
-				for(N neighbour : node.neighbours())
+			for(TNode<L, T> node : a1)
+				for(TNode<L, T> neighbour : node.neighbors())
 					if(!a1.contains(neighbour))
 						b1.add(neighbour);
 			
-			for(N node : a2)
-				for(N neighbour : node.neighbours())
+			for(TNode<L, T> node : a2)
+				for(TNode<L, T> neighbour : node.neighbors())
 					if(!a2.contains(neighbour))
 						b2.add(neighbour);
 			
@@ -216,13 +238,13 @@ public class InexactMatch<L, N extends Node<L, N>>
 			// * NOTE: The 1983 paper is not absolutely clear on this step
 			//   this may not be right
 			int b1Links = 0, b2Links = 0;
-			for(N node : b1)
-				b1Links += node.neighbours().size();
-			for(N node : b2)
-				b2Links += node.neighbours().size();
+			for(TNode<L, T> node : b1)
+				b1Links += node.neighbors().size();
+			for(TNode<L, T> node : b2)
+				b2Links += node.neighbors().size();
 			
 			// * We need to be optimistic so we assume that every link addition 
-			//   fixes two of the missing neighbours counted above.
+			//   fixes two of the missing neighbors counted above.
 			cost += Math.abs(b1Links - b2Links) / 2.0;
 			
 			return cost;
@@ -256,8 +278,8 @@ public class InexactMatch<L, N extends Node<L, N>>
 			for(int i : series(size()))
 				for(int j : series(i+1, size()))
 				{
-					N n1i = node1(i), n1j = node1(j), 
-					  n2i = node2(i), n2j = node2(j);
+					TNode<L, T> n1i = node1(i), n1j = node1(j), 
+								n2i = node2(i), n2j = node2(j);
 					
 					boolean n1connected;
 					if(n1i == null || n1j == null)
@@ -281,11 +303,10 @@ public class InexactMatch<L, N extends Node<L, N>>
 			// Maybe this can be optimized by iterating over edges (once
 			// we have that implemented).
 			
-			
 			return cost;
 		}
 		
-		public N node1(int i)
+		public TNode<L, T> node1(int i)
 		{
 			if(nodes1[i] < 0)
 				return null;
@@ -293,7 +314,7 @@ public class InexactMatch<L, N extends Node<L, N>>
 			return nodeList1.get(nodes1[i]);
 		}
 		
-		public N node2(int i)
+		public TNode<L, T> node2(int i)
 		{
 			if(nodes2[i] < 0)
 				return null;

@@ -99,6 +99,23 @@ public class IFSs
 	}
 	
 	/**
+	 * Generates a sierpinski gasket
+	 * 
+	 * @return
+	 */
+	public static IFS<Similitude> sierpinskiDownSim()
+	{	
+	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.0,-0.5, 0.0, 1.0, 
+				0.5,  0.5, 0.5, 0.0, 1.0, 
+				0.5, -0.5, 0.5, 0.0, 1.0
+				));
+	}
+	
+	/**
 	 * Generates a sierpinski gasket with non-uniform component weights
 	 * 
 	 * @return

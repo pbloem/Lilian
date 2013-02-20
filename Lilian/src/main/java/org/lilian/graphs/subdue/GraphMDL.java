@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.math.util.MathUtils;
+import org.lilian.graphs.UTGraph;
+import org.lilian.graphs.UTNode;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.models.FrequencyModel;
 import org.lilian.util.Functions;
@@ -18,6 +20,7 @@ import org.lilian.util.graphs.old.Node;
 
 /**
  * Utility functions for calculating the compressibility of graphs and graphs 
+ * 
  * with substructures
  * @author Peter
  *
@@ -25,17 +28,17 @@ import org.lilian.util.graphs.old.Node;
 public class GraphMDL
 {
 	
-	public static <L, N extends Node<L, N>> double mdlSparse(Graph<L, N> graph)
+	public static <L, T> double mdlSparse(UTGraph<L, T> graph)
 	{
 		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
-		for(N node : graph)
+		for(UTNode<L, T> node : graph.nodes())
 			labels.add(node.label());
 		
 		return mdl(graph, labels);
 	}
 	
-	public static <L, N extends Node<L, N>> double mdlSparse(Graph<L, N> graph, FrequencyModel<L> codebook)
+	public static <L, T> double mdlSparse(UTGraph<L, T> graph, FrequencyModel<L> codebook)
 	{
 		double bits = 0.0;
 		
@@ -45,10 +48,10 @@ public class GraphMDL
 		bits += prefix(clog2(graph.size()));
 		
 		// * store the edges
-		bits+= perEdge * 2.0 * graph.numEdges();
+		bits+= perEdge * 2.0 * graph.numLinks();
 		
 		// * store the node labels
-		for(N node : graph)
+		for(UTNode<L, T> node : graph.nodes())
 			bits += log2(codebook.probability(node.label()));
 		bits++;
 		bits = Math.ceil(bits);
@@ -56,25 +59,25 @@ public class GraphMDL
 		return bits;
 	}
 
-	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph)
+	public static <L, T> double mdl(UTGraph<L, T> graph)
 	{
 		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
-		for(N node : graph)
+		for(UTNode<L, T> node : graph.nodes())
 			labels.add(node.label());
 		
 		return mdl(graph, labels);
 	}
 		
 
-	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, FrequencyModel<L> codebook)
+	public static <L, T> double mdl(UTGraph<L, T> graph, FrequencyModel<L> codebook)
 	{
 		int n = graph.size();
 		
 		// * Encode the node labels
 		double nBits = 0.0;
 
-		for(N node : graph)
+		for(UTNode<L, T> node : graph.nodes())
 			nBits += log2(codebook.probability(node.label()));
 		nBits++;
 		nBits = Math.ceil(nBits);
@@ -91,13 +94,13 @@ public class GraphMDL
 		double aBits = 0;
 		
 		double maxNeighbours = Double.MIN_VALUE;
-		for(N node : graph)
-			maxNeighbours = Math.max(maxNeighbours, node.neighbours().size());
+		for(UTNode<L, T> node : graph.nodes())
+			maxNeighbours = Math.max(maxNeighbours, node.neighbors().size());
 		
 		aBits += clog2(maxNeighbours + 1);
-		for(N node : graph)
+		for(UTNode<L, T> node : graph.nodes())
 		{
-			int k = node.neighbours().size();
+			int k = node.neighbors().size();
 			aBits += clog2(maxNeighbours + 1) + Math.ceil(MathUtils.binomialCoefficientLog(n, k)/Math.log(2.0));
 		}
 		
@@ -118,13 +121,15 @@ public class GraphMDL
 	 * @param substructure
 	 * @return
 	 */
-	public static <L, N extends Node<L, N>> double mdl(Graph<L, N> graph, Graph<L, N> substructure, double threshold, boolean sparse)
+	public static <L, T> double mdl(
+			UTGraph<L, T> graph, UTGraph<L, T> substructure, 
+			double threshold, boolean sparse)
 	{
 		System.out.println("graph: " + graph);
 		System.out.println("sub: " + substructure);
 		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
-		for(N node : graph)
+		for(UTNode<L, T> node : graph.nodes())
 			labels.add(node.label());
 		
 		double bits = 0.0;
@@ -134,8 +139,8 @@ public class GraphMDL
 		bits += sparse ? mdlSparse(substructure, labels) : mdl(substructure, labels);
 		
 		InexactCost<L> cost = CostFunctions.transformationCost(
-				graph.labels().size(), substructure.size(), substructure.numEdges());
-		InexactSubgraphs<L, N> is = new InexactSubgraphs<L, N>(graph, substructure, cost, threshold, false);
+				graph.labels().size(), substructure.size(), substructure.numLinks());
+		InexactSubgraphs<L, T> is = new InexactSubgraphs<L, T>(graph, substructure, cost, threshold, false);
 		
 		// * Store the leftover graph
 		bits += sparse ? mdlSparse(is.silhouette(), labels) : mdl(is.silhouette(), labels);

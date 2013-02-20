@@ -682,4 +682,14 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		for(int i : series(nodeList.size()))
 			nodeList.get(i).index = i;
 	}
+
+	@Override
+	public Set<T> tags()
+ 	{
+		Set<T> tags = new HashSet<T>();
+		for(UTLink<L, T> link : links())
+			tags.add(link.tag());
+		
+		return tags;
+	}
 }

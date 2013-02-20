@@ -1,4 +1,4 @@
-package org.lilian.graphs.subdue;
+//package org.lilian.graphs.subdue;
 //package org.lilian.util.graphs.algorithms;
 //
 //import static java.util.Collections.sort;
