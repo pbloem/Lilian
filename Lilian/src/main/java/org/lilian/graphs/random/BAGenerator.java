@@ -1,4 +1,4 @@
-package org.lilian.graphs.subdue;
+package org.lilian.graphs.random;
 
 import static org.lilian.util.Series.series;
 
@@ -9,6 +9,7 @@ import org.lilian.Global;
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.Node;
+import org.lilian.graphs.UTGraph;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
 
@@ -19,7 +20,7 @@ public class BAGenerator
 	private int initial;
 	private int attach;
 	
-	private Graph<String> graph;
+	private UTGraph<String, String> graph;
 	
 	private List<Node<String>> probabilities = new ArrayList<Node<String>>();
 	private double sum = 0.0;
@@ -59,7 +60,7 @@ public class BAGenerator
 			newNode();
 	}
 
-	public Graph<String> graph() 
+	public UTGraph<String, String> graph() 
 	{
 		return graph;
 	}

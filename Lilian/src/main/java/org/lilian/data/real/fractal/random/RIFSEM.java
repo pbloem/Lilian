@@ -36,6 +36,7 @@ import org.lilian.util.Series;
 import org.lilian.util.distance.Distance;
 import org.lilian.util.distance.EuclideanDistance;
 import org.lilian.util.distance.HausdorffDistance;
+import org.lilian.util.graphs.old.Stochastic;
 
 /**
  * 
@@ -68,7 +69,7 @@ public class RIFSEM
 	// * A code tree for each dataset. This list holds the root nodes.
 	private List<Node> codeTrees;
 	
-	private int compPerIFS, depth, sampleSize;
+	private int compPerIFS, depth, sampleSize, numSources;
 	
 	private double spanningPointsVariance, perturbVar;
 	
@@ -80,8 +81,12 @@ public class RIFSEM
 	 * @param data
 	 * @param depth
 	 * @param sampleSize
+	 * @param numSources How many points claim responsibility for a given code
 	 */
-	public RIFSEM(DiscreteRIFS<Similitude> initial, List<List<Point>> data, int depth, int sampleSize, double spanningPointsVariance, double perturbVar)
+	public RIFSEM(
+			DiscreteRIFS<Similitude> initial, 
+			List<List<Point>> data, int depth, int sampleSize,
+			double spanningPointsVariance, double perturbVar, int numSources)
 	{
 		
 		this.model = initial;
@@ -90,11 +95,12 @@ public class RIFSEM
 		this.sampleSize = sampleSize;
 		this.spanningPointsVariance = spanningPointsVariance;
 		this.compPerIFS = model.models().get(0).size();
+		this.numSources = numSources;
 
 		// * Check that all component IFSs of model have the same size
 		for(IFS<Similitude> ifs : model.models())
 			if(ifs.size() != compPerIFS)
-				throw new IllegalArgumentException("All component IFSs of the initial model should have the sam enumber of component transformations.");
+				throw new IllegalArgumentException("All component IFSs of the initial model should have the same number of component transformations.");
 				
 		dataSample = new ArrayList<List<Point>>(data.size());
 		
@@ -292,8 +298,12 @@ public class RIFSEM
 
 			for(Point point : points)
 			{
-				List<Codon> code = SearchStochastic.code(model, tree, point);
-				root.observe(code, point);
+				SearchStochastic.SearchResult result =
+						SearchStochastic.search(model, tree, point, new MVN(data.get(0).get(0).dimensionality()), numSources);
+						
+				Weighted<List<Codon>> codes = result.codes();
+				for(int j : Series.series(codes.size()))
+					root.observe(codes.get(j), point, codes.weight(j));
 			}
 		}
 			
@@ -566,7 +576,7 @@ public class RIFSEM
 //			if(parent == null)
 //				System.out.println(codeSuffix);
 //			
-			points.add(point);
+			points.add(point, weight);
 			mvn = null; // signal that the mvn needs to be recomputed
 
 			if (codeSuffix.size() == 0)

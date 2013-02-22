@@ -513,7 +513,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		
 		public void observe(List<Integer> codeSuffix, Point point, double weight)
 		{
-			points.add(point);
+			points.add(point, weight);
 			mvn = null; // signal that the mvn needs to be recomputed
 
 			if (codeSuffix.size() == 0)
