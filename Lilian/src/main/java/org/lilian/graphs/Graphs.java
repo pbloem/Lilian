@@ -101,32 +101,28 @@ public class Graphs
 //	}
 //	
 //		
-//	public static BaseGraph<String> k2()
-//	{
-//		BaseGraph<String> graph = new BaseGraph<String>();
-//		
-//		BaseGraph<String>.Node n1 = graph.addNode("a");
-//		BaseGraph<String>.Node n2 = graph.addNode("b");
-//		
-//		n1.connect(n2);
-//		
-//		return graph;
-//	}
-//	
-//	public static BaseGraph<String> k3()
-//	{
-//		BaseGraph<String> graph = new BaseGraph<String>();
-//		
-//		BaseGraph<String>.Node n1 = graph.addNode("a");
-//		BaseGraph<String>.Node n2 = graph.addNode("b");
-//		BaseGraph<String>.Node n3 = graph.addNode("c");
-//		
-//		n1.connect(n2);
-//		n2.connect(n3);
-//		n3.connect(n1);
-//		
-//		return graph;
-//	}	
+	/**
+	 * Returns a fully connected UT graph of the given size, with the given label
+	 * on all nodes (and null for all tags)
+	 * 
+	 * @param size
+	 * @param label
+	 * @return
+	 */
+	public static UTGraph<String, String> k(int size, String label)
+	{
+		UTGraph<String, String> graph = new MapUTGraph<String, String>();
+		
+		for(int i : Series.series(size))
+		{
+			UTNode<String, String> node = graph.add(label);
+			
+			for(int j : Series.series(graph.size() - 1 ))
+				node.connect(graph.nodes().get(j));
+		}
+		
+		return graph;
+	}
 	
 	public static UTGraph<String, String> line(int n, String label)
 	{
@@ -145,18 +141,27 @@ public class Graphs
 		
 		return graph;
 	}
-//	
-//	public static BaseGraph<String> star(int n)
-//	{
-//		BaseGraph<String> graph = new BaseGraph<String>();
-//			
-//		BaseGraph<String>.Node center = graph.addNode("x");
-//		for(int i : Series.series(n))
-//			center.connect(graph.addNode("x"));
-//		
-//		return graph;
-//	}
-//	
+	
+	/**
+	 * Returns a graph with n nodes, arranged in a star topology (ie. one node 
+	 * is connected to all others, and all others are connected only to that node).
+	 * 
+	 * 
+	 * @param n
+	 * @param label
+	 * @return
+	 */
+	public static UTGraph<String, String> star(int n, String label)
+	{
+		UTGraph<String, String> graph = new MapUTGraph<String, String>();
+			
+		UTNode<String, String> center = graph.add(label);
+		for(int i : Series.series(n))
+			center.connect(graph.add(label));
+		
+		return graph;
+	}
+	
 	public static UTGraph<String, String> ladder(int n, String label)
 	{
 		UTGraph<String, String> graph = new MapUTGraph<String, String>();
@@ -185,116 +190,116 @@ public class Graphs
 		
 		return graph;
 	}
-//	
-//	/**
-//	 * A graph based on the example graph in the paper by Jonyer, Holder and Cook
-//	 * 
-//	 * @return
-//	 */
-//	public static BaseGraph<String> jbc()
-//	{
-//		BaseGraph<String> graph = new BaseGraph<String>();
-//
-//		// * triangle 1
-//		BaseGraph<String>.Node t1a = graph.addNode("a"),
-//		                       t1b = graph.addNode("b"),
-//		                       t1c = graph.addNode("c");
-//		t1a.connect(t1b);
-//		t1b.connect(t1c);
-//		t1c.connect(t1a);
-//		
-//		// * triangle 2
-//		BaseGraph<String>.Node t2a = graph.addNode("a"),
-//                t2b = graph.addNode("b"),
-//                t2d = graph.addNode("d");
-//		
-//		t2a.connect(t2b);
-//		t2b.connect(t2d);
-//		t2d.connect(t2a);
-//
-//		// * triangle 3
-//		BaseGraph<String>.Node t3a = graph.addNode("a"),
-//                               t3b = graph.addNode("b"),
-//                               t3e = graph.addNode("e");
-//		
-//		t3a.connect(t3b);
-//		t3b.connect(t3e);
-//		t3e.connect(t3a);	
-//		
-//		// * triangle 4
-//		BaseGraph<String>.Node t4a = graph.addNode("a"),
-//                               t4b = graph.addNode("b"),
-//                               t4f = graph.addNode("f");
-//
-//		t4a.connect(t4b);
-//		t4b.connect(t4f);
-//		t4f.connect(t4a);	
-//		
-//		// * square 1
-//		BaseGraph<String>.Node s1x = graph.addNode("x"),
-//                               s1y = graph.addNode("y"),
-//                               s1z = graph.addNode("z"),
-//                               s1q = graph.addNode("q");
-//
-//		s1x.connect(s1y);
-//		s1y.connect(s1q);
-//		s1q.connect(s1z);	
-//		s1z.connect(s1x);	
-//			
-//		// * square 2
-//		BaseGraph<String>.Node s2x = graph.addNode("x"),
-//                               s2y = graph.addNode("y"),
-//                               s2z = graph.addNode("z"),
-//                               s2q = graph.addNode("q");
-//
-//		s2x.connect(s2y);
-//		s2y.connect(s2q);
-//		s2q.connect(s2z);	
-//		s2z.connect(s2x);	
-//		
-//		// * square 3
-//		BaseGraph<String>.Node s3x = graph.addNode("x"),                   
-//                               s3y = graph.addNode("y"),                   
-//                               s3z = graph.addNode("z"),                   
-//                               s3q = graph.addNode("q");                   
-//                                                            
-//		s3x.connect(s3y);                                                  
-//		s3y.connect(s3q);                                                  
-//		s3q.connect(s3z);	                                               
-//		s3z.connect(s3x);	                                               
-//
-//		// * square 4
-//		BaseGraph<String>.Node s4x = graph.addNode("x"),                   
-//                               s4y = graph.addNode("y"),                   
-//                               s4z = graph.addNode("z"),                   
-//                               s4q = graph.addNode("q");                   
-//                                             
-//		s4x.connect(s4y);                                                  
-//		s4y.connect(s4q);                                                  
-//		s4q.connect(s4z);	                                               
-//		s4z.connect(s4x);			
-//		
-//		// rest
-//		BaseGraph<String>.Node k = graph.addNode("k"),                   
-//		                       r = graph.addNode("r"); 
-//		
-//		t1a.connect(t2a);
-//		t2a.connect(t3a);
-//		t3a.connect(t4a);
-//		
-//		t1b.connect(s1y);
-//		t2b.connect(s4y);
-//		
-//		t2d.connect(k);
-//		k.connect(r);
-//		
-//		s1y.connect(s2x);
-//		s2y.connect(r);
-//		s3x.connect(r);
-//		s3y.connect(s4x);
-//		
-//		return graph;
-//	}
+	
+	/**
+	 * A graph based on the example graph in the paper by Jonyer, Holder and Cook
+	 * 
+	 * @return
+	 */
+	public static UTGraph<String, String> jbc()
+	{
+		UTGraph<String, String> graph = new MapUTGraph<String, String>();
+
+		// * triangle 1
+		UTNode<String, String> t1a = graph.add("a"),
+		                       t1b = graph.add("b"),
+		                       t1c = graph.add("c");
+		t1a.connect(t1b);
+		t1b.connect(t1c);
+		t1c.connect(t1a);
+		
+		// * triangle 2
+		UTNode<String, String> t2a = graph.add("a"),
+                               t2b = graph.add("b"),
+                               t2d = graph.add("d");
+		
+		t2a.connect(t2b);
+		t2b.connect(t2d);
+		t2d.connect(t2a);
+
+		// * triangle 3
+		UTNode<String, String> t3a = graph.add("a"),
+                               t3b = graph.add("b"),
+                               t3e = graph.add("e");
+		
+		t3a.connect(t3b);
+		t3b.connect(t3e);
+		t3e.connect(t3a);	
+		
+		// * triangle 4
+		UTNode<String, String> t4a = graph.add("a"),
+                               t4b = graph.add("b"),
+                               t4f = graph.add("f");
+
+		t4a.connect(t4b);
+		t4b.connect(t4f);
+		t4f.connect(t4a);	
+		
+		// * square 1
+		UTNode<String, String> s1x = graph.add("x"),
+                               s1y = graph.add("y"),
+                               s1z = graph.add("z"),
+                               s1q = graph.add("q");
+
+		s1x.connect(s1y);
+		s1y.connect(s1q);
+		s1q.connect(s1z);	
+		s1z.connect(s1x);	
+			
+		// * square 2
+		UTNode<String, String> s2x = graph.add("x"),
+                               s2y = graph.add("y"),
+                               s2z = graph.add("z"),
+                               s2q = graph.add("q");
+
+		s2x.connect(s2y);
+		s2y.connect(s2q);
+		s2q.connect(s2z);	
+		s2z.connect(s2x);	
+		
+		// * square 3
+		UTNode<String, String> s3x = graph.add("x"),                   
+                               s3y = graph.add("y"),                   
+                               s3z = graph.add("z"),                   
+                               s3q = graph.add("q");                   
+                                                        
+		s3x.connect(s3y);                                              
+		s3y.connect(s3q);                                                  
+		s3q.connect(s3z);	                                               
+		s3z.connect(s3x);	                                               
+
+		// * square 4
+		UTNode<String, String> s4x = graph.add("x"),                   
+                               s4y = graph.add("y"),                   
+                               s4z = graph.add("z"),                   
+                               s4q = graph.add("q");                   
+                                             
+		s4x.connect(s4y);                                              
+		s4y.connect(s4q);                                              
+		s4q.connect(s4z);	                                           
+		s4z.connect(s4x);			
+		
+		// rest
+		UTNode<String, String> k = graph.add("k"),                   
+		                       r = graph.add("r"); 
+		
+		t1a.connect(t2a);
+		t2a.connect(t3a);
+		t3a.connect(t4a);
+		
+		t1b.connect(s1y);
+		t2b.connect(s4y);
+		
+		t2d.connect(k);
+		k.connect(r);
+		
+		s1y.connect(s2x);
+		s2y.connect(r);
+		s3x.connect(r);
+		s3y.connect(s4x);
+		
+		return graph;
+	}
 	
 
 	public static UTGraph<String, String> single(String label)

@@ -42,26 +42,25 @@ public class Subdue<L, T>
 	
 	public Subdue(UTGraph<L, T> graph, boolean sparse)
 	{
+		labels = graph.labels();
+		tags = graph.tags();
+		
 		this.graph = graph;
 		this.sparse = sparse;
 		tGraph = wrap(graph);
-		
-		labels = graph.labels();
-		tags = graph.tags();
 	}
 
 	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold, boolean sparse)
 	{
+		labels = graph.labels();
+		tags = graph.tags();
+		
 		this.costThreshold = costThreshold;
 		this.costFunction = new CostWrapper(costFunction);
+		this.sparse = sparse;
 		
 		this.graph = graph;
 		this.tGraph = wrap(graph);
-		
-		this.sparse = sparse;
-		
-		labels = graph.labels();
-		tags = graph.tags();
 	}
 	
 	/**
@@ -289,6 +288,7 @@ public class Subdue<L, T>
 	/**
 	 * Produces a graph with the same structure as the input, but with wrapper 
 	 * objects as labels/tags that refer back to the original labels/tags. 
+	 * (But not nodes) 
 	 * 
 	 * @param graph
 	 * @return
@@ -297,23 +297,17 @@ public class Subdue<L, T>
 	{
 		MapUTGraph<Token, TagToken> wrapped = new MapUTGraph<Token, TagToken>();
 		
-		List<UTNode<L, T>> nodesIn = 
-				new ArrayList<UTNode<L, T>>(graph.nodes());
-		List<UTNode<Token, TagToken>> nodesOut = 
-				new ArrayList<UTNode<Token, TagToken>>(graph.size());
+		for(UTNode<L, T> nodeIn : graph.nodes())
+			wrapped.add(new LabelToken(nodeIn.label()));
 		
-		for(UTNode<L, T> nodeIn : nodesIn)
-			nodesOut.add(wrapped.add(new LabelToken(nodeIn.label())));
-		
-		for(int i : series(nodesIn.size()))
-			for(int j : series(i, nodesIn.size()))
+		for(int i : series(graph.size()))
+			for(int j : series(i, graph.size()))
 			{
-				UTNode<L, T> ni = nodesIn.get(i), nj = nodesIn.get(j);
-				if(ni.connected(nj))
-				{
-					T tag = ni.link(nj).tag();
-					nodesOut.get(i).connect(nodesOut.get(j), new LabelTagToken(tag));
-				}
+				UTNode<L, T> ni = graph.nodes().get(i), nj = graph.nodes().get(j);
+				for(T tag : tags)
+					if(ni.connected(nj, tag))
+						wrapped.nodes().get(i).connect(wrapped.nodes().get(j), 
+								new LabelTagToken(tag));
 			}
 		
 		return wrapped;
@@ -387,7 +381,7 @@ public class Subdue<L, T>
 		
 		public String toString()
 		{
-			return label.toString();
+			return label+"";
 		}
 	}
 	
@@ -443,7 +437,7 @@ public class Subdue<L, T>
 		
 		public String toString()
 		{
-			return label.toString();
+			return label+"";
 		}
 	}
 	
@@ -500,7 +494,7 @@ public class Subdue<L, T>
 		
 		public String toString()
 		{
-			return subGraph.toString() + " " + score + " " + (sparse ? GraphMDL.mdl(subGraph) : GraphMDL.mdl(subGraph));
+			return subGraph.toString() + " " + score + " " + GraphMDL.mdl(subGraph);
 		}
 	}
 	

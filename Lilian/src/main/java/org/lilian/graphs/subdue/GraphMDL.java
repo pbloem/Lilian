@@ -134,7 +134,7 @@ public class GraphMDL
 		
 		double bits = 0.0;
 		
-		// * Store the substructure in
+		// * Store the substructure
 		//   (the end of this representation is recognizable, so no prefix coding required) 
 		bits += sparse ? mdlSparse(substructure, labels) : mdl(substructure, labels);
 		

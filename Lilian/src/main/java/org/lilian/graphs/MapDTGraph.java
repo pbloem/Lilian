@@ -585,6 +585,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		DTNode<L, T> node = new MapDTNode(label);
 		
 		modCount++;
+		updateIndices();
 
 		return node;
 	}

@@ -33,7 +33,7 @@ public class InexactSubgraphs<L, T>
 {
 	
 	private MapUTGraph<L, T> graph1; 
-	private TGraph<L, T> graph2;
+	private TGraph<L, T> template;
 	 
 	private double threshold;
 	private boolean returnBest;
@@ -48,17 +48,17 @@ public class InexactSubgraphs<L, T>
 	// * The transformation cost connected with each substructure
 	public List<Integer> transCosts = new ArrayList<Integer>();
 
-	public InexactSubgraphs(UTGraph<L, T> graph1, UTGraph<L, T> graph2,
+	public InexactSubgraphs(UTGraph<L, T> graph1, UTGraph<L, T> template,
 			InexactCost<L> cost, double threshold, boolean returnBest)
 	{
 		this.graph1 = MapUTGraph.copy(graph1);
-		this.graph2 = graph2;
+		this.template = template;
 		
 		this.threshold = threshold;
 		this.returnBest = returnBest;
 		
 		nodeList1 = new ArrayList<TNode<L, T>>(this.graph1.nodes());
-		nodeList2 = new ArrayList<TNode<L, T>>(this.graph2.nodes());
+		nodeList2 = new ArrayList<TNode<L, T>>(this.template.nodes());
 		
 		this.costFunction = cost;
 		
@@ -386,10 +386,10 @@ public class InexactSubgraphs<L, T>
 			public StateIterator()
 			{
 				remaining1 = new ArrayList<Integer>(graph1.size() + 1);
-				remaining2 = new ArrayList<Integer>(graph2.size() + 1);
+				remaining2 = new ArrayList<Integer>(template.size() + 1);
 				
 				remaining1.addAll(Series.series(graph1.size()));
-				remaining2.addAll(Series.series(graph2.size()));
+				remaining2.addAll(Series.series(template.size()));
 
 				remaining1.add(-1);
 				remaining2.add(-1);

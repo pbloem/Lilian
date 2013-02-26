@@ -33,14 +33,25 @@ public interface TNode<L, T> extends Node<L>
 	
 	public void connect(TNode<L, T> other, T tag);
 	
+	/**
+	 * Check whether this node is connected to another, with a given tag on the 
+	 * connecting link.
+	 * 
+	 * @param other
+	 * @param tag
+	 * @return
+	 */
 	public boolean connected(TNode<L, T> other, T tag);
 	
 	
 	/**
-	 * Returns the link connecting this node to the given node
+	 * Returns a link connecting this node to the given node.
+	 *  
+	 * No guarantees are made on the ordering of links. 
 	 *  
 	 * @param other
-	 * @return
+	 * @return A TLink object returning a link connection this node to another 
+	 * node, null if the nodes are not connected.
 	 */
 	public TLink<L, T> link(TNode<L, T> other);
 	

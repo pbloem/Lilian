@@ -21,8 +21,6 @@ public class GraphsTest
 	@Test
 	public void testLine()
 	{
-		
-		
 		UTGraph<String, String> line = Graphs.line(3, "x");
 		
 		System.out.println(line);

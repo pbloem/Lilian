@@ -499,7 +499,8 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		UTNode<L, T> node = new MapUTNode(label);
 		
 		modCount++;
-
+		updateIndices();
+		
 		return node;
 	}
 
@@ -665,7 +666,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 								oth = link.second().index();
 							else
 								oth = link.first().index();
-							 
+														 
 							if(curr <= oth)
 								buffer.add(link);
 						}
