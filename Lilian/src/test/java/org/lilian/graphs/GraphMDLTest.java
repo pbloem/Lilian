@@ -45,18 +45,24 @@ public class GraphMDLTest
 	@Test
 	public void jbc()
 	{	
+		boolean sparse = true;
 		
-		UTGraph<String, String> graph = Graphs.jbc();
 		
 		UTGraph<String, String> substructure = new MapUTGraph<String, String>();
 		// * square 1
-		UTNode<String, String> s1x = graph.add("x"),
-                               s1y = graph.add("y"),
-                               s1z = graph.add("z"),
-                               s1q = graph.add("q");
+		UTNode<String, String> s1x = substructure.add("x"),
+                               s1y = substructure.add("y"),
+                               s1z = substructure.add("z"),
+                               s1q = substructure.add("q");
 		
-		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), Graphs.single("x"), 20.0, false));
-		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), substructure, 20.0, false));
+		UTGraph<String, String> substructure2 = new MapUTGraph<String, String>();
+		// * square 1
+		UTNode<String, String> c0 = substructure2.add("c"),
+                               c1 = substructure2.add("c");
+		
+		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), Graphs.single("x"), 4.0, sparse));
+		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), substructure, 4.0, sparse));
+		System.out.println("--" + GraphMDL.mdl(Graphs.jbc(), substructure2, 4.0, sparse));
 
 	}
 	

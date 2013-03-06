@@ -72,4 +72,11 @@ public interface Classified<P> extends List<P>
 	 * @param max
 	 */
 	public void setMaxClass(int max);
+
+	/**
+	 * Sets the given class to the given data item.
+	 * @param i
+	 * @param cls
+	 */
+	public void setClass(int i, int cls);
 }

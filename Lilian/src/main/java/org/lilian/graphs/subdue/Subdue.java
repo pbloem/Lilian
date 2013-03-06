@@ -305,10 +305,14 @@ public class Subdue<L, T>
 			{
 				UTNode<L, T> ni = graph.nodes().get(i), nj = graph.nodes().get(j);
 				for(T tag : tags)
+				{
 					if(ni.connected(nj, tag))
 						wrapped.nodes().get(i).connect(wrapped.nodes().get(j), 
 								new LabelTagToken(tag));
+				}
 			}
+		
+
 		
 		return wrapped;
 	}
@@ -467,9 +471,7 @@ public class Subdue<L, T>
 
 		private void calculateScore()
 		{
-			System.out.print("(");
 			score = GraphMDL.mdl(tGraph, subGraph, costThreshold, sparse);
-			System.out.println(")");
 		}
 		
 		public double score()

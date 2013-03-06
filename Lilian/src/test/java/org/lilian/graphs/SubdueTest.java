@@ -20,16 +20,16 @@ public class SubdueTest
 		UTGraph<String, String> in = 
 				Graphs.jbc();
 				// RandomGraphs.random(30, 0.5);
-				// RandomGraphs.preferentialAttachment(1000, 1);
+				RandomGraphs.preferentialAttachment(50, 1);
 		
 		
 		InexactCost<String> costFunction = CostFunctions.uniform();
 		Subdue<String, String> sub = 
 				new Subdue<String, String>(
-						in, costFunction, 0.0, true);
+						in, costFunction, 2.0, false);
 		
 		Collection<Subdue<String, String>.Substructure> subs =
-				sub.search(5, 300, 20, -1);
+				sub.search(4, 20, 20, -1);
 		
 		System.out.println(GraphMDL.mdl(in));
 		for(Subdue<String, String>.Substructure structure : subs)

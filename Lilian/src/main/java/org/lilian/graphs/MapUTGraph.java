@@ -358,7 +358,8 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 				return false;
 			
 			for(MapUTLink link : links.get(tag))
-				if(link.second().equals(other));
+				if(link.second().equals(other))
+					return true;
 				
 			return false;
 		}
