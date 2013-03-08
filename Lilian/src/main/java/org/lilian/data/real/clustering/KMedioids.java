@@ -38,11 +38,20 @@ public class KMedioids<P>
 		
 		medioids = sample(numClusters, n);
 		
+		Global.log().info("Calculating distances");
+		
+		int total = (n * n + n) / 2;
+		int t = 0;
+				
 		distances = new Array2DRowRealMatrix(n, n);
 		for(int i : series(n))
 			for(int j : series(i, n))
+			{
 				distances.setEntry(i, j, 
 						distance.distance(data.get(i), data.get(j)));
+				Global.log().info("Calculating distance " + t + " out of " + total);
+				t++;
+			}
 		
 		List<Integer> classes = new ArrayList<Integer>(n);
 		for(int i : series(n))

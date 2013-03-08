@@ -321,5 +321,31 @@ public class Graphs
 		return degrees;
 	}
 	
-	
+	/**
+	 * Adds one graph to another.
+	 * 
+	 * @param graph
+	 * @param addition
+	 */
+	public static <L, T> void add(UTGraph<L, T> graph, UTGraph<L, T> addition)
+	{
+		List<UTNode<L, T>> nodesAdded = new ArrayList<UTNode<L,T>>(addition.size());
+		
+		// * Add all nodes
+		for(UTNode<L, T> aNode : addition.nodes())
+		{
+			UTNode<L, T> gNode = graph.add(aNode.label());
+			nodesAdded.add(gNode);
+		}
+		
+		// * Add all links
+		for(UTLink<L, T> link : addition.links())
+		{
+			// System.out.println('.');
+			int i = link.first().index(), j = link.second().index();
+			
+			nodesAdded.get(i).connect(nodesAdded.get(j), link.tag());
+		}
+	}
+
 }

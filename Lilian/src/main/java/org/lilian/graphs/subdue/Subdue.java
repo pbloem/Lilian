@@ -73,24 +73,22 @@ public class Subdue<L, T>
 	 */
 	public Collection<Substructure> search(int iterations, int beamWidth, int maxBest, int maxSubSize)
 	{
-		Global.log().info("...");
+		// Global.log().info("...");
+		
 		LinkedList<Substructure> parents = new LinkedList<Substructure>(),
 				                 children = new LinkedList<Substructure>(),
 		                         bestList = new LinkedList<Substructure>();
 		
 		for(L label : labels)
-		{
-			Global.log().info(".");
 			parents.add(new Substructure(substructure(label)));
-		}
 		
 		sort(parents);
 		
 		for(int i : series(iterations))
 		{
-			Global.log().info("Starting iteration " + i);
-			Global.log().info("* there are " + parents.size() + " parents");
-			
+//			Global.log().info("Starting iteration " + i);
+//			Global.log().info("* there are " + parents.size() + " parents");
+//			
 			// * generate all extensions of the parents
 			List<MapUTGraph<Token, TagToken>> extensions = new LinkedList<MapUTGraph<Token, TagToken>>();
 			for(Substructure parent : parents)
@@ -98,16 +96,16 @@ public class Subdue<L, T>
 					if(child.size() <= maxSubSize || maxSubSize == -1)
 						extensions.add(child);
 			
-			Global.log().info("Generated " + extensions.size() +  " children. Checking for isomorphisms.");
-			
+//			Global.log().info("Generated " + extensions.size() +  " children. Checking for isomorphisms.");
+//			
 			// * check for isomorphic children
 			while(! extensions.isEmpty())
 			{
 				MapUTGraph<Token, TagToken> next = extensions.remove(0);
 				
-				if(extensions.size() % 100 == 0)
-					Global.log().info(extensions.size() + " left.");
-				
+//				if(extensions.size() % 100 == 0)
+//					Global.log().info(extensions.size() + " left.");
+//				
 				Iterator<MapUTGraph<Token, TagToken>> iterator = extensions.iterator();
 				while(iterator.hasNext())
 				{
@@ -130,12 +128,12 @@ public class Subdue<L, T>
 				children.add(new Substructure(next));
 			}
 			
-			Global.log().info("Reduced to "+children.size()+" non-isomorphic children.");
+// 			Global.log().info("Reduced to "+children.size()+" non-isomorphic children.");
 	
 			sort(children);
 			
-			for(Substructure child : children)
-				System.out.println("__ " + child);
+//			for(Substructure child : children)
+//				System.out.println("__ " + child);
 			
 			while(children.size() > beamWidth)
 				children.pollLast();

@@ -3,6 +3,8 @@ package org.lilian.graphs.random;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.lilian.Global;
@@ -53,6 +55,7 @@ public class FractalGenerator
 		
 		for(UTLink<String, String> link : links)
 		{
+			// * Add 'offspring' neighbours to the nodes on each side of this link ...
 			List<UTNode<String, String>> nodesA = new ArrayList<UTNode<String,String>>(offspring);
 			List<UTNode<String, String>> nodesB = new ArrayList<UTNode<String,String>>(offspring);
 			
@@ -65,6 +68,7 @@ public class FractalGenerator
 				nodesB.get(i).connect(link.second());
 			}
 			
+			// ... connect 'linksBetweenOffspring' of the new nodes.
 			int last = 0;
 			for(int i : series(linksBetweenOffspring))
 			{
@@ -72,9 +76,11 @@ public class FractalGenerator
 				last = i;
 			}
 			
+			// ... possibly exchange the original link for another link between the new neighbours
 			if(Global.random.nextDouble() < hubConnectionProb)
 			{
 				link.remove();
+				
 				nodesA.get(last + 1).connect(nodesB.get(last + 1));				
 			}
 		}
@@ -84,6 +90,141 @@ public class FractalGenerator
 	{
 		return graph; 	
 	}
+	
+	public static int size(int offspring, int offspringLinks, int depth)
+	{
+		int n = 2;
+		int l = 1;
+		
+		int n0 = n, l0 = l;
+		for(int i : series(depth))
+		{
+			n = n0 + 2 * l0 * offspring;
+			l = l0 + l0 * 2 * offspring + l0 * offspringLinks;
+			
+			n0 = n; l0 = l;
+		}
+		
+		return n;
+				
+//		if(depth == 0)
+//			return 2;
+//		
+//		int ld = numLinks(offspring, offspringLinks, depth - 1);
+//		int nd = size(offspring, offspringLinks, depth - 1);
+//			
+//		return nd + 2 * ld * offspring;
+	}
+	
+	public static int numLinks(int offspring, int offspringLinks, int depth)
+	{
+		int n = 2;
+		int l = 1;
+		
+		int n0 = n, l0 = l;
+		for(int i : series(depth))
+		{
+			n = n0 + 2 * l0 * offspring;
+			l = l0 + l0 * 2 * offspring + l0 * offspringLinks;
+			
+			n0 = n; l0 = l;
+		}
+		
+		return l;
+	}
+//	
+//	public static Result search(int nodes, int links)
+//	{
+//		
+//	}
+//	
+//	public class State implements Comparable<State>
+//	{
+//		private int offspring, offspringLinks, depth;
+//		
+//		private int targetNodes, targetLinks;
+//		private int myNodes, myLinks;
+//
+//		public State(int offspring, int offspringLinks, int depth, int targetNodes, int targetLinks)
+//		{
+//			this.offspring = offspring;
+//			this.offspringLinks = offspringLinks;
+//			this.depth = depth;
+//			
+//			myNodes = size(offspring, offspringLinks, depth);
+//			myLinks = numLinks(offspring, offspringLinks, depth);
+//		}
+//
+//		public int offspring()
+//		{
+//			return offspring;
+//		}
+//
+//		public int offspringLinks()
+//		{
+//			return offspringLinks;
+//		}
+//
+//		public int depth()
+//		{
+//			return depth;
+//		}
+//		
+//		public int score()
+//		{
+//			int n = targetNodes - myLinks;
+//			int l = targetLinks - myLinks;
+//			
+//			return n * n + l * l;
+//		}
+//		
+//		public List<State> children()
+//		{	
+//			if(myNodes > targetNodes && myLinks > targetLinks)
+//				return Collections.emptyList();
+//			
+//			return Arrays.asList(
+//					new State(offspring + 1, offspringLinks, depth, targetNodes, targetLinks),
+//					new State(offspring, offspringLinks + 1, depth, targetNodes, targetLinks),
+//					new State(offspring, offspringLinks, depth + 1, targetNodes, targetLinks)
+//				);
+//		}
+//
+//		@Override
+//		public int compareTo(State other)
+//		{
+//			if(this.score() != other.score())
+//				// * Return the one with the lowest 
+//				return Double.compare(this.score(), other.score());
+//		}
+//	}
+//	
+//	public class Result
+//	{
+//		private int offspring, offspringLinks, depth;
+//
+//		public Result(int offspring, int offspringLinks, int depth)
+//		{
+//			this.offspring = offspring;
+//			this.offspringLinks = offspringLinks;
+//			this.depth = depth;
+//		}
+//
+//		public int offspring()
+//		{
+//			return offspring;
+//		}
+//
+//		public int offspringLinks()
+//		{
+//			return offspringLinks;
+//		}
+//
+//		public int depth()
+//		{
+//			return depth;
+//		}
+//	}
 }
 
 /* Python Code

@@ -125,8 +125,8 @@ public class GraphMDL
 			UTGraph<L, T> graph, UTGraph<L, T> substructure, 
 			double threshold, boolean sparse)
 	{
-		System.out.println("graph: " + graph);
-		System.out.println("sub: " + substructure);
+		// System.out.println("graph: " + graph);
+		// System.out.println("sub: " + substructure);
 		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
 		for(UTNode<L, T> node : graph.nodes())
@@ -161,6 +161,7 @@ public class GraphMDL
 			bits += is.numLinks().get(i) * (clog2(graph.size()) + clog2(substructure.size()));
 		}
 		
+		// System.out.println(bits);
 		return bits;
 	}
 	

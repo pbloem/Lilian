@@ -1,5 +1,6 @@
 package org.lilian.graphs.random;
 
+import static java.lang.Math.log;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
@@ -45,5 +46,16 @@ public class RandomGraphs
 					nodes.get(i).connect(nodes.get(j));
 		
 		return graph;
+	}
+	
+	public static UTGraph<String, String> fractal(
+			int depth, int offspring, int interLinks, double hubProb)
+	{
+		FractalGenerator gen = new FractalGenerator(offspring, interLinks, hubProb);
+		
+		for(int i : series(depth))
+			gen.iterate();
+		
+		return gen.graph();
 	}
 }

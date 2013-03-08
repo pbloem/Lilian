@@ -40,6 +40,24 @@ public class GraphsTest
 		assertEquals(n + 2 * (n - 1), ladder.numLinks());
 		assertEquals(n*2, ladder.size());
 	}
+	
+	@Test
+	public void testAdd()
+	{
+		UTGraph<String, String> empty = new MapUTGraph<String, String>();
+		UTGraph<String, String> k3 = Graphs.k(3, "x");
+		
+		Graphs.add(empty, k3);
+		
+		System.out.println(k3);
+		System.out.println(empty);
+				
+		Graphs.add(empty, k3);
+		
+		System.out.println(empty);
+		
+		
+	}
 
 //	@Test
 //	public void testJBC()

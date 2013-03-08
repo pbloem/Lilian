@@ -22,8 +22,6 @@ import org.lilian.util.Series;
 /**
  * Searches for inexact subgraphs of a given template in a larger graph.
  * 
- * NOTE: We assume that the input graphs are undirected.
- * 
  * @author Peter
  *
  * @param <L>
@@ -38,38 +36,34 @@ public class InexactSubgraphs<L, T>
 	private double threshold;
 	private boolean returnBest;
 	
-	private List<TNode<L, T>> nodeList1;
-	private List<TNode<L, T>> nodeList2; 
-	
 	private InexactCost<L> costFunction;
 	
 	// * The number of links required to connect each substructure to the graph
 	public List<Integer> numLinks = new ArrayList<Integer>();
+	
 	// * The transformation cost connected with each substructure
 	public List<Integer> transCosts = new ArrayList<Integer>();
 
-	public InexactSubgraphs(UTGraph<L, T> graph1, UTGraph<L, T> template,
+	public InexactSubgraphs(UTGraph<L, T> graph, UTGraph<L, T> template,
 			InexactCost<L> cost, double threshold, boolean returnBest)
 	{
-		this.graph1 = MapUTGraph.copy(graph1);
+		this.graph1 = MapUTGraph.copy(graph);
 		this.template = template;
 		
 		this.threshold = threshold;
 		this.returnBest = returnBest;
 		
-		nodeList1 = new ArrayList<TNode<L, T>>(this.graph1.nodes());
-		nodeList2 = new ArrayList<TNode<L, T>>(this.template.nodes());
-		
 		this.costFunction = cost;
 		
 		State best = null;
+		
+		// * Loop the search until no more substructures are found
 		do 
 		{
 			best = search();
+			// System.out.print("."+template.size()+".");
 			
-			// System.out.println("Found " + best);
-
-			if(best != null)
+			if(best != null && ! this.graph1.nodes().isEmpty())
 			{
 				// * remove the matched nodes from the graph
 				
@@ -81,14 +75,12 @@ public class InexactSubgraphs<L, T>
 					rm.add(i);
 				
 				Collections.sort(rm, Collections.reverseOrder());
-				
+
+				// * Deduplicate
 				Set<TNode<L, T>> nodes = new HashSet<TNode<L, T>>();
 				for(int i : rm)
 					if(i >= 0)
-					{
-						TNode<L, T> node = nodeList1.remove(i);
-						nodes.add(node);
-					}
+						nodes.add(graph1.nodes().get(i));
 				
 				// * record transformation cost and linking cost
 				int links = 0;
@@ -106,9 +98,8 @@ public class InexactSubgraphs<L, T>
 					node.remove();
 			}
 
-//			 System.out.println(nodeList1);
-//			 System.out.println(this.graph1 + " " + this.graph1.size());
 		} while(best != null && ! this.graph1.nodes().isEmpty());
+		// System.out.println();
 	}
 
 	private State search()
@@ -285,7 +276,7 @@ public class InexactSubgraphs<L, T>
 		private double currentCost()
 		{
 			// * if this is a complete match, then at least some of the pairs 
-			//   must be definite (ie. not represent the removal of addition of
+			//   must be definite (ie. not represent the removal ofr addition of
 			//   a node.) 
 			if(complete())
 			{
@@ -359,7 +350,7 @@ public class InexactSubgraphs<L, T>
 			if(nodes1[i] < 0)
 				return null;
 				
-			return nodeList1.get(nodes1[i]);
+			return graph1.nodes().get(nodes1[i]);
 		}
 		
 		public TNode<L, T> node2(int i)
@@ -367,7 +358,7 @@ public class InexactSubgraphs<L, T>
 			if(nodes2[i] < 0)
 				return null;
 			
-			return nodeList2.get(nodes2[i]);
+			return template.nodes().get(nodes2[i]);
 		}
 		
 		@Override
@@ -490,9 +481,9 @@ public class InexactSubgraphs<L, T>
 					sb.append(", ");
 					
 				sb.append(
-					(nodes1[i] == -1 ? "λ" : nodeList1.get(nodes1[i]))
+					(nodes1[i] == -1 ? "λ" : graph1.nodes().get(nodes1[i]))
 					+ "-" + 
-					(nodes2[i] == -1 ? "λ" :nodeList2.get(nodes2[i]))
+					(nodes2[i] == -1 ? "λ" : template.nodes().get(nodes2[i]))
 				);
 			}
 			

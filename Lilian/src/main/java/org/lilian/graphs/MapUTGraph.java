@@ -445,6 +445,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 			
 			dead = true;
 			
+			numEdges --;
 			modCount++;
 		}
 
