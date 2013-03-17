@@ -94,7 +94,7 @@ public class PCAEco
 				v.multiplyEntry(row, col, scalar);
 		}
 		
-		vt = v.transpose();
+		// vt = v.transpose();
 		
 		signals = d.multiply(v);
 	}
@@ -195,7 +195,7 @@ public class PCAEco
 			double scale = simplified.get(i);
 			reconstruction = reconstruction.add(v.getColumnVector(i).mapMultiply(scale));
 		}
-		System.out.println(reconstruction);
+		// System.out.println(reconstruction);
 
 		return new Point(reconstruction);
 	}

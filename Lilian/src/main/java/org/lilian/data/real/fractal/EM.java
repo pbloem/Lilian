@@ -23,6 +23,7 @@ import org.lilian.search.Builder;
 import org.lilian.search.Parameters;
 import org.lilian.search.Parametrizable;
 import org.lilian.search.evo.Target;
+import org.lilian.util.Functions;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
 
