@@ -12,6 +12,7 @@ import org.lilian.graphs.Graph;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTNode;
+import org.lilian.util.Functions;
 
 
 /**
@@ -44,6 +45,35 @@ public class RandomGraphs
 			for(int j : series(i+1, n))
 				if(Global.random.nextDouble() < prob)
 					nodes.get(i).connect(nodes.get(j));
+		
+		return graph;
+	}
+
+	/**
+	 * Makes a uniform random selection from the set of all graphs with exactly
+	 * n nodes and m links. Nodes will not connect to themselves
+	 * 
+	 * @param n
+	 * @param m
+	 * @return
+	 */
+	public static UTGraph<String, String> random(int n, int m)
+	{		
+		UTGraph<String, String> graph = new MapUTGraph<String, String>();
+		for(int i : series(n))
+			graph.add("x");
+		
+		List<Integer> indices = Functions.sample(m, (n*n - n)/2);
+		
+		int c = 0;
+		for(int i : series(n))
+			for(int j : series(i + 1, n))
+			{
+				if(indices.contains(c))
+					graph.nodes().get(i).connect(graph.nodes().get(j));
+				
+				c++;
+			}
 		
 		return graph;
 	}

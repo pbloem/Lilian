@@ -3,7 +3,9 @@ package org.lilian.graphs.random;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.lilian.Global;
 import org.lilian.graphs.Graph;
@@ -36,22 +38,45 @@ public class BAGenerator
 			probabilities.add(graph.add(LABEL));
 	}
 
+	/**
+	 * Add a node to the graph.
+	 * 
+	 * Each node is added to m distinct, pre-drawn other nodes, where the 
+	 * probability of a node being drawn is proportional to its number of links.
+	 * 
+	 * @return The new node added to the graph.
+	 */
 	public Node<String> newNode()
 	{
 		Node<String> node = graph.add(LABEL);
+		List<Node<String>> neighbors = new ArrayList<Node<String>>(attach);		
 		
-		for(int i : series(attach))
-		{
-			Node<String> neighbor =
-					probabilities.get(Global.random.nextInt(probabilities.size()));
-			
+		int l0 = graph.numLinks();
+		for(Node<String> neighbor : sample(probabilities, attach))
+		{	
 			node.connect(neighbor);
-			
+			neighbors.add(neighbor);
+
 			probabilities.add(neighbor);
 			probabilities.add(node);
 		}
 		
 		return node;
+	}
+	
+	/**
+	 * Returns k distinct random samples from 'values'
+	 * 
+	 * @param values
+	 */
+	private static <P> Set<P> sample(List<P> values, int k)
+	{
+		Set<P> set = new HashSet<P>();
+		
+		while (set.size() < k)
+			set.add(values.get(Global.random.nextInt(values.size())));
+		
+		return set;
 	}
 	
 	public void iterate(int n)

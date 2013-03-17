@@ -10,6 +10,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 import org.lilian.util.distance.EuclideanDistance;
 
@@ -21,7 +22,7 @@ public class KMedioidsTest
 	{
 		for(int i : Series.series(100))
 		{
-			List<Integer> sample = KMedioids.sample(50, 100);
+			List<Integer> sample = Functions.sample(50, 100);
 			Set<Integer> set = new HashSet<Integer>(sample);
 			
 			System.out.println(sample);

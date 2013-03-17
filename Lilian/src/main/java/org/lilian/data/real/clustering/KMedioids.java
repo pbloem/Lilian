@@ -3,9 +3,7 @@ package org.lilian.data.real.clustering;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
@@ -14,6 +12,7 @@ import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.classification.Classification;
 import org.lilian.data.real.classification.Classified;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 import org.lilian.util.distance.Distance;
 
@@ -36,7 +35,7 @@ public class KMedioids<P>
 		this.distance = distance;
 		this.numClusters = numClusters;
 		
-		medioids = sample(numClusters, n);
+		medioids = Functions.sample(numClusters, n);
 		
 		Global.log().info("Calculating distances");
 		
@@ -146,42 +145,6 @@ public class KMedioids<P>
 		}
 		
 		return distances.getEntry(small, big);
-	}
-	
-	/**
-	 * Samples k distinct values from the first n integers
-	 * @param k
-	 * @param size
-	 * @return
-	 */
-	public static List<Integer> sample(int k, int size)
-	{
-		// * The algorithm we use basically simulates having an array with the 
-		//   values of o to n-1 at their own indices, and for each i, choosing a 
-		//   random index above it and swapping the two entries.
-		//
-		//   Since we expect low k, most entries in this array will stay at 
-		//   their original index and we only stores the values that deviate.
-		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
-				
-		for(int i : series(k))
-		{
-			// Sample a random integer above or equal to i and below 'size'
-			int draw = Global.random.nextInt(size - i) + i;
-			
-			int drawValue = map.containsKey(draw) ? map.get(draw) : draw;
-			int iValue = map.containsKey(i) ? map.get(i) : i; 
-			
-			// swap the values
-			map.put(i, drawValue);
-			map.put(draw, iValue);
-		}
-		
-		List<Integer> result = new ArrayList<Integer>(k);
-		for(int i : series(k))
-			result.add(map.get(i));
-		
-		return result;
 	}
 
 
