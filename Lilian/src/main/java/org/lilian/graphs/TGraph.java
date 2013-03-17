@@ -1,5 +1,7 @@
 package org.lilian.graphs;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -8,10 +10,10 @@ import java.util.Set;
  * 
  * @author Peter
  *
- * @param <L>
- * @param <T>
+ * @param <L> The label type
+ * @param <T> The tag type
  */
-public interface TGraph<L, T>
+public interface TGraph<L, T> extends Graph<L>
 {
 	/**
 	 * Returns the first node in the Graph which has the given label 
@@ -21,22 +23,23 @@ public interface TGraph<L, T>
 	 */
 	public TNode<L, T> node(L label);
 	
-	public Set<TNode<L, T>> nodes(L label);
+	public Set<? extends TNode<L, T>> nodes(L label);
 	
+	public List<? extends TNode<L, T>> nodes();
+	
+	public Collection<? extends TLink<L, T>> links();
+
 	/**
 	 * Adds a new node with the given label 
 	 */
-	public TNode<L, T> addNode(L label);
+	public TNode<L, T> add(L label);
 	
 	public int numLinks();
 	
-	/**
-	 * Returns the node labels
-	 * @return
-	 */
-	public Set<L> labels();
+	public Set<T> tags();
 	
 	/**
+	 *
 	 * Checks whether two nodes exist with the given labels that are connected.
 	 * 
 	 * If multiple pairs of nodes exist with these labels, only one of them 

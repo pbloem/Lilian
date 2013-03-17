@@ -147,7 +147,9 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 */
 	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder, double spanningPointsVariance)
 	{
-		this(initial, data, numSources, 0.3, false, builder, spanningPointsVariance);
+		this(initial, data, numSources, 0.3, 
+				true, 
+			builder, spanningPointsVariance);
 	}
 
 	/**
@@ -367,6 +369,17 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	}
 
 	/**
+	 * Set the internal IFS model to the given parameter. The next call of 
+	 * iterate or modelToCodes will use this model. 
+	 * 
+	 * @param model
+	 */
+	public void setModel(IFS<M> model)
+	{
+		this.model = model;
+	}
+	
+	/**
 	 * @return The multivariate Gaussian model (possibly spherical) that was
 	 *         fitted to the data.
 	 */
@@ -501,7 +514,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		
 		public void observe(List<Integer> codeSuffix, Point point, double weight)
 		{
-			points.add(point);
+			points.add(point, weight);
 			mvn = null; // signal that the mvn needs to be recomputed
 
 			if (codeSuffix.size() == 0)
@@ -621,14 +634,14 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * This method implements the search algorithm for finding code pairs
 		 * where the second is a rightshifted version of the first.
 		 * 
-		 * Start at the leaves of this node, take its code and find the node
-		 * whose code that that shares its tail, save for the last symbol t. Any
-		 * such pairs are added to the Maps object.
+		 * This method is executed first for all descendants of this node, and 
+		 * then for the node itself.
 		 * 
-		 * This method is recursively executed at all depths.
-		 * 
-		 * @param maps
-		 */
+		 * It takes this nodes' code and retrieves the node that has the same code, 
+		 * but with the first element removed. It then knows that the points of 
+		 * that node should map to the points of this node under the 
+		 * transformation denoted by the first element of this node's code.
+		 */ 
 		public void findPairs(Maps maps)
 		{
 			if (children.size() > 0) // * Recurse

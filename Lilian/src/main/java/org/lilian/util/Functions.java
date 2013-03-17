@@ -1,5 +1,9 @@
 package org.lilian.util;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+import static org.lilian.util.Series.series;
+
 import java.util.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -580,5 +584,58 @@ public class Functions
 			return Double.compare(n1.doubleValue(), n2.doubleValue());
 		}
 	
+	}
+	
+	/**
+	 * Probabilistically rounds the input. The result of this 
+	 * method is at least floor(in), and is ceil(in) with probability
+	 * (in - floor(in)) 
+	 * 
+	 * @param in
+	 */
+	public static double probRound(double in)
+	{
+		if(Global.random.nextDouble() < in - floor(in))
+			return ceil(in);
+		
+		return(floor(in));
+	}
+
+	/**
+	 * Samples k distinct values from the first 'size' natural numbers
+	 * 
+	 * @param k The number of natural numbers to return
+	 * @param size The maximum integer possible + 1
+	 * @return A uniform random choice from all sets of size k of distinct 
+	 * 	integers below the 'size' parameter.
+	 */
+	public static List<Integer> sample(int k, int size)
+	{
+		// * The algorithm we use basically simulates having an array with the 
+		//   values of o to n-1 at their own indices, and for each i, choosing a 
+		//   random index above it and swapping the two entries.
+		//
+		//   Since we expect low k, most entries in this array will stay at 
+		//   their original index and we only stores the values that deviate.
+		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+				
+		for(int i : series(k))
+		{
+			// Sample a random integer above or equal to i and below 'size'
+			int draw = Global.random.nextInt(size - i) + i;
+			
+			int drawValue = map.containsKey(draw) ? map.get(draw) : draw;
+			int iValue = map.containsKey(i) ? map.get(i) : i; 
+			
+			// swap the values
+			map.put(i, drawValue);
+			map.put(draw, iValue);
+		}
+		
+		List<Integer> result = new ArrayList<Integer>(k);
+		for(int i : series(k))
+			result.add(map.get(i));
+		
+		return result;
 	}
 }

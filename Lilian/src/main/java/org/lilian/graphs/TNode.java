@@ -1,5 +1,6 @@
 package org.lilian.graphs;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -9,13 +10,13 @@ import java.util.Set;
  * @param <L>
  * @param <T>
  */
-public interface TNode<L, T>
+public interface TNode<L, T> extends Node<L>
 {
-	public Set<TNode<L, T>> neighbors();
+	public Collection<? extends TNode<L, T>> neighbors();
 	
-	public Node<TNode<L, T>> neighbour(L label);
+	public TNode<L, T> neighbor(L label);
 
-	public Set<TNode<L, T>> neighbours(L label);
+	public Collection<? extends TNode<L, T>> neighbors(L label);
 	
 	/** 
 	 * <p>Connects this node to another node. </p>
@@ -29,11 +30,32 @@ public interface TNode<L, T>
 	 *  
 	 * @param other
 	 */
-	public void connect(TNode<L, T> other);
 	
-	public void disconnect(TNode<L, T> other);
+	public void connect(TNode<L, T> other, T tag);
 	
-	public boolean connected(TNode<L, T> other);
+	/**
+	 * Check whether this node is connected to another, with a given tag on the 
+	 * connecting link.
+	 * 
+	 * @param other
+	 * @param tag
+	 * @return
+	 */
+	public boolean connected(TNode<L, T> other, T tag);
+	
+	
+	/**
+	 * Returns a link connecting this node to the given node.
+	 *  
+	 * No guarantees are made on the ordering of links. 
+	 *  
+	 * @param other
+	 * @return A TLink object returning a link connection this node to another 
+	 * node, null if the nodes are not connected.
+	 */
+	public TLink<L, T> link(TNode<L, T> other);
+	
+	public Collection<? extends TLink<L, T>> links(TNode<L, T> other);
 	
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 

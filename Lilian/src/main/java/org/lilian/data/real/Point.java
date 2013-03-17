@@ -180,6 +180,21 @@ public class Point
 		return p;
 	}
 	
+	/**
+	 * Produces a point with the given value for all dimensions
+	 * @param dim
+	 * @param val
+	 * @return
+	 */
+	public static Point value(int dim, double val)
+	{
+		Point p = new Point(dim);
+		for(int i = 0; i < dim; i++)
+			p.set(i, val);
+		
+		return p;
+	}	
+	
 	public static Point point(List<Double> in)
 	{
 		if(in instanceof Point)

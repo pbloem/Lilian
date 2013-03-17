@@ -1,13 +1,33 @@
 package org.lilian.graphs;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 /**
  * 
+ * 
+ * Design choices:
+ * <ul>
+ * <li>A Graph is _not_ a Collection of Nodes, because the generic type cannot 
+ * be further restricted in the subclasses of graph. Eg. we cannot make DTGraph
+ * a collection of DTnodes. thus the client must call nodes() to get a 
+ * collection of the graphs nodes. </li>
+ * <li>To maintain the LSP, the subclasses of Node can be modified by all types 
+ * of node (if we restricted this to subclasses of nodes we would be restricting 
+ * preconditions in a subclass). In practice, all implementations have a single 
+ * type of node and only allow that type, but that rule is not enforced at the 
+ * API level.</li>
+ * </ul>
+ * 
+ * TODO: Create a separate UGraph & UTGraph. Undirected graphs behave differently than 
+ * directed graphs. Letting Graph be the interface for undirected graphs violates
+ * LSP.
+ * 
+ * 
  * @param <L>
  */
-public interface Graph<L> extends List<Node<L>>
+public interface Graph<L>
 {
 	/**
 	 * Returns the first node in the Graph which has the given label 
@@ -17,12 +37,21 @@ public interface Graph<L> extends List<Node<L>>
 	 */
 	public Node<L> node(L label);
 	
-	public Set<Node<L>> nodes(L label);
+	public Collection<? extends Node<L>> nodes(L label);
+	
+	public List<? extends Node<L>> nodes();
+	
+	public Collection<? extends Link<L>> links();
+	
+	/**
+	 * @return The graph's size in nodes.
+	 */
+	public int size();
 	
 	/**
 	 * Adds a new node with the given label 
 	 */
-	public Node<L> addNode(L label);
+	public Node<L> add(L label);
 	
 	public int numLinks();
 	
@@ -46,9 +75,15 @@ public interface Graph<L> extends List<Node<L>>
 
 	/**
 	 * The state of a graph indicates whether it has changed. If the value 
-	 * returned by this method has changed, then a modification has been made. 
-	 * If the value is the same, then with great likelihood, the graph has not 
-	 * been modified.
+	 * returned by this method has changed, then a modification has been made.
+	 *  
+	 * If the value is the same, then with great probability, the graph has not 
+	 * been modified. 
+	 * 
+	 * Please note that this value should only be used in reference to the same
+	 * graph object. The state of one graph bears no relation to the state of 
+	 * another. Ie. it should be thought of as a mod count rather than a hash 
+	 * code.
 	 * 
 	 * @return
 	 */

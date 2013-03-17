@@ -30,8 +30,14 @@ public interface Map extends Serializable {
 	public List<Point> map(List<Point> points);
 	
 	/**
-	 * Returns a map whose function is equal to applying first this map, and then
-	 * the argument to the result of the first mapping.
+	 * <p>
+	 * Returns a map whose function is equal to applying the other map and then 
+	 * this map.
+	 * </p><p>
+	 * Thus, if functions F(x) and G(x) are represented by Map objects f and g, 
+	 * then the function F(G(x)) is represented by f.compose(g).
+	 * </p>
+	 * 
 	 * @param other
 	 * @return
 	 */

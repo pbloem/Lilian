@@ -216,11 +216,14 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 	{
 		if(m instanceof AffineMap)
 		{
-			AffineMap am = (AffineMap)m;
-			RealMatrix newRot = transformation.multiply(am.transformation);
+			// return t(o(x)) = R_t * R_o * x + R_t * t_o + t_t 
+			
+			AffineMap other = (AffineMap)m;
+			
+			RealMatrix newRot = this.transformation.multiply(other.transformation);
 		
-			RealVector newTrans = transformation.operate(am.translation);
-			newTrans = newTrans.add(translation);
+			RealVector newTrans = this.transformation.operate(other.translation);
+			newTrans = newTrans.add(this.translation);
 			
 			return new AffineMap(newRot, newTrans); 
 		}

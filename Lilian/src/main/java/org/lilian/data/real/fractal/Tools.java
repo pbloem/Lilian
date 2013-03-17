@@ -14,6 +14,13 @@ import org.lilian.data.real.Point;
 import org.lilian.util.distance.Distance;
 import org.lilian.util.distance.EuclideanDistance;
 
+/**
+ * NOTE: This is old code. It shoudl be checked for correctness before being used 
+ * again.
+ * 
+ * @author Peter
+ *
+ */
 public class Tools 
 {
 	/**

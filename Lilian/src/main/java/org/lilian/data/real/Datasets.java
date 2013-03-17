@@ -91,8 +91,15 @@ public class Datasets
 		List<P> res = new ArrayList<P>(data);
 		Collections.shuffle(res);
 		
-		// * Copy the sublist over, so we the gc can clean up the shuffled list.
-		List<P> res2 = new ArrayList<P>(res.subList(0, n));
+		
+		List<P> res2 = null;
+		try {
+			// * Copy the sublist over, so the gc can clean up the shuffled list.
+			res2 = new ArrayList<P>(res.subList(0, n));
+		} catch(IndexOutOfBoundsException e)
+		{
+			throw new RuntimeException("Data.size: " + data.size(), e);
+		}
 		
 		return res2;
 	}

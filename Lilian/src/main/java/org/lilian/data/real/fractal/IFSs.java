@@ -1,5 +1,7 @@
 package org.lilian.data.real.fractal;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import static org.lilian.util.Series.series;
 
 import java.util.AbstractList;
@@ -12,6 +14,7 @@ import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Map;
+import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.search.Builder;
@@ -27,6 +30,9 @@ import org.lilian.util.Series;
  * @author Peter
  *
  */
+
+// * REMEMBER: Angles in parameters are on a scale of 0.0-1.0, with 1.0 being a 
+//   full revolution.  
 public class IFSs
 {
 	/**
@@ -93,6 +99,23 @@ public class IFSs
 	}
 	
 	/**
+	 * Generates a sierpinski gasket
+	 * 
+	 * @return
+	 */
+	public static IFS<Similitude> sierpinskiDownSim()
+	{	
+	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.0,-0.5, 0.0, 1.0, 
+				0.5,  0.5, 0.5, 0.0, 1.0, 
+				0.5, -0.5, 0.5, 0.0, 1.0
+				));
+	}
+	
+	/**
 	 * Generates a sierpinski gasket with non-uniform component weights
 	 * 
 	 * @return
@@ -108,6 +131,23 @@ public class IFSs
 				0.5, -0.5,-0.5, 0.0, 1.5
 				));
 	}		
+	
+	/**
+	 * Generates a sierpinski gasket with non-uniform component weights
+	 * 
+	 * @return
+	 */
+	public static IFS<Similitude> sierpinskiOffSim(double p0, double p1, double p2)
+	{	
+	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.5,  0.0, 0.5, 0.0, p0, 
+				0.5,  0.5,-0.5, 0.0, p1, 
+				0.5, -0.5,-0.5, 0.0, p2
+				));
+	}			
 	
 	/**
 	 * Generates a sierpinski gasket with non-uniform component weights
@@ -146,14 +186,14 @@ public class IFSs
 	}
 
 	
-	public static IFS<Similitude> cantorASim()
-	{
-		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
-		return builder.build(Arrays.asList(
-				.45,  .5, .5, 0.0, 1.0,
-				.45, -.5,-.5, 0.0, 1.0
-				));		
-	}	
+//	public static IFS<Similitude> cantorASim()
+//	{
+//		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+//		return builder.build(Arrays.asList(
+//				.45,  .5, .5, 0.0, 1.0,
+//				.45, -.5,-.5, 0.0, 1.0
+//				));		
+//	}	
 
 	public static IFS<Similitude> cantor1D()
 	{
@@ -173,6 +213,63 @@ public class IFSs
 				));		
 	}
 	
+
+	public static IFS<Similitude> cantorASim()
+	{
+		double th = 1.0/3.0, tth = 2.0/3.0;
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				th,  tth,  tth, 0.0, 1.0, 
+				th, -tth, -tth, 0.0, 1.0
+				));		
+	}
+	
+	
+	public static IFS<Similitude> cantorBSim()
+	{
+		double th = 1.0/3.0, tth = 2.0/3.0;
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				th, -tth,  tth, 0.0, 1.0,
+				th,  tth, -tth, 0.0, 1.0
+				));		
+	}
+	
+	public static IFS<Similitude> koch4Sim()
+	{		
+		double
+			scale = 1.0/3.0,
+			a = Math.PI/3.0,
+			y = sin(a) * (1/3.0),
+			x = (1/3.0) - cos(a) * (1/3.0);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -2/3.0, 0.0, 0.0, 1.0,
+				scale, -x, -y, a / (Math.PI * 2), 1.0,
+				scale, x, -y, -a / (Math.PI * 2), 1.0,
+				scale, 2/3.0, 0.0, 0.0, 1.0
+				));
+	}
+	
+	public static IFS<Similitude> koch4DownSim()
+	{
+		double
+			scale = 1.0/3.0,
+			a = Math.PI/3.0,
+			y = sin(a) * (1/3.0),
+			x = (1/3.0) - cos(a) * (1/3.0);
+	
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -2/3.0, 0.0, 0.0, 1.0,
+				scale, -x, y, -a / (Math.PI * 2), 1.0,
+				scale, x, y,   a / (Math.PI * 2), 1.0,
+				scale, 2/3.0, 0.0, 0.0, 1.0
+				));
+	}	
 	
 	public static IFS<Similitude> koch2Sim()
 	{		
@@ -189,7 +286,7 @@ public class IFSs
 				));
 	}
 	
-	public static IFS<Similitude> koch2SimOff()
+	public static IFS<Similitude> koch2SimOff(double p, double q)
 	{		
 		double
 			scale = 1.0/Math.sqrt(3.0),
@@ -199,24 +296,39 @@ public class IFSs
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				scale, -x, -y, (Math.PI + a) / (2.0 * Math.PI), 1.0,
-				scale, +x, -y, (Math.PI - a) / (2.0 * Math.PI), 2.0
+				scale, -x, -y, (Math.PI + a) / (2.0 * Math.PI), p,
+				scale, +x, -y, (Math.PI - a) / (2.0 * Math.PI), q
+				));
+	}
+	
+	public static IFS<Similitude> koch2SimDownOff(double p, double q)
+	{		
+		double
+			scale = 1.0/Math.sqrt(3.0),
+			a = Math.acos(Math.sqrt(3.0)/2.0),
+			y = Math.sin(a) * scale,
+			x = (1.0 - scale) + (scale - Math.cos(a) * scale);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -x, y, (Math.PI - a) / (2.0 * Math.PI), p,
+				scale, +x, y, (Math.PI + a) / (2.0 * Math.PI), q
 				));
 	}
 	
 	
 	public static IFS<Similitude> koch2DownSim()
 	{
-		double 	a = Math.sqrt(13.0/9.0),
-				angle = Math.atan(2.0/3.0),
-				y = - 0.5 * a * Math.sin(angle),
-				x1 = - 1.0 + 0.5 * a * Math.cos(angle),
-				x2 =   1.0 - 0.5 * a * Math.cos(angle);
+		double
+			scale = 1.0/Math.sqrt(3.0),
+			a = Math.acos(Math.sqrt(3.0)/2.0),
+			y = Math.sin(a) * scale,
+			x = (1.0 - scale) + (scale - Math.cos(a) * scale);
 		
 		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				a/2.0,  x1, -y, -(angle + Math.PI) / (2.0 * Math.PI), 1.0,
-				a/2.0, -x2, -y,  (angle + Math.PI) / (2.0 * Math.PI), 1.0
+				scale, -x, y, (Math.PI - a) / (2.0 * Math.PI), 1.0,
+				scale, +x, y, (Math.PI + a) / (2.0 * Math.PI), 1.0
 				));
 	}	
 	
@@ -358,6 +470,39 @@ public class IFSs
 		}
 		
 		return model;
+	}
+	
+	/**
+	 * Generates an IFS by sampling two subsets of the data, and finding the 
+	 * optimal map between them. 
+	 * 
+	 * @param data
+	 * @param comp
+	 * @return
+	 */
+	public static IFS<Similitude> initialMaps(List<Point> data, int comp, int perMap)
+	{
+		
+		IFS<Similitude> ifs = null;
+		
+		for(int i : Series.series(comp))
+		{
+			List<Point> x, y;
+			
+			x = Datasets.sample(data, perMap);
+			y = Datasets.sample(data, perMap);
+			
+			Similitude map = Maps.findMap(x, y);
+			if(map.scalar() > 1.0)
+				map = map.inverse();
+			
+			if(ifs == null)
+				ifs = new IFS<Similitude>(map, 1);
+			else
+				ifs.addMap(map, 1);
+		}
+		
+		return ifs;
 	}
 
 	/**

@@ -179,10 +179,13 @@ public class MapModel<M extends Map & Parametrizable>
 	 * @return
 	 */
 	public M random()
+	{	
+		return maps.get(draw());
+	}
+	
+	public int draw()
 	{
-		int index = Functions.draw(weights, weightSum);
-		
-		return maps.get(index);
+		return Functions.draw(weights, weightSum);
 	}
 	
 	@Override

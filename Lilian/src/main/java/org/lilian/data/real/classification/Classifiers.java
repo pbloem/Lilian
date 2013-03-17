@@ -697,5 +697,5 @@ public class Classifiers
 		
 			return code.contains(0) ? 1 : 0;
 		}
-	}			
+	}		
 }

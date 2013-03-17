@@ -338,6 +338,12 @@ public class Classification
 			
 			maxClass = max;
 		}
+
+		@Override
+		public void setClass(int i, int cls)
+		{
+			classes.set(i, cls);
+		}
 	}
 	
 	/**
