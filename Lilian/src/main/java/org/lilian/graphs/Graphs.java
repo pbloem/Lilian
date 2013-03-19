@@ -79,6 +79,7 @@ public class Graphs
 	{
 		List<Integer> shuffle = new ArrayList<Integer>(series(graph.size()));
 		Collections.shuffle(shuffle);
+		// System.out.println(shuffle);
 		
 		UTGraph<L, T> out = new MapUTGraph<L, T>();
 		for(int i : series(graph.size()))
@@ -347,4 +348,55 @@ public class Graphs
 		}
 	}
 
+	public static <L> boolean hasSelfLoops(Graph<L> graph)
+	{
+		for(Node<L> node : graph.nodes())
+			if(node.connected(node))
+				return true;
+		
+		return false;
+	}
+	
+	public static <L, T> UTGraph<L, T> subgraph(UTGraph<L, T> graph, Collection<UTNode<L, T>> nodes)
+	{
+		List<UTNode<L, T>> list = new ArrayList<UTNode<L,T>>(nodes);
+		
+		UTGraph<L, T> out = new MapUTGraph<L, T>();
+		for(UTNode<L, T> node : list)
+			out.add(node.label());
+		
+		for(int i : series(list.size()))
+			for(int j : series(i, list.size()))
+				for(T tag : graph.tags())
+					if(list.get(i).connected(list.get(j), tag))
+						out.nodes().get(i).connect(out.nodes().get(j), tag);
+		
+		return out;
+	}
+	
+	/**
+	 * Returns a copy of a graph with the labels and tags replaced by canonical 
+	 * strings. 
+	 * 
+	 * @return
+	 */
+	public static <L, T> UTGraph<String, String> reduce(UTGraph<L, T> graph)
+	{
+		List<L> labels = new ArrayList<L>(graph.labels());
+		List<T> tags = new ArrayList<T>(graph.tags());
+		
+		UTGraph<String, String> out = new MapUTGraph<String, String>();
+		
+		for(UTNode<L, T> node : graph.nodes())
+			out.add("" + labels.indexOf(node.label()));
+		
+		for(int i : series(graph.size()))
+			for(int j : series(i, graph.size()))
+				for(T tag : graph.tags())
+					if(graph.nodes().get(i).connected(graph.nodes().get(j), tag))
+						out.nodes().get(i).connect(out.nodes().get(j), ""+tags.indexOf(tag));
+		
+		return out;
+	}
 }
+

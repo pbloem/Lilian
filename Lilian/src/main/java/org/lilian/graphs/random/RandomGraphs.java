@@ -28,7 +28,7 @@ public class RandomGraphs
 	public static UTGraph<String, String> preferentialAttachment(int nodes, int toAttach)
 	{
 		BAGenerator bag = new BAGenerator(BA_INITIAL, toAttach);
-		bag.iterate(nodes - BA_INITIAL);
+		bag.iterate((nodes - BA_INITIAL));
 		
 		return bag.graph();
 	}

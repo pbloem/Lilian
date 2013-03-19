@@ -21,13 +21,21 @@ public class SubdueCompressor<L, T> implements Compressor<UTGraph<L, T>>
 	private int maxSubSize;
 	private int maxBest;
 	private int beamWidth;
+	private int matcherBeamWidth = -1;
 	private int iterations;
 	private double threshold;
 	private boolean sparse;
-	
+
 	public SubdueCompressor(
 			int maxSubSize, int maxBest, int beamWidth,
 			int iterations, double threshold, boolean sparse)
+	{
+		this(maxSubSize, maxBest, beamWidth, iterations, threshold, sparse, -1);
+	}
+	
+	public SubdueCompressor(
+			int maxSubSize, int maxBest, int beamWidth,
+			int iterations, double threshold, boolean sparse, int matcherBeamWidth)
 	{
 		this.maxSubSize = maxSubSize;
 		this.maxBest = maxBest;
@@ -35,6 +43,7 @@ public class SubdueCompressor<L, T> implements Compressor<UTGraph<L, T>>
 		this.iterations = iterations;
 		this.sparse = sparse;
 		this.threshold = threshold;
+		this.matcherBeamWidth = matcherBeamWidth;
 	}
 
 	@Override
@@ -62,7 +71,7 @@ public class SubdueCompressor<L, T> implements Compressor<UTGraph<L, T>>
 		}
 		
 		InexactCost<L> costFunction = CostFunctions.uniform();
-		Subdue<L, T> subdue = new Subdue<L, T>(graph, costFunction, threshold, sparse);
+		Subdue<L, T> subdue = new Subdue<L, T>(graph, costFunction, threshold, sparse, matcherBeamWidth);
 		Collection<Subdue<L, T>.Substructure> subs = subdue.search(iterations, beamWidth, maxBest, maxSubSize);
 		
 		return subs.iterator().next().score();

@@ -4,14 +4,17 @@ import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.lilian.Global;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.TGraph;
 import org.lilian.graphs.TNode;
@@ -29,6 +32,7 @@ import org.lilian.util.Series;
  */
 public class InexactSubgraphs<L, T>
 {
+	private int beamWidth = -1;
 	
 	private MapUTGraph<L, T> graph1; 
 	private TGraph<L, T> template;
@@ -44,9 +48,17 @@ public class InexactSubgraphs<L, T>
 	// * The transformation cost connected with each substructure
 	public List<Integer> transCosts = new ArrayList<Integer>();
 
+
 	public InexactSubgraphs(UTGraph<L, T> graph, UTGraph<L, T> template,
 			InexactCost<L> cost, double threshold, boolean returnBest)
 	{
+		this(graph, template, cost, threshold, returnBest, -1);
+	}
+	
+	public InexactSubgraphs(UTGraph<L, T> graph, UTGraph<L, T> template,
+			InexactCost<L> cost, double threshold, boolean returnBest, int beamWidth)
+	{
+		this.beamWidth = beamWidth;
 		this.graph1 = MapUTGraph.copy(graph);
 		this.template = template;
 		
@@ -107,11 +119,12 @@ public class InexactSubgraphs<L, T>
 		State best = null;
 		double bestCost = Double.POSITIVE_INFINITY;
 		
-		PriorityQueue<State> buffer = new PriorityQueue<State>();
+		LinkedList<State> buffer = new LinkedList<State>();
 		buffer.add(new State());
 
 		while(! buffer.isEmpty())
 		{
+//			Global.log().info("buffer size:" + buffer.size());
 			State top = buffer.poll();
 			
 			// * If the lowest state has cost higher than threshold, we 
@@ -141,6 +154,13 @@ public class InexactSubgraphs<L, T>
 			
 			for(State child : top)
 				buffer.add(child);
+			
+			Collections.sort(buffer);
+			
+			if(beamWidth != -1)
+				while(buffer.size() > beamWidth)
+					buffer.removeLast();
+					
 		}
 		
 		return best;
@@ -182,7 +202,7 @@ public class InexactSubgraphs<L, T>
 	private class State implements Iterable<State>, Comparable<State>
 	{
 		// * representation of the pairs
-		// - non-negative values represent mappings between nodes. negative 
+		// - non-negative values represent mappings between nodes. Negative 
 		//   values map to new nodes. 
 		private int[] nodes1;
 		private int[] nodes2;
@@ -276,7 +296,7 @@ public class InexactSubgraphs<L, T>
 		private double currentCost()
 		{
 			// * if this is a complete match, then at least some of the pairs 
-			//   must be definite (ie. not represent the removal ofr addition of
+			//   must be definite (ie. not represent the removal for addition of
 			//   a node.) 
 			if(complete())
 			{

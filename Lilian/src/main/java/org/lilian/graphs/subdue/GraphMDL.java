@@ -109,6 +109,13 @@ public class GraphMDL
 		return nBits + aBits;
 	}
 
+	public static <L, T> double mdl(
+			UTGraph<L, T> graph, UTGraph<L, T> substructure, 
+			double threshold, boolean sparse)
+	{
+		return mdl(graph, substructure, threshold, sparse, -1);
+	}
+	
 	/**
 	 * How many bits are required to store the graph, if we use a symbol for the
 	 * given substructure.
@@ -123,11 +130,11 @@ public class GraphMDL
 	 */
 	public static <L, T> double mdl(
 			UTGraph<L, T> graph, UTGraph<L, T> substructure, 
-			double threshold, boolean sparse)
+			double threshold, boolean sparse, int beamWidth)
 	{
-		// System.out.println("graph: " + graph);
-		// System.out.println("sub: " + substructure);
-		
+//		System.out.println("graph: " + graph);
+//		System.out.println("sub: " + substructure);
+//		
 		BasicFrequencyModel<L> labels = new BasicFrequencyModel<L>();
 		for(UTNode<L, T> node : graph.nodes())
 			labels.add(node.label());
@@ -140,7 +147,7 @@ public class GraphMDL
 		
 		InexactCost<L> cost = CostFunctions.transformationCost(
 				graph.labels().size(), substructure.size(), substructure.numLinks());
-		InexactSubgraphs<L, T> is = new InexactSubgraphs<L, T>(graph, substructure, cost, threshold, false);
+		InexactSubgraphs<L, T> is = new InexactSubgraphs<L, T>(graph, substructure, cost, threshold, false, beamWidth);
 		
 		// * Store the leftover graph
 		bits += sparse ? mdlSparse(is.silhouette(), labels) : mdl(is.silhouette(), labels);

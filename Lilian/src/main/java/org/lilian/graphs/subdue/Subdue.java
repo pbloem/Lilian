@@ -23,13 +23,13 @@ import org.lilian.util.distance.Metrizable;
 /**
  * Subdue (Jonyer, Cook, Holder, 2003) finds relevant substructures in a graph 
  * based on an MDL criterion
- * 
  *  
  * @author Peter
  *
  */
 public class Subdue<L, T>
 {
+	private int matcherBeamWidth = -1;
 	private double costThreshold = 0.0;
 	private InexactCost<Token> costFunction = null;
 	
@@ -52,6 +52,13 @@ public class Subdue<L, T>
 
 	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold, boolean sparse)
 	{
+		this(graph, costFunction, costThreshold, sparse, -1);
+	}
+	
+	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold, boolean sparse, int matcherBeamWidth)
+	{
+		this.matcherBeamWidth = matcherBeamWidth;
+		
 		labels = graph.labels();
 		tags = graph.tags();
 		
@@ -105,7 +112,7 @@ public class Subdue<L, T>
 				
 //				if(extensions.size() % 100 == 0)
 //					Global.log().info(extensions.size() + " left.");
-//				
+				
 				Iterator<MapUTGraph<Token, TagToken>> iterator = extensions.iterator();
 				while(iterator.hasNext())
 				{
@@ -125,6 +132,7 @@ public class Subdue<L, T>
 						iterator.remove();
 				}
 				
+//				Global.log().info("children: "+children.size());
 				children.add(new Substructure(next));
 			}
 			
@@ -469,7 +477,7 @@ public class Subdue<L, T>
 
 		private void calculateScore()
 		{
-			score = GraphMDL.mdl(tGraph, subGraph, costThreshold, sparse);
+			score = GraphMDL.mdl(tGraph, subGraph, costThreshold, sparse, matcherBeamWidth);
 		}
 		
 		public double score()

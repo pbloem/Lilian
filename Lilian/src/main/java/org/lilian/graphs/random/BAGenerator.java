@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.lilian.Global;
 import org.lilian.graphs.Graph;
+import org.lilian.graphs.Graphs;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.Node;
 import org.lilian.graphs.UTGraph;
@@ -32,10 +33,11 @@ public class BAGenerator
 		this.initial = initial;
 		this.attach = attach;
 		
-		graph = new MapUTGraph<String, String>();
+		graph = Graphs.k(initial, LABEL);
 		
 		for(int i : series(initial))
-			probabilities.add(graph.add(LABEL));
+			for(int j : series(initial - 1))
+				probabilities.add(graph.nodes().get(i));
 	}
 
 	/**
@@ -49,13 +51,10 @@ public class BAGenerator
 	public Node<String> newNode()
 	{
 		Node<String> node = graph.add(LABEL);
-		List<Node<String>> neighbors = new ArrayList<Node<String>>(attach);		
 		
-		int l0 = graph.numLinks();
 		for(Node<String> neighbor : sample(probabilities, attach))
 		{	
 			node.connect(neighbor);
-			neighbors.add(neighbor);
 
 			probabilities.add(neighbor);
 			probabilities.add(node);
