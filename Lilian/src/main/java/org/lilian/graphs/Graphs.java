@@ -398,5 +398,24 @@ public class Graphs
 		
 		return out;
 	}
+	
+	/**
+	 * Replaces labels by a given value, and tags by null
+	 * @return
+	 */
+	public static <L, T> UTGraph<String, String> blank(UTGraph<L, T> graph, String label)
+	{
+		UTGraph<String, String> out = new MapUTGraph<String, String>();
+		
+		for(UTNode<L, T> node : graph.nodes())
+			out.add(label);
+		
+		for(int i : series(graph.size()))
+			for(int j : series(i, graph.size()))
+					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
+						out.nodes().get(i).connect(out.nodes().get(j));
+		
+		return out;
+	}	
 }
 
