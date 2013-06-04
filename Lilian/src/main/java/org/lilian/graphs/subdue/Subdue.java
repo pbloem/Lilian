@@ -17,6 +17,8 @@ import org.lilian.Global;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTNode;
+import org.lilian.graphs.subdue.Wrapping.TagToken;
+import org.lilian.graphs.subdue.Wrapping.Token;
 import org.lilian.util.Series;
 import org.lilian.util.distance.Metrizable;
 
@@ -31,31 +33,27 @@ public class Subdue<L, T>
 {
 	private int matcherBeamWidth = -1;
 	private double costThreshold = 0.0;
-	private InexactCost<Token> costFunction = null;
+	private InexactCost<L> costFunction = null;
 	
-	private UTGraph<L, T> graph;
-	private MapUTGraph<Token, TagToken> tGraph;
+	private UTGraph<L, T> data;
 	
 	private Set<L> labels;
 	private Set<T> tags;
-	private boolean sparse = false;
 	
-	public Subdue(UTGraph<L, T> graph, boolean sparse)
+	public Subdue(UTGraph<L, T> graph)
 	{
 		labels = graph.labels();
 		tags = graph.tags();
 		
-		this.graph = graph;
-		this.sparse = sparse;
-		tGraph = wrap(graph);
+		data = graph;
 	}
 
-	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold, boolean sparse)
+	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold)
 	{
-		this(graph, costFunction, costThreshold, sparse, -1);
+		this(graph, costFunction, costThreshold, -1);
 	}
 	
-	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold, boolean sparse, int matcherBeamWidth)
+	public Subdue(UTGraph<L, T> graph, InexactCost<L> costFunction, double costThreshold, int matcherBeamWidth)
 	{
 		this.matcherBeamWidth = matcherBeamWidth;
 		
@@ -63,11 +61,9 @@ public class Subdue<L, T>
 		tags = graph.tags();
 		
 		this.costThreshold = costThreshold;
-		this.costFunction = new CostWrapper(costFunction);
-		this.sparse = sparse;
+		this.costFunction = costFunction;
 		
-		this.graph = graph;
-		this.tGraph = wrap(graph);
+		data = graph;
 	}
 	
 	/**
@@ -80,8 +76,6 @@ public class Subdue<L, T>
 	 */
 	public Collection<Substructure> search(int iterations, int beamWidth, int maxBest, int maxSubSize)
 	{
-		// Global.log().info("...");
-		
 		LinkedList<Substructure> parents = new LinkedList<Substructure>(),
 				                 children = new LinkedList<Substructure>(),
 		                         bestList = new LinkedList<Substructure>();
@@ -92,57 +86,40 @@ public class Subdue<L, T>
 		sort(parents);
 		
 		for(int i : series(iterations))
-		{
-//			Global.log().info("Starting iteration " + i);
-//			Global.log().info("* there are " + parents.size() + " parents");
-//			
+		{	
+//			Global.log().info("iteration " + i);
+//			for(Substructure sub : bestList)
+//				System.out.println(sub);
+			
 			// * generate all extensions of the parents
-			List<MapUTGraph<Token, TagToken>> extensions = new LinkedList<MapUTGraph<Token, TagToken>>();
+			List<MapUTGraph<L, T>> extensions = new LinkedList<MapUTGraph<L, T>>();
 			for(Substructure parent : parents)
-				for(MapUTGraph<Token, TagToken> child : substructures(parent.subgraph()))
+				for(MapUTGraph<L, T> child : substructures(parent.subgraph()))
 					if(child.size() <= maxSubSize || maxSubSize == -1)
 						extensions.add(child);
 			
-//			Global.log().info("Generated " + extensions.size() +  " children. Checking for isomorphisms.");
-//			
 			// * check for isomorphic children
 			while(! extensions.isEmpty())
 			{
-				MapUTGraph<Token, TagToken> next = extensions.remove(0);
-				
-//				if(extensions.size() % 100 == 0)
-//					Global.log().info(extensions.size() + " left.");
-				
-				Iterator<MapUTGraph<Token, TagToken>> iterator = extensions.iterator();
+				MapUTGraph<L, T> next = extensions.remove(0);
+
+				Iterator<MapUTGraph<L, T>> iterator = extensions.iterator();
 				while(iterator.hasNext())
 				{
-					MapUTGraph<Token, TagToken> other = iterator.next();
+					MapUTGraph<L, T> other = iterator.next();
 					
-//					InexactMatch<Token, BaseGraph<Token>.Node> im = 
-//							new InexactMatch<Token, BaseGraph<Token>.Node>(
-//									next, other, costFunction, costThreshold);
-//					
-//					if(im.matches())
-//						iterator.remove();
-					
-					UndirectedVF2<Token, TagToken> vf2 = 
-							new UndirectedVF2<Token, TagToken>(next, other, true);
+					UndirectedVF2<L, T> vf2 = 
+							new UndirectedVF2<L, T>(next, other, true);
 					
 					if(vf2.matches())
 						iterator.remove();
 				}
 				
-//				Global.log().info("children: "+children.size());
 				children.add(new Substructure(next));
 			}
-			
-// 			Global.log().info("Reduced to "+children.size()+" non-isomorphic children.");
-	
+
 			sort(children);
-			
-//			for(Substructure child : children)
-//				System.out.println("__ " + child);
-			
+						
 			while(children.size() > beamWidth)
 				children.pollLast();
 			
@@ -163,10 +140,10 @@ public class Subdue<L, T>
 	 * @param label
 	 * @return
 	 */
-	public MapUTGraph<Token, TagToken> substructure(L label)
+	public MapUTGraph<L, T> substructure(L label)
 	{
-		MapUTGraph<Token, TagToken> graph = new MapUTGraph<Token, TagToken>();
-		graph.add(new LabelToken(label));
+		MapUTGraph<L, T> graph = new MapUTGraph<L, T>();
+		graph.add(label);
 		
 		return graph;
 	}
@@ -175,24 +152,23 @@ public class Subdue<L, T>
 	 * Returns all substructures that can be derived by adding a link to the 
 	 * given parent (possibly by also adding a new node)
 	 */
-	public List<MapUTGraph<Token, TagToken>> substructures(MapUTGraph<Token, TagToken> parent)
+	public List<MapUTGraph<L, T>> substructures(MapUTGraph<L, T> parent)
 	{
-		List<MapUTGraph<Token, TagToken>> substructures = new ArrayList<MapUTGraph<Token, TagToken>>();
+		List<MapUTGraph<L, T>> substructures = new ArrayList<MapUTGraph<L, T>>();
 		
 		// * Try all additional connections between existing nodes
 		for(int i : series(parent.nodes().size()))
 			for(int j : series(i+1, parent.nodes().size()))
 			{
-				UTNode<Token, TagToken> 
+				UTNode<L, T> 
 						n1 = parent.nodes().get(i), 
 						n2 = parent.nodes().get(j);
 				
 				for(T tag : tags)
 				{	
-					TagToken tt = new LabelTagToken(tag); 
-					if(! n1.connected(n2, tt))
+					if(! n1.connected(n2, tag))
 					{
-						MapUTGraph<Token, TagToken> sub = copy(parent, n1, n2, tt);
+						MapUTGraph<L, T> sub = copy(parent, n1, n2, tag);
 						substructures.add(sub);
 					}
 				}
@@ -203,8 +179,8 @@ public class Subdue<L, T>
 			for(L label : labels)
 				for(T tag : tags)
 				{
-					UTNode<Token, TagToken> n1 = parent.nodes().get(i);
-					MapUTGraph<Token, TagToken> sub = copy(parent, n1, label);
+					UTNode<L, T> n1 = parent.nodes().get(i);
+					MapUTGraph<L, T> sub = copy(parent, n1, label);
 					substructures.add(sub);
 				}
 		
@@ -220,31 +196,30 @@ public class Subdue<L, T>
 	 * @param label
 	 * @return
 	 */
-	private MapUTGraph<Token, TagToken> copy(
-			MapUTGraph<Token, TagToken> parent, 
-			UTNode<Token, TagToken> n1, 
+	private MapUTGraph<L, T> copy(
+			MapUTGraph<L, T> parent, 
+			UTNode<L, T> n1, 
 			L label)
 	{
-		MapUTGraph<Token, TagToken> child = new MapUTGraph<Token, TagToken>();
+		MapUTGraph<L, T> child = new MapUTGraph<L, T>();
 		
 		// * Note : these intermediate lists are no longer necessary.
-		List<UTNode<Token, TagToken>> nodesIn = new ArrayList<UTNode<Token, TagToken>>(parent.nodes());
-		List<UTNode<Token, TagToken>> nodesOut = new ArrayList<UTNode<Token, TagToken>>(parent.size());
+		List<UTNode<L, T>> nodesIn = new ArrayList<UTNode<L, T>>(parent.nodes());
+		List<UTNode<L, T>> nodesOut = new ArrayList<UTNode<L, T>>(parent.size());
 
 		
-		for(UTNode<Token, TagToken> nodeIn : nodesIn)
+		for(UTNode<L, T> nodeIn : nodesIn)
 			nodesOut.add(child.add(nodeIn.label()));
-		UTNode<Token, TagToken> newNode = child.add(new LabelToken(label));
+		UTNode<L, T> newNode = child.add(label);
 		
 		for(int i : series(nodesIn.size()))
 		{
-			UTNode<Token, TagToken> ni = nodesIn.get(i);
+			UTNode<L, T> ni = nodesIn.get(i);
 			for(int j : series(i, nodesIn.size()))
 			{
-				UTNode<Token, TagToken> nj = nodesIn.get(j);
+				UTNode<L, T> nj = nodesIn.get(j);
 				if(ni.connected(nj))
 					nodesOut.get(i).connect(nodesOut.get(j));
-			
 			}
 			
 			if(ni.equals(n1))
@@ -263,23 +238,23 @@ public class Subdue<L, T>
 	 * @param n2
 	 * @return
 	 */
-	private MapUTGraph<Token, TagToken> copy(
-			MapUTGraph<Token, TagToken> parent,
-			UTNode<Token, TagToken> n1,
-			UTNode<Token, TagToken> n2,
-			TagToken newTag)
+	private MapUTGraph<L, T> copy(
+				MapUTGraph<L, T> parent,
+				UTNode<L, T> n1,
+				UTNode<L, T> n2,
+				T newTag)
 	{
-		MapUTGraph<Token, TagToken> child = new MapUTGraph<Token, TagToken>();
-		List<UTNode<Token, TagToken>> nodesIn = new ArrayList<UTNode<Token, TagToken>>(parent.nodes());
-		List<UTNode<Token, TagToken>> nodesOut = new ArrayList<UTNode<Token, TagToken>>(parent.size());
+		MapUTGraph<L, T> child = new MapUTGraph<L, T>();
+		List<UTNode<L, T>> nodesIn = new ArrayList<UTNode<L, T>>(parent.nodes());
+		List<UTNode<L, T>> nodesOut = new ArrayList<UTNode<L, T>>(parent.size());
 		
-		for(UTNode<Token, TagToken> nodeIn : nodesIn)
+		for(UTNode<L, T> nodeIn : nodesIn)
 			nodesOut.add(child.add(nodeIn.label()));
 		
 		for(int i : series(nodesIn.size()))
 			for(int j : series(i, nodesIn.size()))
 			{
-				UTNode<Token, TagToken> ni = nodesIn.get(i), nj = nodesIn.get(j);
+				UTNode<L, T> ni = nodesIn.get(i), nj = nodesIn.get(j);
 				
 				if(ni.connected(nj))
 					nodesOut.get(i).connect(nodesOut.get(j), ni.link(nj).tag());
@@ -290,166 +265,7 @@ public class Subdue<L, T>
 			
 		return child;
 	}
-	
-	/**
-	 * Produces a graph with the same structure as the input, but with wrapper 
-	 * objects as labels/tags that refer back to the original labels/tags. 
-	 * (But not nodes) 
-	 * 
-	 * @param graph
-	 * @return
-	 */
-	private MapUTGraph<Token, TagToken> wrap(UTGraph<L, T> graph)
-	{
-		MapUTGraph<Token, TagToken> wrapped = new MapUTGraph<Token, TagToken>();
-		
-		for(UTNode<L, T> nodeIn : graph.nodes())
-			wrapped.add(new LabelToken(nodeIn.label()));
-		
-		for(int i : series(graph.size()))
-			for(int j : series(i, graph.size()))
-			{
-				UTNode<L, T> ni = graph.nodes().get(i), nj = graph.nodes().get(j);
-				for(T tag : tags)
-				{
-					if(ni.connected(nj, tag))
-						wrapped.nodes().get(i).connect(wrapped.nodes().get(j), 
-								new LabelTagToken(tag));
-				}
-			}
-		
 
-		
-		return wrapped;
-	}
-
-
-	/**
-	 * A token is a node label in a substructure. It can represent a labeled 
-	 * node in the graph or a variable node.
-	 * 
-	 * @author Peter
-	 *
-	 */
-	public interface Token {
-		
-	}
-	
-	public interface TagToken {
-		
-	}
-	
-	private class LabelToken implements Token 
-	{
-		L label;
-
-		public LabelToken(L label)
-		{
-			this.label = label;
-		} 
-		
-		public L label()
-		{
-			return label;
-		}
-
-		@Override
-		public int hashCode()
-		{
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + getOuterType().hashCode();
-			result = prime * result + ((label == null) ? 0 : label.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			LabelToken other = (LabelToken) obj;
-			if (!getOuterType().equals(other.getOuterType()))
-				return false;
-			if (label == null)
-			{
-				if (other.label != null)
-					return false;
-			} else if (!label.equals(other.label))
-				return false;
-			return true;
-		}
-
-		private Subdue getOuterType()
-		{
-			return Subdue.this;
-		}
-		
-		public String toString()
-		{
-			return label+"";
-		}
-	}
-	
-	private class LabelTagToken implements TagToken 
-	{
-		T label;
-
-		public LabelTagToken(T label)
-		{
-			this.label = label;
-		} 
-		
-		public T label()
-		{
-			return label;
-		}
-
-		@Override
-		public int hashCode()
-		{
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + getOuterType().hashCode();
-			result = prime * result + ((label == null) ? 0 : label.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			LabelTagToken other = (LabelTagToken) obj;
-			if (!getOuterType().equals(other.getOuterType()))
-				return false;
-			if (label == null)
-			{
-				if (other.label != null)
-					return false;
-			} else if (!label.equals(other.label))
-				return false;
-			return true;
-		}
-
-		private Subdue getOuterType()
-		{
-			return Subdue.this;
-		}
-		
-		public String toString()
-		{
-			return label+"";
-		}
-	}
 	
 	
 	/**
@@ -461,23 +277,23 @@ public class Subdue<L, T>
 	public  class Substructure 
 		implements Comparable<Substructure>
 	{
-		private MapUTGraph<Token, TagToken> subGraph;
+		private MapUTGraph<L, T> subGraph;
 		private double score;
 		
-		public Substructure(MapUTGraph<Token, TagToken> subGraph)
+		public Substructure(MapUTGraph<L, T> subGraph)
 		{
 			this.subGraph = subGraph;
 			calculateScore();
 		}
 		
-		public MapUTGraph<Token, TagToken> subgraph()
+		public MapUTGraph<L, T> subgraph()
 		{
 			return subGraph;
 		}
 
 		private void calculateScore()
 		{
-			score = GraphMDL.mdl(tGraph, subGraph, costThreshold, sparse, matcherBeamWidth);
+			score = GraphMDL.mdl(data, subGraph, costThreshold, matcherBeamWidth);
 		}
 		
 		public double score()
@@ -487,11 +303,19 @@ public class Subdue<L, T>
 
 		public boolean matches(Substructure other)
 		{
-			InexactMatch<Token, TagToken> im = 
-					new InexactMatch<Subdue.Token, Subdue.TagToken>(
+			InexactMatch<L, T> im = 
+					new InexactMatch<L, T>(
 							this.subGraph, other.subGraph, costFunction, costThreshold);
 			
 			return im.matches();
+		}
+		
+		public UTGraph<Token, TagToken> silhouette()
+		{
+			InexactSubgraphs<L, T> is = 
+					new InexactSubgraphs<L, T>(data, subGraph, costFunction, costThreshold, false);
+			
+			return is.silhouette();
 		}
 
 		@Override
@@ -502,10 +326,13 @@ public class Subdue<L, T>
 		
 		public String toString()
 		{
-			return subGraph.toString() + " " + score + " " + GraphMDL.mdl(subGraph);
+			InexactSubgraphs<L, T> is = new InexactSubgraphs<L, T>(data, subGraph, costFunction, costThreshold, false, matcherBeamWidth);
+			int matches = is.numMatches();
+			
+			return subGraph.toString() + " " + score + " " + GraphMDL.mdl(subGraph) + " " + matches;
 		}
 	}
-	
+	/**
 	private class CostWrapper implements InexactCost<Token>
 	{
 		private InexactCost<L> master;
@@ -518,24 +345,24 @@ public class Subdue<L, T>
 		@Override
 		public double relabel(Token in, Token out)
 		{
-			if(in instanceof Subdue.LabelToken && out instanceof Subdue.LabelToken)
-				return master.relabel(((LabelToken)in).label(), ((LabelToken)out).label );
+			if(in instanceof Wrapping<?, ?>.LabelToken && out instanceof Wrapping<?, ?>.LabelToken)
+				return master.relabel(((Wrapping<L, T>.LabelToken)in).label(), ((Wrapping<L, T>.LabelToken)out).label() );
 			return 1.0;
 		}
 
 		@Override
 		public double removeNode(Token label)
 		{
-			if(label instanceof Subdue.LabelToken)
-				return master.removeNode(((LabelToken)label).label());
+			if(label instanceof Wrapping<?, ?>.LabelToken)
+				return master.removeNode(((Wrapping<L, T>.LabelToken)label).label());
 			return 1.0;
 		}
 
 		@Override
 		public double addNode(Token label)
 		{
-			if(label instanceof Subdue.LabelToken)
-				return master.addNode(((LabelToken)label).label());
+			if(label instanceof Wrapping<?, ?>.LabelToken)
+				return master.addNode(((Wrapping<L, T>.LabelToken)label).label());
 			return 1.0;
 		}
 
@@ -553,4 +380,6 @@ public class Subdue<L, T>
 		
 		
 	}
+	
+	*/
 }

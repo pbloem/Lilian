@@ -17,13 +17,22 @@ import java.util.Set;
 import org.lilian.Global;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.TGraph;
+import org.lilian.graphs.TLink;
 import org.lilian.graphs.TNode;
 import org.lilian.graphs.UTGraph;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
+import static org.lilian.graphs.subdue.Wrapping.*;
+
 /**
- * Searches for inexact subgraphs of a given template in a larger graph.
+ * Takes a subgraph (template) and a larger graph and finds the occurence of the 
+ * template in the graph. This class returns the result as a tokenized graph
+ * (ie all the nodes replaced with nodes with token objects wrapped around the 
+ * labels) with the occurrences of the template replaced by symbol tokens. 
+ * 
+ * TODO: Decouple the graph matching code from the code that extracts it from 
+ * the main graph, and repeats the process. 
  * 
  * @author Peter
  *
@@ -32,9 +41,12 @@ import org.lilian.util.Series;
  */
 public class InexactSubgraphs<L, T>
 {
+	private Wrapping<L, T> wrapping = new Wrapping<L, T>();
+	private Token symbolToken = wrapping.symbol();
+	
 	private int beamWidth = -1;
 	
-	private MapUTGraph<L, T> graph1; 
+	private MapUTGraph<Token, TagToken> silhouette; 
 	private TGraph<L, T> template;
 	 
 	private double threshold;
@@ -43,11 +55,13 @@ public class InexactSubgraphs<L, T>
 	private InexactCost<L> costFunction;
 	
 	// * The number of links required to connect each substructure to the graph
-	public List<Integer> numLinks = new ArrayList<Integer>();
+	private List<Integer> numLinks = new ArrayList<Integer>();
 	
 	// * The transformation cost connected with each substructure
-	public List<Integer> transCosts = new ArrayList<Integer>();
-
+	private List<Integer> transCosts = new ArrayList<Integer>(); 
+	
+	private Set<Integer> symbolNodes = new HashSet<Integer>();
+	private long lastMod = -1;
 
 	public InexactSubgraphs(UTGraph<L, T> graph, UTGraph<L, T> template,
 			InexactCost<L> cost, double threshold, boolean returnBest)
@@ -59,7 +73,7 @@ public class InexactSubgraphs<L, T>
 			InexactCost<L> cost, double threshold, boolean returnBest, int beamWidth)
 	{
 		this.beamWidth = beamWidth;
-		this.graph1 = MapUTGraph.copy(graph);
+		this.silhouette = wrapping.wrap(graph);
 		this.template = template;
 		
 		this.threshold = threshold;
@@ -73,47 +87,98 @@ public class InexactSubgraphs<L, T>
 		do 
 		{
 			best = search();
-			// System.out.print("."+template.size()+".");
 			
-			if(best != null && ! this.graph1.nodes().isEmpty())
+			if (best != null && ! silhouette.nodes().isEmpty())
 			{
+				// * Add a symbol node
+				TNode<Token, TagToken> symbol = silhouette.add(symbolToken);
+				
 				// * remove the matched nodes from the graph
 				
 				// ** Sort the indices from largest to smallest so that we can 
 				//    remove them in order without affecting the rest of the
 				//    indices to be removed 
-				List<Integer> rm = new ArrayList<Integer>(best.nodes1.length);
-				for(int i : best.nodes1)
+				//   (if we remove from low to high, the indices of the higher 
+				//    nodes will change in the graph)
+				List<Integer> rm = new ArrayList<Integer>(best.silhouetteNodes.length);
+				for (int i : best.silhouetteNodes)
 					rm.add(i);
 				
 				Collections.sort(rm, Collections.reverseOrder());
 
 				// * Deduplicate
-				Set<TNode<L, T>> nodes = new HashSet<TNode<L, T>>();
-				for(int i : rm)
-					if(i >= 0)
-						nodes.add(graph1.nodes().get(i));
+				Set<TNode<Token, TagToken>> nodes = new HashSet<TNode<Token, TagToken>>();
+				for (int i : rm)
+					if (i >= 0)
+						nodes.add(silhouette.nodes().get(i));
 				
 				// * record transformation cost and linking cost
 				int links = 0;
-				for(TNode<L, T> node : nodes)
-					for(TNode<L, T> neighbour : node.neighbors())
-						if(! nodes.contains(neighbour))
+				for (TNode<Token, TagToken> node : nodes)
+					for (TNode<Token, TagToken> neighbour : node.neighbors())
+						if (! nodes.contains(neighbour))
 							links++;
 				
 				numLinks.add(links);
 				
 				transCosts.add((int)best.cost());
 				
-				// * remove the nodes from the graph
-				for(TNode<L, T> node : nodes)
+				// * Remove the nodes from the graph
+				int i = 0; // index of the node to be removed in the template
+				for(TNode<Token, TagToken> node : nodes)
+				{
+					
+					
+					// * Check the neighbours. If they are not to be removed, 
+					//   they should be connected to the symbol node
+					for(TNode<Token, TagToken> neighbor : node.neighbors())
+						if(! nodes.contains(neighbor))
+							for(TLink<Token, TagToken> link : node.links(neighbor))
+							{
+								if(! (link.tag() instanceof Wrapping<?, ?>.LabelTagToken) )
+									throw new IllegalStateException("Illegal state. All tagtokens should be of type LabelTagToken");
+								
+								Wrapping<L, T>.LabelTagToken tag = (Wrapping<L, T>.LabelTagToken) link.tag(); 
+								TagToken newTT;
+								if(tag.firstAnnotation() == null)
+									newTT = wrapping.tag(tag.tag(), i);
+								else
+									newTT = wrapping.tag(tag.tag(), tag.firstAnnotation(), i);
+								
+								symbol.connect(neighbor, newTT);
+							}
+							
 					node.remove();
+					i++;
+				}
 			}
 
-		} while(best != null && ! this.graph1.nodes().isEmpty());
-		// System.out.println();
+		} while (best != null && ! silhouette.nodes().isEmpty());
+		
 	}
-
+	
+	/**
+	 * Returns a list of the indices of the nodes in sihouette which are 
+	 * symbolnodes
+	 * 
+	 * @return
+	 */
+	public Set<Integer> symbolNodes()
+	{
+		if(lastMod != silhouette.state())
+		{
+			symbolNodes.clear();
+			for(int i : Series.series(silhouette.size()))
+				if(silhouette.nodes().get(i).label() instanceof Wrapping<?, ?>.SymbolToken)
+					symbolNodes.add(i);
+					
+				
+			lastMod = silhouette.state();
+		}
+		
+		return symbolNodes;
+	}
+	
 	private State search()
 	{
 		State best = null;
@@ -176,9 +241,9 @@ public class InexactSubgraphs<L, T>
 	 * 
 	 * @return
 	 */
-	public UTGraph<L, T> silhouette()
+	public UTGraph<Token, TagToken> silhouette()
 	{
-		return graph1;
+		return silhouette;
 	}
 	
 	/**
@@ -199,13 +264,24 @@ public class InexactSubgraphs<L, T>
 		return transCosts;
 	}
 	
+	public Wrapping<L, T> wrapping()
+	{
+		return wrapping;
+	}
+	
 	private class State implements Iterable<State>, Comparable<State>
 	{
-		// * representation of the pairs
+		// * Each state is defined primarily by a list of node pairs.
+		//   These two array represent these node pairs. 
+		// 
+		// - silhouetteNodes[0] is the index in 'silhouette' of the node which 
+		//   is part of the first pair. templateNodes[0] is the index of the 
+		//   node in template that is part of the first pair.
+		//
 		// - non-negative values represent mappings between nodes. Negative 
 		//   values map to new nodes. 
-		private int[] nodes1;
-		private int[] nodes2;
+		private int[] silhouetteNodes;
+		private int[] templateNodes;
 		
 		private double cost;
 		private boolean complete;
@@ -215,8 +291,8 @@ public class InexactSubgraphs<L, T>
 		 */
 		public State()
 		{
-			nodes1 = new int[0];
-			nodes2 = new int[0];
+			silhouetteNodes = new int[0];
+			templateNodes = new int[0];
 			cost = 0.0;
 			complete = false;
 		}
@@ -228,17 +304,17 @@ public class InexactSubgraphs<L, T>
 		 * @param g1Node
 		 * @param g2Node
 		 */
-		public State(State parent, int g1Node, int g2Node, boolean complete)
+		public State(State parent, int silhouetteNode, int templateNode, boolean complete)
 		{
 			int n = parent.size();
-			nodes1 = new int[n+1];
-			nodes2 = new int[n+1];
+			silhouetteNodes = new int[n+1];
+			templateNodes = new int[n+1];
 			
-			System.arraycopy(parent.nodes1, 0, nodes1, 0, n);
-			System.arraycopy(parent.nodes2, 0, nodes2, 0, n);
+			System.arraycopy(parent.silhouetteNodes, 0, silhouetteNodes, 0, n);
+			System.arraycopy(parent.templateNodes, 0, templateNodes, 0, n);
 
-			nodes1[n] = g1Node;
-			nodes2[n] = g2Node;
+			silhouetteNodes[n] = silhouetteNode;
+			templateNodes[n] = templateNode;
 			
 			this.complete = complete;
 						
@@ -251,38 +327,38 @@ public class InexactSubgraphs<L, T>
 			double cost = 0.0;
 			
 			// * The nodes that are currently paired
-			Set<TNode<L, T>> a1 = new HashSet<TNode<L, T>>();
-			Set<TNode<L, T>> a2 = new HashSet<TNode<L, T>>();
+			Set<TNode<Token, TagToken>> aSilhouette = new HashSet<TNode<Token, TagToken>>();
+			Set<TNode<L, T>> aTemplate = new HashSet<TNode<L, T>>();
 			
-			for(int i : series(nodes1.length))
-				if(node1(i) != null)
-					a1.add(node1(i));
-			for(int i : series(nodes2.length))
-				if(node2(i) != null)
-					a2.add(node2(i));
+			for(int i : series(silhouetteNodes.length))
+				if(nodeSilhouette(i) != null)
+					aSilhouette.add(nodeSilhouette(i));
+			for(int i : series(templateNodes.length))
+				if(nodeTemplate(i) != null)
+					aTemplate.add(nodeTemplate(i));
 			
 			// * The shells around a1 and a2
-			Set<TNode<L, T>> b1 = new LinkedHashSet<TNode<L, T>>();
-			Set<TNode<L, T>> b2 = new LinkedHashSet<TNode<L, T>>();
+			Set<TNode<Token, TagToken>> bSilhouette = new LinkedHashSet<TNode<Token, TagToken>>();
+			Set<TNode<L, T>> bTemplate = new LinkedHashSet<TNode<L, T>>();
 			
-			for(TNode<L, T> node : a1)
-				for(TNode<L, T> neighbour : node.neighbors())
-					if(!a1.contains(neighbour))
-						b1.add(neighbour);
+			for(TNode<Token, TagToken> node : aSilhouette)
+				for(TNode<Token, TagToken> neighbour : node.neighbors())
+					if(!aSilhouette.contains(neighbour))
+						bSilhouette.add(neighbour);
 			
-			for(TNode<L, T> node : a2)
+			for(TNode<L, T> node : aTemplate)
 				for(TNode<L, T> neighbour : node.neighbors())
-					if(!a2.contains(neighbour))
-						b2.add(neighbour);
-			if(b2.size() > b1.size())
-				cost += Math.abs(b1.size() - b2.size());
+					if(!aTemplate.contains(neighbour))
+						bTemplate.add(neighbour);
+			if(bTemplate.size() > bSilhouette.size())
+				cost += Math.abs(bSilhouette.size() - bTemplate.size());
 			
 			// * NOTE: The 1983 paper is not absolutely clear on this step
 			//   this may not be right
 			int b1Links = 0, b2Links = 0;
-			for(TNode<L, T> node : b1)
+			for(TNode<Token, TagToken> node : bSilhouette)
 				b1Links += node.neighbors().size();
-			for(TNode<L, T> node : b2)
+			for(TNode<L, T> node : bTemplate)
 				b2Links += node.neighbors().size();
 						
 			// * We need to be optimistic so we assume that every link addition 
@@ -296,48 +372,67 @@ public class InexactSubgraphs<L, T>
 		private double currentCost()
 		{
 			// * if this is a complete match, then at least some of the pairs 
-			//   must be definite (ie. not represent the removal for addition of
+			//   must be definite (ie. not represent the removal or addition of
 			//   a node.) 
 			if(complete())
 			{
 				int connected = 0;
 				for(int i : series(size()))
-					if(nodes1[i] >= 0 && nodes2[i] >= 0)
+					if(silhouetteNodes[i] >= 0 && templateNodes[i] >= 0)
 						connected++;
 				
 				if(connected == 0)
 					return Double.POSITIVE_INFINITY;
 			}
 					
+			// * If any of the template nodes map to a symbol node, this is an 
+			//   illegal state
+			for(int i : Series.series(size()))
+				if(nodeSilhouette(i) != null)
+					if(! (nodeSilhouette(i).label() instanceof Wrapping<?, ?>.LabelToken)) 
+						return Double.POSITIVE_INFINITY;
+				
 			
 			double cost = 0.0;
 			
 			// * relabeling penalty
 			for(int i : Series.series(size()))
 			{
-				if(node1(i) != null && node2(i) != null)
-					if(! node1(i).label().equals(node2(i).label()) )
+				if(nodeSilhouette(i) != null && nodeTemplate(i) != null)
+				{
+					// * unwrap the labeltoken
+					L silhouetteLabel = 
+							((Wrapping<L, T>.LabelToken) (nodeSilhouette(i).label())).label();
+					L templateLabel =  
+							nodeTemplate(i).label();
+					
+					if(! silhouetteLabel.equals(templateLabel))
 						cost += costFunction.relabel(
-							node1(i).label(), 
-							node2(i).label());
+							silhouetteLabel, 
+							templateLabel);
+				}
 			}
 			
 			// * Node addition penalty
 			for(int i : series(size()))
-				if(node1(i) == null)
-					cost += costFunction.addNode(node2(i).label());
+				if(nodeSilhouette(i) == null)
+					cost += costFunction.addNode(nodeTemplate(i).label());
 
 			// * Node deletion penalty
 			for(int i : series(size()))
-				if(node2(i) == null)
-					cost += costFunction.addNode(node1(i).label());
+				if(nodeTemplate(i) == null)
+				{
+					L silhouetteLabel =
+							((Wrapping<L, T>.LabelToken) (nodeSilhouette(i).label())).label();
+					cost += costFunction.removeNode(silhouetteLabel);
+				}
 			
 			// * Link penalties
 			for(int i : series(size()))
 				for(int j : series(i+1, size()))
 				{
-					TNode<L, T> n1i = node1(i), n1j = node1(j); 
-					TNode<L, T> n2i = node2(i), n2j = node2(j);
+					TNode<Token, TagToken> n1i = nodeSilhouette(i), n1j = nodeSilhouette(j); 
+					TNode<L, T> n2i = nodeTemplate(i), n2j = nodeTemplate(j);
 					
 					boolean n1connected;
 					if(n1i == null || n1j == null)
@@ -359,26 +454,31 @@ public class InexactSubgraphs<L, T>
 
 				}
 			
-			// Maybe this can be optimized by iterating over edges (once
-			// we have that implemented).
+			// * Maybe this can be optimized by iterating over edges (once
+			//   we have that implemented).
 			
 			return cost;
 		}
 		
-		public TNode<L, T> node1(int i)
+		/**
+		 * Returns the node in the silhouette  
+		 * @param i
+		 * @return
+		 */
+		public TNode<Token, TagToken> nodeSilhouette(int i)
 		{
-			if(nodes1[i] < 0)
+			if(silhouetteNodes[i] < 0)
 				return null;
 				
-			return graph1.nodes().get(nodes1[i]);
+			return silhouette.nodes().get(silhouetteNodes[i]);
 		}
 		
-		public TNode<L, T> node2(int i)
+		public TNode<L, T> nodeTemplate(int i)
 		{
-			if(nodes2[i] < 0)
+			if(templateNodes[i] < 0)
 				return null;
 			
-			return template.nodes().get(nodes2[i]);
+			return template.nodes().get(templateNodes[i]);
 		}
 		
 		@Override
@@ -390,27 +490,32 @@ public class InexactSubgraphs<L, T>
 		private class StateIterator implements Iterator<State>
 		{
 			// * Lists of the nodes that have not yet been pairs
-			private List<Integer> remaining1, remaining2;
+			private List<Integer> remainingS, remainingT;
 			// * indices of the nodes to add to the next state to return.
 			private int i, j;
 			
 			public StateIterator()
 			{
-				remaining1 = new ArrayList<Integer>(graph1.size() + 1);
-				remaining2 = new ArrayList<Integer>(template.size() + 1);
+				remainingS = new ArrayList<Integer>(silhouette.size() + 1);
+				remainingT = new ArrayList<Integer>(template.size() + 1);
 				
-				remaining1.addAll(Series.series(graph1.size()));
-				remaining2.addAll(Series.series(template.size()));
+				remainingS.addAll(Series.series(silhouette.size()));
+				remainingT.addAll(Series.series(template.size()));
 
-				remaining1.add(-1);
-				remaining2.add(-1);
+				remainingS.add(-1);
+				remainingT.add(-1);
 				
-				for(int n1 : nodes1)
+				for(int n1 : silhouetteNodes)
 					if(n1 >= 0)
-						remaining1.remove((Integer)n1);
-				for(int n2 : nodes2)
+						remainingS.remove((Integer)n1);
+				
+				for(int n2 : templateNodes)
 					if(n2 >= 0)
-						remaining2.remove((Integer)n2);
+						remainingT.remove((Integer)n2);
+				
+				// * Also remove the symbol nodes from remainingS as these are 
+				//   not allowed to be part of a match
+				remainingS.removeAll(symbolNodes());
 				
 //				System.out.println(State.this + " remaining: " + remaining1 + " " + remaining2);
 				
@@ -421,7 +526,7 @@ public class InexactSubgraphs<L, T>
 			@Override
 			public boolean hasNext()
 			{
-				if(i >= remaining1.size() - 1 && j >= remaining2.size() - 1)
+				if(i >= remainingS.size() - 1 && j >= remainingT.size() - 1)
 					return false;
 				
 				return true;
@@ -433,15 +538,15 @@ public class InexactSubgraphs<L, T>
 				if(! hasNext())
 					throw new NoSuchElementException();
 				
-				int n1 = remaining1.get(i),
-				    n2 = remaining2.get(j);
+				int n1 = remainingS.get(i),
+				    n2 = remainingT.get(j);
 				
-				boolean complete2 = (n2 < 0 && remaining2.size() == 1) || (n2 >= 0 && remaining2.size() <= 2 );				
+				boolean complete2 = (n2 < 0 && remainingT.size() == 1) || (n2 >= 0 && remainingT.size() <= 2 );				
 	
 				State result = new State(State.this, n1, n2, complete2);
 				
 				j++;
-				if(j > remaining2.size() - 1)
+				if(j > remainingT.size() - 1)
 				{
 					j = 0;
 					i ++;
@@ -478,7 +583,7 @@ public class InexactSubgraphs<L, T>
 		 */
 		public int size()
 		{
-			return nodes1.length;
+			return silhouetteNodes.length;
 		}
 
 		@Override
@@ -501,9 +606,9 @@ public class InexactSubgraphs<L, T>
 					sb.append(", ");
 					
 				sb.append(
-					(nodes1[i] == -1 ? "λ" : graph1.nodes().get(nodes1[i]))
+					(silhouetteNodes[i] == -1 ? "λ" : silhouette.nodes().get(silhouetteNodes[i]))
 					+ "-" + 
-					(nodes2[i] == -1 ? "λ" : template.nodes().get(nodes2[i]))
+					(templateNodes[i] == -1 ? "λ" : template.nodes().get(templateNodes[i]))
 				);
 			}
 			

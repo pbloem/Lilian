@@ -9,8 +9,10 @@ import java.util.*;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
+import org.lilian.data.real.fractal.EM;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
+import org.lilian.data.real.fractal.SimEM;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.Series;
 
@@ -628,6 +630,56 @@ public class RIFSs {
 				rifs = new DiscreteRIFS<Similitude>(ifs, 1.0);
 			else
 				rifs.addModel(ifs, 1.0);
+		}
+		
+		return rifs;
+	}
+	
+	public static DiscreteRIFS<Similitude> initialLearn(
+			List<List<Point>> data, int compIFS, int compMaps,
+			int generations, int depth, int sample, double spread 
+			)
+	{
+		List<Point> flat = new ArrayList<Point>();
+		for(List<Point> set : data)
+			flat.addAll(set);
+		
+		int compTot = compIFS * compMaps;
+		
+		IFS<Similitude> initial = IFSs.initialSphere(
+				flat.get(0).dimensionality(), compTot, 0.7, 0.1);
+		
+		EM<Similitude> em = new SimEM(initial, flat, 1, spread);
+		for(int i : Series.series(generations))
+			em.iterate(sample, depth);
+		
+		IFS<Similitude> meanModel = em.model();
+				
+		int c = 0;
+		DiscreteRIFS<Similitude> rifs = null;
+		for(int i : series(compIFS))
+		{
+			IFS<Similitude> compModel = null;
+			double totalPrior = 0.0;
+			
+			for(int j : series(compMaps))
+			{
+				Similitude sim = meanModel.get(c);
+				double prior = meanModel.probability(c);
+				
+				if(compModel == null)
+					compModel = new IFS<Similitude>(sim, prior);
+				else
+					compModel.addMap(sim, prior);
+				
+				totalPrior += prior;
+				c ++;
+			}
+			
+			if(rifs == null)
+				rifs = new DiscreteRIFS<Similitude>(compModel, totalPrior);
+			else
+				rifs.addModel(compModel, totalPrior);
 		}
 		
 		return rifs;

@@ -16,8 +16,8 @@ public class InexactSubgraphsTest
 	@Test
 	public void test()
 	{
-		UTGraph<String, String> line = Graphs.line(3, "");
-		UTGraph<String, String> ladder = Graphs.ladder(6, "");
+		UTGraph<String, String> line = Graphs.line(2, "x");
+		UTGraph<String, String> ladder = Graphs.ladder(2, "x");
 		
 		System.out.println(line);
 		System.out.println(ladder);

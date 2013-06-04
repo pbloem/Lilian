@@ -69,7 +69,7 @@ public class ZIPGraphCompressor<L, T> implements Compressor<UTGraph<L, T>>
 	public static <L, T> BitString toBits(UTGraph<L, T> graph)
 	{
 		int n = graph.size();
-		BitString string = new BitString( (n * n - n) / 2 );
+		BitString string = new BitString( (n * n + n) / 2 );
 		
 		for(int i : series(n))
 			for(int j : series(i, n))

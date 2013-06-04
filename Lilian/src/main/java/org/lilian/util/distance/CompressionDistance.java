@@ -20,10 +20,10 @@ public class CompressionDistance<T> implements Distance<T> {
 	public double distance(T x, T y) 
 	{
 		double 	cxy = comp.compressedSize(x, y),
-				cyx = comp.compressedSize(y, x),
+				//cyx = comp.compressedSize(y, x),
 				cx  = comp.compressedSize(x),
 				cy  = comp.compressedSize(y);
 		
-		return max(cxy - cx, cyx - cy) / max(cx, cy); 
+		return (cxy - min(cx, cy)) / max(cx, cy); 
 	}
 }

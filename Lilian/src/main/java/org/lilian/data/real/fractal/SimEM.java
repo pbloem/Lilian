@@ -9,7 +9,14 @@ import org.lilian.search.Builder;
 
 public class SimEM extends EM<Similitude>
 {
-
+	public SimEM(IFS<Similitude> initial, List<Point> data,
+			int numSources, double spanningPointsVariance)
+	{
+		this(initial, data, numSources,  
+				Similitude.similitudeBuilder(data.get(0).dimensionality())
+				, spanningPointsVariance);
+	}
+	
 	public SimEM(IFS<Similitude> initial, List<Point> data,
 			int numSources, Builder<Similitude> builder, double spanningPointsVariance)
 	{

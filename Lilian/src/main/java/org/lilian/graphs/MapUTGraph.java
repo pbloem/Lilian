@@ -165,7 +165,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 				throw new IllegalArgumentException("Can only connect to nodes from the same graph (arguments: this="+this+", other="+other+")");
 			
 			// * This graph can only contain MapDTNodes, so this is a safe cast
-			MapUTNode mdtOther = (MapUTNode)other;
+			MapUTNode mdtOther = (MapUTNode) other;
 			
 			if(connected(mdtOther, tag))
 				return;
@@ -339,13 +339,13 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		{
 			MapUTNode o = (MapUTNode) other;
 			
-			if(!connected(o))
-				return null;
+			if(! connected(o))
+				return Collections.emptyList();
 			
 			List<MapUTLink> result = new LinkedList<MapUTLink>();
 			for(T tag : links.keySet())
 				for(MapUTLink link : links.get(tag))
-					if(link.second().equals(o))
+					if(link.other(this).equals(o))
 						result.add(link);
 			
 			return result;

@@ -510,6 +510,14 @@ public class Resources
 		return data;
 	}
 	
+	@Resource(name="koch RIFS mean")
+	public static List<Point> kochRIFSMean(@Name("size") int size, @Name("depth") int depth)
+	{
+		List<Point> data = RIFSs.koch2UpDown().meanInstance(size, depth);
+	
+		return data;
+	}
+	
 	@Resource(name="sierpinski RIFS")
 	public static List<List<Point>> sierpinskiRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
 	{

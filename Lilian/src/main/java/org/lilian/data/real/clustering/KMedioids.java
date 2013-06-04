@@ -52,6 +52,8 @@ public class KMedioids<P>
 				t++;
 			}
 		
+		System.out.println(distances);
+		
 		List<Integer> classes = new ArrayList<Integer>(n);
 		for(int i : series(n))
 			classes.add(-1);

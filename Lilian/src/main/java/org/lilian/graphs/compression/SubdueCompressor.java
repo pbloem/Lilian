@@ -14,6 +14,7 @@ import org.lilian.graphs.subdue.GraphMDL;
 import org.lilian.graphs.subdue.InexactCost;
 import org.lilian.graphs.subdue.Subdue;
 import org.lilian.util.Compressor;
+import org.lilian.util.graphs.old.Graph;
 
 public class SubdueCompressor<L, T> implements Compressor<UTGraph<L, T>>
 {
@@ -70,8 +71,12 @@ public class SubdueCompressor<L, T> implements Compressor<UTGraph<L, T>>
 			}
 		}
 		
-		InexactCost<L> costFunction = CostFunctions.uniform();
-		Subdue<L, T> subdue = new Subdue<L, T>(graph, costFunction, threshold, sparse, matcherBeamWidth);
+		int numLabels = graph.labels().size();
+		int numNodes = graph.size();
+		int numLinks = graph.numLinks();
+		InexactCost<L> costFunction = CostFunctions.transformationCost(numLabels, numNodes, numLinks);
+		
+		Subdue<L, T> subdue = new Subdue<L, T>(graph, costFunction, threshold, matcherBeamWidth);
 		Collection<Subdue<L, T>.Substructure> subs = subdue.search(iterations, beamWidth, maxBest, maxSubSize);
 		
 		return subs.iterator().next().score();

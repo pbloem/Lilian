@@ -131,10 +131,10 @@ public class Graphs
 		if(n == 0)
 			return graph;
 			
-		UTNode<String, String> last = graph.add("x"), next;
+		UTNode<String, String> last = graph.add(label), next;
 		for(int i : series(n-1))
 		{
-			next = graph.add("x");
+			next = graph.add(label);
 			last.connect(next);
 			last = next;
 		}
@@ -176,8 +176,8 @@ public class Graphs
 		
 		for(int i : series(n-1))
 		{
-			nextRight = graph.add("x");
-			nextLeft  = graph.add("x");
+			nextRight = graph.add(label);
+			nextLeft  = graph.add(label);
 			
 			nextLeft.connect(nextRight);
 			
@@ -287,8 +287,8 @@ public class Graphs
 		t2a.connect(t3a);
 		t3a.connect(t4a);
 		
-		t1b.connect(s1y);
-		t2b.connect(s4y);
+		t1c.connect(s1y);
+		t4f.connect(s4y);
 		
 		t2d.connect(k);
 		k.connect(r);
