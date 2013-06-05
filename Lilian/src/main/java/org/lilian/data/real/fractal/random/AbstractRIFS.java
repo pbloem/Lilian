@@ -1,6 +1,8 @@
 package org.lilian.data.real.fractal.random;
 
 
+import static org.lilian.util.Series.series;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -12,6 +14,7 @@ import org.lilian.data.real.Point;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.Functions;
+import org.lilian.util.Series;
 
 /**
  * Provides basic implementation for most of the method of the RandomIFSModel 
@@ -41,6 +44,16 @@ public abstract class AbstractRIFS<M extends Map & Parametrizable> implements RI
 	public List<Point> randomInstance(int n, int depth) {
 		return randomInstance(n, depth, Global.random.nextLong());
 	}
+	
+	public List<List<Point>> randomInstances(int n, int nSets, int depth) 
+	{
+		List<List<Point>> result = new ArrayList<List<Point>>(nSets);
+		for(int i : series(nSets))
+			result.add(randomInstance(n, depth, Global.random.nextLong()));
+		
+		return result;
+	}
+
 
 	/**
 	 * Returns points drawn from an instance specified by a seed. The seed 
