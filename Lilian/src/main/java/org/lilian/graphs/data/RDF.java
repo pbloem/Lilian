@@ -30,6 +30,16 @@ public class RDF
 		return createDirectedGraph(triples, null, null);
 	}
 	
+	public static MapDTGraph<String, String> readTurtle(File file)
+	{
+		
+		RDFDataSet testSet = new RDFFileDataSet(file, RDFFormat.TURTLE);
+
+		List<Statement> triples = testSet.getFullGraph();	
+		
+		return createDirectedGraph(triples, null, null);
+	}
+	
 	public static MapDTGraph<String, String> createDirectedGraph(
 			List<Statement> sesameGraph, 
 			List<String> vWhiteList,

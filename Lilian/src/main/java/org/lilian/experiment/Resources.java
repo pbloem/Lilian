@@ -337,6 +337,13 @@ public class Resources
 		return org.lilian.graphs.data.RDF.read(file);
 	}
 	
+	@Resource(name="turtle graph")
+	public static DTGraph<String, String> turtleGraph(
+			@Name("file") File file)
+	{
+		return org.lilian.graphs.data.RDF.readTurtle(file);
+	}
+	
 	@Resource(name="gml graph")
 	public static Graph<String> gmlGraph(@Name("file") File file) 
 		throws IOException
