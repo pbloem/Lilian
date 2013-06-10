@@ -35,7 +35,7 @@ public interface TGraph<L, T> extends Graph<L>
 	public TNode<L, T> add(L label);
 	
 	public int numLinks();
-	
+		
 	public Set<T> tags();
 	
 	/**

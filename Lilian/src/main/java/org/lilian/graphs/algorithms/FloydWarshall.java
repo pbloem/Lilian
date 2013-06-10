@@ -1,4 +1,4 @@
-package org.lilian.graphs;
+package org.lilian.graphs.algorithms;
 
 import static org.lilian.util.Series.series;
 
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.lilian.Global;
+import org.lilian.graphs.Graph;
 import org.lilian.util.Series;
 
 public class FloydWarshall<L>
