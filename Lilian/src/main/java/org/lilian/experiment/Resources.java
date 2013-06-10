@@ -9,9 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.data2semantics.tools.graphs.Edge;
-import org.data2semantics.tools.graphs.GML;
-import org.data2semantics.tools.graphs.Vertex;
 import org.lilian.data.dimension.BiTakens;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;

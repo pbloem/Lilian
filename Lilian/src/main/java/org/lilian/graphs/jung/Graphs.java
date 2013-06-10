@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections15.Transformer;
-import org.data2semantics.tools.graphs.Edge;
-import org.data2semantics.tools.graphs.Vertex;
 import org.lilian.graphs.Node;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTLink;
