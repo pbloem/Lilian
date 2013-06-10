@@ -47,6 +47,7 @@ import org.lilian.Global;
 import org.lilian.data.real.classification.Classified;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Functions;
+import org.lilian.util.ResultTurtleWriter;
 import org.lilian.util.Series;
 
 import freemarker.template.Configuration;
@@ -252,6 +253,7 @@ public abstract class AbstractExperiment implements Experiment
 		return new Date(t1);
 	}
 	
+	
 	public void writeReport() throws IOException
 	{
 		// * Create data model
@@ -278,6 +280,7 @@ public abstract class AbstractExperiment implements Experiment
 		
 		
 		Template tpl = null;
+		
 		try
 		{
 			tpl = fmConfig.getTemplate("index.ftl");
@@ -293,13 +296,19 @@ public abstract class AbstractExperiment implements Experiment
 
 		copy("static", reportDir);
 		
+		
+		Writer turtleOut = new BufferedWriter( new FileWriter(new File(reportDir, "output.ttl")));;
+		ResultTurtleWriter writer = new ResultTurtleWriter(this, turtleOut);
+		writer.writeExperiment();
+		
 		Writer out = null; 
 		
 		try
 		{
 			out = new BufferedWriter( new FileWriter(new File(reportDir, "index.html")));
-
+			
 			tpl.process(results, out);
+			
 			out.flush();			
 			
 		} catch (IOException e)
