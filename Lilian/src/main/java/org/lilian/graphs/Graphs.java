@@ -357,22 +357,6 @@ public class Graphs
 		return false;
 	}
 	
-	public static <L, T> UTGraph<L, T> subgraph(UTGraph<L, T> graph, Collection<UTNode<L, T>> nodes)
-	{
-		List<UTNode<L, T>> list = new ArrayList<UTNode<L,T>>(nodes);
-		
-		UTGraph<L, T> out = new MapUTGraph<L, T>();
-		for(UTNode<L, T> node : list)
-			out.add(node.label());
-		
-		for(int i : series(list.size()))
-			for(int j : series(i, list.size()))
-				for(T tag : graph.tags())
-					if(list.get(i).connected(list.get(j), tag))
-						out.nodes().get(i).connect(out.nodes().get(j), tag);
-		
-		return out;
-	}
 	
 	/**
 	 * Returns a copy of a graph with the labels and tags replaced by canonical 
