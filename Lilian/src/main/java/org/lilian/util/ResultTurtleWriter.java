@@ -55,7 +55,8 @@ public class ResultTurtleWriter {
 				if (anno instanceof Result) {
 					Object value = invoke(method);
 					Result curAnnotation = (Result) anno;
-					if (value instanceof Results) {
+					if (value instanceof Results) 
+					{
 						Results results = (Results) value;
 
 						for (int i : Series.series(results.size()))
