@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 import org.lilian.Global;
 import org.lilian.graphs.Graph;
@@ -96,6 +97,10 @@ public class FloydWarshall<L> implements Distance<Node<L>>
 	
 //	public RealMatrix matrix()
 //	{
-//		return new Array2DRealRow
+//		RealMatrix mat = new Array2DRowRealMatrix(n, n);
+//		for(int i : series(n))
+//			for(int j : series(n))
+//				mat.setEntry(i, j, distances[i][j]);
+//		
 //	}
 }
