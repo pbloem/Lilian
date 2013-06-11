@@ -14,11 +14,23 @@ body {
 	border-radius: 30px;
 }
 
+body.narrow {
+	width: 560px;
+}
+
+.narrow h1 {
+	font-size: 0.7em;
+}
+
 .chart-container .plot{
 	width: 800px;
 	height: 200px;
 	position: relative;
 	padding-left: 40px;
+}
+
+.narrow .chart-container .plot {
+	width: 500px;
 }
 
 .chart-container.scatter .plot,

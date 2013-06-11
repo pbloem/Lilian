@@ -7,17 +7,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math.linear.RealMatrix;
 import org.lilian.Global;
 import org.lilian.graphs.Graph;
+import org.lilian.graphs.Node;
 import org.lilian.util.Series;
+import org.lilian.util.distance.Distance;
 
-public class FloydWarshall<L>
+/**
+ * TODO: Check graph modcount
+ * @author Peter
+ *
+ * @param <L>
+ */
+public class FloydWarshall<L> implements Distance<Node<L>>
 {
 	private short[][] distances;
 	private int n;
+	private Graph<L> graph;
 
 	public FloydWarshall(Graph<L> graph)
 	{
+		this.graph = graph;
 		n = graph.size();
 		
 		distances = new short[n][];
@@ -73,4 +84,18 @@ public class FloydWarshall<L>
 
 		return diameter;
 	}
+
+	@Override
+	public double distance(Node<L> a, Node<L> b)
+	{
+		int i = a.index();
+		int j = b.index();
+		
+		return distance(i, j);
+	}
+	
+//	public RealMatrix matrix()
+//	{
+//		return new Array2DRealRow
+//	}
 }

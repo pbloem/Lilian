@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.ConsoleHandler;
@@ -31,6 +32,7 @@ public class Environment
 	
 	@Reportable
 	protected long rngSeed;
+	protected List<String> tags = new ArrayList<String>();
 	
 	public Environment(File dir, long rngSeed)
 	{
@@ -136,5 +138,15 @@ public class Environment
 	public long seed()
 	{
 		return rngSeed;
+	}
+	
+	public void addTag(String tag)
+	{
+		tags.add(tag);
+	}
+	
+	public List<String> tags()
+	{
+		return Collections.unmodifiableList(tags);
 	}
 }

@@ -268,6 +268,12 @@ public abstract class AbstractExperiment implements Experiment
 		results.put("end_date_time", new Date(this.t).toString());
 		results.put("end_millis", t);
 		
+		// * Environment tags
+		String tags = "";
+		for(String tag : Environment.current.tags())
+			tags += Tools.cssSafe(tag) + " ";
+		results.put("tags", tags);
+		
 		// * Run through all methods tagged 'result'
 		List<Map<String, Object>> rs = new ArrayList<Map<String, Object>>();
 		for(Method method : Tools.allMethods(this.getClass()))
@@ -370,6 +376,7 @@ public abstract class AbstractExperiment implements Experiment
 				int width = Tools.tableWidth((List<?>) value);
 				
 				Map<String, Object> map = new HashMap<String, Object>();
+				
 				map.put("table", value);
 				map.put("id", Tools.cssSafe(anno.name()));
 				map.put("width", width);
@@ -473,13 +480,14 @@ public abstract class AbstractExperiment implements Experiment
 			int height = image.getHeight();
 			int width = image.getWidth();
 			
-			File outFile = new File(new File(dir, "images/"), Tools.cssSafe(anno.name()) + ".png");
+			File images = new File(dir, "images/");
+			File outFile = new File(images, Tools.cssSafe(anno.name()) + ".png");
 			outFile.mkdirs();
 			
 			ImageIO.write(image, "PNG", outFile);
 			
 			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("path", outFile.getAbsolutePath());
+			map.put("path", "../images/"+Tools.cssSafe(anno.name())+".png");
 			map.put("width", width);
 			map.put("height", height);
 			

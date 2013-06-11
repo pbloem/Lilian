@@ -119,21 +119,23 @@ public class ResultTurtleWriter {
 							+ " on experiment " + this + ". Exception: "
 							+ e.getMessage() + " -  "
 							+ Arrays.toString(e.getStackTrace()));
+			throw new RuntimeException(e);
 		} catch (IllegalArgumentException e) {
 			Global.log().warning(
 					"Failed to invoke result method " + method
 							+ " on experiment " + this + ". Exception: "
 							+ e.getMessage() + " -  "
 							+ Arrays.toString(e.getStackTrace()));
+			throw new RuntimeException(e);
+
 		} catch (IllegalAccessException e) {
 			Global.log().warning(
 					"Failed to invoke result method " + method
 							+ " on experiment " + this + ". Exception: "
 							+ e.getMessage() + " -  "
 							+ Arrays.toString(e.getStackTrace()));
+			throw new RuntimeException(e);
 		}
-
-		return null;
 	}
 
 }

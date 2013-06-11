@@ -14,14 +14,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections15.Transformer;
+import org.lilian.graphs.DTGraph;
+import org.lilian.graphs.DTLink;
 import org.lilian.graphs.Node;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTLink;
 
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.layout.SpringLayout;
 import edu.uci.ics.jung.algorithms.layout.SpringLayout2;
+import edu.uci.ics.jung.graph.DirectedGraph;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedGraph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
@@ -65,7 +70,39 @@ public class Graphs
 		return out;
 	}
 	
+	/**
+	 * Translates and Undirected Tagged graph to a JUNG graph.
+	 * 
+	 * @param graph
+	 * @return
+	 */
+	public static <L, T> DirectedGraph<Vertex<L>, Edge<T>> toJUNG(DTGraph<L, T> graph)
+	{
+		DirectedSparseGraph<Vertex<L>, Edge<T>> out = 
+			new DirectedSparseGraph<Vertex<L>, Edge<T>>();
+		
+		Map<Node<L>, Vertex<L>> map = new HashMap<Node<L>, Vertex<L>>();
+		
+		for (Node<L> node : graph.nodes())
+		{
+			Vertex<L> vertex = new Vertex<L>(node.label());
+			map.put(node, vertex);
+			
+			out.addVertex(vertex);
+		}
+		
+		for(DTLink<L, T> link : graph.links())
+		{
+			Vertex<L> first = map.get(link.first());
+			Vertex<L> second = map.get(link.second());
+			
+			out.addEdge(new Edge<T>(link.tag()), Arrays.asList(first, second));
+		}
+		
+		return out;
+	}
 	
+
 	/**
 	 * Renders an image of a graph
 	 * @param graph
@@ -77,7 +114,7 @@ public class Graphs
 		// vv is the VisualizationViewer containing my graph
 		VisualizationImageServer<V, E> vis =
 		    new VisualizationImageServer<V, E>(
-		    		new ISOMLayout<V, E>(graph), 
+		    		new CircleLayout<V, E>(graph), 
 		    		new Dimension(width, height));
 
 		vis.setBackground(Color.WHITE);
@@ -88,7 +125,7 @@ public class Graphs
 		vis.getRenderContext()
 			.setEdgeDrawPaintTransformer(new Transformer<E, Paint>()
 			{
-				Color c = new Color(0.0f, 0.0f, 0.0f, 0.05f);
+				Color c = new Color(0.0f, 0.0f, 0.0f, 1.0f/256);
 				public Paint transform(E input)
 				{
 					return c;
@@ -96,7 +133,7 @@ public class Graphs
 			});
 		vis.getRenderContext().setVertexFillPaintTransformer(new Transformer<V, Paint>()
 		{
-			Color c = new Color(0.0f, 0.0f, 1.0f, 0.5f);
+			Color c = new Color(0.0f, 0.0f, 1.0f, 0.05f);
 			public Paint transform(V input)
 			{
 				return c;
@@ -111,7 +148,7 @@ public class Graphs
 		});
 		vis.getRenderContext().setVertexShapeTransformer(new Transformer<V, Shape>()
 		{
-			double r = 3.0;
+			double r = 0.0;
 			Shape e = new Ellipse2D.Double(0.0, 0.0, r, r);
 			
 			public Shape transform(V input)

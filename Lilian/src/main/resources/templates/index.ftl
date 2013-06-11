@@ -20,7 +20,7 @@
   
   <title>Lilian results</title>
 </head>
-<body>
+<body class="${tags}">
   <h1>Report: ${short_name}</h1>
   <h2>Run information</h2>
   <p class="explanation">
