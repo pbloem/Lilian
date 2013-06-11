@@ -95,12 +95,18 @@ public class FloydWarshall<L> implements Distance<Node<L>>
 		return distance(i, j);
 	}
 	
-//	public RealMatrix matrix()
-//	{
-//		RealMatrix mat = new Array2DRowRealMatrix(n, n);
-//		for(int i : series(n))
-//			for(int j : series(n))
-//				mat.setEntry(i, j, distances[i][j]);
-//		
-//	}
+	/**
+	 * Returns the distance matrix
+	 *  
+	 * @return
+	 */
+	public RealMatrix matrix()
+	{
+		RealMatrix mat = new Array2DRowRealMatrix(n, n);
+		for(int i : series(n))
+			for(int j : series(n))
+				mat.setEntry(i, j, distances[i][j]);
+	
+		return mat;
+	}
 }
