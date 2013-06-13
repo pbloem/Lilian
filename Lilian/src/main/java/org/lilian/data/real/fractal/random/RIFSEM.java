@@ -54,7 +54,6 @@ public class RIFSEM
 	
 	private static boolean useSphericalMVN = false;
 	private static final int COVARIANCE_THRESHOLD = 5;
-	private static final boolean PERTURB_UNASSIGNED = true;
 	// * If a code has fewer than this number of points, it is not
 	//   used in reconstructing the choice tree
 	private static final int TREE_POINTS_THRESHOLD = 10; 
@@ -74,6 +73,7 @@ public class RIFSEM
 	private double spanningPointsVariance, perturbVar;
 	
 	private Builder<Similitude> builder;
+	private Builder<IFS<Similitude>> ifsBuilder;
 	
 	/**
 	 * 
@@ -118,6 +118,7 @@ public class RIFSEM
 		findCodes();		
 		
 		builder = Similitude.similitudeBuilder(model.dimension());
+		ifsBuilder = IFS.builder(compPerIFS, builder);
 	}
 	
 //	public RIFSEM(DiscreteRIFS<Similitude> initial, List<List<Point>> data,
@@ -167,13 +168,27 @@ public class RIFSEM
 		for(SChoiceTree tree : trees)
 			tree.count(freqs);
 		
-		DiscreteRIFS<Similitude> newModel = null;
+		// * Models and weights
+		List<IFS<Similitude>> modelComponents = new ArrayList<IFS<Similitude>>(model.size());
+		List<Double> modelWeights = new ArrayList<Double>(model.size());
+		
+		// * Initialize empty
+		for (int i : Series.series(model.size()))
+			modelComponents.add(null);
+		for (int i : Series.series(model.size()))
+			modelWeights.add(-1.0);
+
+		// * Keep check of components which were unassigned
+		List<Integer> modelAssigned = new ArrayList<Integer>(model.size());
+		List<Integer> modelUnassigned = new ArrayList<Integer>(model.size());
+
 
 		for(int h : series(model.size()))
 		{
 			IFS<Similitude> component = model.models().get(h);
 			int numComponents = component.size();
 			
+			// * Initialize empty trans and weights list
 			List<Similitude> trans = new ArrayList<Similitude>(numComponents);
 			for (int i : Series.series(numComponents))
 				trans.add(null);
@@ -201,15 +216,6 @@ public class RIFSEM
 					double weight = findScalar(maps.fromWeights(c),
 							maps.toWeights(c));
 	
-					// * If the map contracts too much, we perturb it slightly
-	//				double det = MatrixTools
-	//						.getDeterminant(map.getTransformation());
-	//				if (Math.abs(det) < CONTRACTION_THRESHOLD || Double.isNaN(det))
-	//					map = Parameters
-	//							.perturb(map,
-	//									Similitude.similitudeBuilder(dimension),
-	//									perturbVar);
-	
 					trans.set(i, map);
 					weights.set(i, weight);
 	
@@ -224,33 +230,26 @@ public class RIFSEM
 				Global.log().info("unassigned: " + unassigned);
 			
 			if (assigned.isEmpty())
-			{				
-				throw new IllegalStateException(
-						"No points were assigned to any components. Component IFS ("+h+")");
-			}
+				modelUnassigned.add(h);
+			else
+				modelAssigned.add(h);
 	
-			// * For each unassigned component, take a random assigned component and
-			// perturb it slightly.
+			// * For each unassigned IFS component, take a random assigned component and
+			//   perturb it slightly.
 			for (int i : unassigned)
 			{
-				if(PERTURB_UNASSIGNED) 
-				{
-					int j = assigned.get(Global.random.nextInt(assigned.size()));
-					Similitude source = trans.get(j);
-					double sourceWeight = weights.get(j);
-		
-					Similitude perturbed0 = Parameters.perturb(source, builder, perturbVar);
-					Similitude perturbed1 = Parameters.perturb(source, builder, perturbVar);
+				int j = assigned.get(Global.random.nextInt(assigned.size()));
+				Similitude source = trans.get(j);
+				double sourceWeight = weights.get(j);
+	
+				Similitude perturbed0 = Parameters.perturb(source, builder, perturbVar);
+				Similitude perturbed1 = Parameters.perturb(source, builder, perturbVar);
 
-					trans.set(i, perturbed0);
-					trans.set(j, perturbed1);
-		
-					weights.set(i, sourceWeight / 2.0);
-					weights.set(j, sourceWeight / 2.0);
-				} else {
-					trans.set(i, component.get(i));
-					weights.set(i, component.probability(i));
-				}
+				trans.set(i, perturbed0);
+				trans.set(j, perturbed1);
+	
+				weights.set(i, sourceWeight / 2.0);
+				weights.set(j, sourceWeight / 2.0);
 			}
 										
 			component = new IFS<Similitude>(trans.get(0), weights.get(0));
@@ -258,13 +257,35 @@ public class RIFSEM
 				component.addMap(trans.get(i), weights.get(i));
 			
 			double ifsPrior = freqs.probability(h);
-			if(newModel == null)
-				newModel = new DiscreteRIFS<Similitude>(component, ifsPrior);
-			else
-				newModel.addModel(component, ifsPrior);
+			
+			modelComponents.set(h, component);
+			modelWeights.set(h, ifsPrior);
 		}
 		
-		model = newModel;
+		// * For each unassigned model component, take a random assigned component and
+		//   perturb it slightly.
+		for (int h : modelUnassigned)
+		{
+			int j = modelAssigned.get(Global.random.nextInt(modelAssigned.size()));
+			IFS<Similitude> source = modelComponents.get(j);
+			double sourceWeight = modelWeights.get(j);
+
+			IFS<Similitude> perturbed0 = Parameters.perturb(source, ifsBuilder, perturbVar);
+			IFS<Similitude> perturbed1 = Parameters.perturb(source, ifsBuilder, perturbVar);
+
+			modelComponents.set(h, perturbed0);
+			modelComponents.set(j, perturbed1);
+
+			modelWeights.set(h, sourceWeight / 2.0);
+			modelWeights.set(j, sourceWeight / 2.0);
+		}		
+		
+		model = null;
+		for(int h : series(modelComponents.size()))
+			if(model == null)
+				model = new DiscreteRIFS<Similitude>(modelComponents.get(h), modelWeights.get(h));
+			else
+				model.addModel(modelComponents.get(h), modelWeights.get(h));
 	}
 	
 	/**
