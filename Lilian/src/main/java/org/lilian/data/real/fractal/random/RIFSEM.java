@@ -230,9 +230,13 @@ public class RIFSEM
 				Global.log().info("unassigned: " + unassigned);
 			
 			if (assigned.isEmpty())
+			{
 				modelUnassigned.add(h);
-			else
+				continue;
+			} else
+			{
 				modelAssigned.add(h);
+			}
 	
 			// * For each unassigned IFS component, take a random assigned component and
 			//   perturb it slightly.
