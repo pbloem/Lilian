@@ -1,5 +1,6 @@
 package org.lilian.graphs.clustering;
 
+import static org.lilian.util.MatrixTools.toString;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
@@ -39,24 +40,18 @@ public class GraphSpectral<L> implements Clusterer<L>
 	public Classified<Node<L>> cluster(Graph<L> graph)
 	{
 		int n = graph.size();
-		
-		FloydWarshall<L> fw = new FloydWarshall<L>(graph);
-		
-		RealMatrix s = fw.matrix();
-		RealMatrix d = new Array2DRowRealMatrix(n, n);
+		RealMatrix l = new Array2DRowRealMatrix(n, n);
 		
 		for(int i : series(n))
-		{
-			int sum = 0;
 			for(int j : series(n))
-				sum += s.getEntry(i, j);
+				if(i == j)
+					l.setEntry(i, j, graph.nodes().get(i).degree());
+				else
+					l.setEntry(i, j, 
+							graph.nodes().get(i).connected(graph.nodes().get(j)) ? -1 : 0);
 
-			d.setEntry(i, i, sum);
-		}
-		
-		d = MatrixTools.inverse(d);
-		RealMatrix l = d.multiply(s);
-		
+		System.out.println(MatrixTools.toString(l, 3));
+				
 		EigenDecomposition eig =  new EigenDecompositionImpl(l, Double.NaN);
 		List<Point> points = new ArrayList<Point>(n);
 		
@@ -65,10 +60,13 @@ public class GraphSpectral<L> implements Clusterer<L>
 			Point p = new Point(k);
 			
 			for(int j : series(k))
-				p.set(k, eig.getEigenvector(j).getEntry(i));
+				p.set(j, eig.getEigenvector(j).getEntry(i));
 			
 			points.add(p);
 		}
+		
+		for(Point p : points)
+			System.out.println(p);
 		
 		KMeans kmeans = new KMeans(points, k);
 		kmeans.iterate(ITS);

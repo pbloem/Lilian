@@ -201,4 +201,23 @@ public class MatrixTools
 		
 		return matrix;
 	}
+
+	public static String toString(RealMatrix s)
+	{
+		return toString(s, 1);
+	}
+
+	public static String toString(RealMatrix s, int dec)
+	{
+		String result = "";
+		for(int i : series(s.getRowDimension()))
+		{
+			for(int j : series(s.getColumnDimension()))
+				result += String.format("%."+dec+"f\t", s.getEntry(i, j));
+			result += "\n";
+		}
+			
+		return result;
+	}
+
 }

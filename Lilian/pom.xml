@@ -118,7 +118,27 @@
             <artifactId>sesame-rio-n3</artifactId>
             <version>2.7.1</version>
     </dependency>
-    
+
+     <dependency>
+     	<groupId>batik</groupId>
+     	<artifactId>batik</artifactId>
+     	<version>1.5</version>
+     </dependency>
+     <dependency>
+     	<groupId>batik</groupId>
+     	<artifactId>batik-dom</artifactId>
+     	<version>1.6-1</version>
+     </dependency>
+     <dependency>
+     	<groupId>batik</groupId>
+     	<artifactId>batik-svggen</artifactId>
+     	<version>1.6-1</version>
+     </dependency>
+     <dependency>
+     	<groupId>batik</groupId>
+     	<artifactId>batik-transcoder</artifactId>
+     	<version>1.6-1</version>
+     </dependency>
   </dependencies>
    <repositories>
     <repository>

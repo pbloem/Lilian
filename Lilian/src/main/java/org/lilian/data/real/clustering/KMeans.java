@@ -29,7 +29,7 @@ public class KMeans
 	
 	private int dim;
 	
-	// * Indices of the medioids
+	// * The cluster means
 	private List<Point> means;
 	
 	public KMeans(List<Point> data, int numClusters)
@@ -42,9 +42,6 @@ public class KMeans
 		means = Datasets.sampleWithoutReplacement(data, numClusters);
 		
 		Global.log().info("Calculating distances");
-		
-		int total = (n * n + n) / 2;
-		int t = 0;
 				
 		List<Integer> classes = new ArrayList<Integer>(n);
 		for(int i : series(n))
@@ -61,6 +58,7 @@ public class KMeans
 		for(int i : series(data.size()))
 		{
 			Point p = data.get(i);
+			
 			int bestCluster = -1;
 			double bestDistance = Double.POSITIVE_INFINITY; 
 			
@@ -76,6 +74,8 @@ public class KMeans
 			
 			data.setClass(i, bestCluster);
 		}		
+		
+		System.out.println(data.classes());
 	}
 	
 	public Classified<Point> clustered()
@@ -88,6 +88,8 @@ public class KMeans
 	 */
 	public void update()
 	{
+		System.out.println(means);
+
 		
 		List<RealVector> means = new ArrayList<RealVector>(numClusters);
 		BasicFrequencyModel<Integer> fm = new BasicFrequencyModel<Integer>();
@@ -100,14 +102,15 @@ public class KMeans
 			int cluster = data.cls(i);
 			fm.add(cluster);
 			
-			means.get(cluster).add(data.get(i).getBackingData());
+			means.set(cluster, means.get(cluster).add(data.get(i).getBackingData()));
 		}
 		
-		for(int i : series(numClusters))
-			means.get(i).mapMultiply(1.0/fm.frequency(i));
+		for(int i : series(numClusters)) 
+					means.get(i).mapMultiplyToSelf(1.0/fm.frequency(i));
 	
 		for(int i : series(numClusters))
 			this.means.set(i, new Point(means.get(i)));
+		
 	}
 	
 	public void iterate(int n)

@@ -48,11 +48,11 @@ public class KMedioids<P>
 			{
 				distances.setEntry(i, j, 
 						distance.distance(data.get(i), data.get(j)));
-				Global.log().info("Calculating distance " + t + " out of " + total);
+				// Global.log().info("Calculating distance " + t + " out of " + total);
 				t++;
 			}
 		
-		System.out.println(distances);
+		// System.out.println(distances);
 		
 		List<Integer> classes = new ArrayList<Integer>(n);
 		for(int i : series(n))
