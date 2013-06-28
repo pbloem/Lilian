@@ -88,6 +88,7 @@ public class Draw
 			line.setAttributeNS(null, "y2", "" + b.get(1));
 
 			line.setAttributeNS(null, "stroke", "black");
+			line.setAttributeNS(null, "stroke-opacity", "0.1");
 			line.setAttributeNS(null, "stroke-width", "0.005");
 
 			g.appendChild(line);
