@@ -522,6 +522,14 @@ public class Resources
 		return data;
 	}
 	
+	@Resource(name="koch RIFS random")
+	public static List<Point> kochRIFSRandom(@Name("size") int size, @Name("depth") int depth)
+	{
+		List<Point> data = RIFSs.koch2UpDown().randomInstance(size, depth);
+	
+		return data;
+	}
+		
 	@Resource(name="sierpinski RIFS")
 	public static List<List<Point>> sierpinskiRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
 	{
