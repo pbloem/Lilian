@@ -329,13 +329,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public Set<MapDTNode> to()
+		public Set<MapDTNode> out()
 		{
 			return Collections.unmodifiableSet(neighborsTo);
 		}
 
 		@Override
-		public Set<MapDTNode> to(L label)
+		public Set<MapDTNode> out(L label)
 		{
 			Set<MapDTNode> set = new LinkedHashSet<MapDTNode>();
 			for(MapDTNode node : neighborsTo)
@@ -347,13 +347,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public Set<? extends DNode<L>> from()
+		public Set<? extends DNode<L>> in()
 		{
 			return Collections.unmodifiableSet(neighborsFrom);
 		}
 
 		@Override
-		public Set<? extends DNode<L>> from(L label)
+		public Set<? extends DNode<L>> in(L label)
 		{
 			Set<MapDTNode> set = new LinkedHashSet<MapDTNode>();
 			for(MapDTNode node : neighborsFrom)
@@ -585,7 +585,9 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		DTNode<L, T> node = new MapDTNode(label);
 		
 		modCount++;
-		updateIndices();
+		
+		// This isn't necessary (right?)
+		// updateIndices();
 
 		return node;
 	}

@@ -11,13 +11,13 @@ public interface DNode<L> extends Node<L>
 
 	public Collection<? extends DNode<L>> neighbors(L label);
 	
-	public Collection<? extends DNode<L>> to();
+	public Collection<? extends DNode<L>> out();
 	
-	public Collection<? extends DNode<L>> to(L label);	
+	public Collection<? extends DNode<L>> out(L label);	
 	
-	public Collection<? extends DNode<L>> from();
+	public Collection<? extends DNode<L>> in();
 	
-	public Collection<? extends DNode<L>> from(L label);		
+	public Collection<? extends DNode<L>> in(L label);		
 	
 	/** 
 	 * <p>Connects this node to another node. </p>

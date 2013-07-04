@@ -17,7 +17,7 @@ public class DataTest {
 		
 		UTGraph<String, String> graph = null;
 		try {
-			graph = Data.readString(file);
+			graph = Data.edgeList(file);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -33,7 +33,7 @@ public class DataTest {
 		
 		UTGraph<String, String> graph = null;
 		try {
-			graph = Data.readString(file);
+			graph = Data.edgeList(file);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

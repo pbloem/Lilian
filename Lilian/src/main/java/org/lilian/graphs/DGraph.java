@@ -14,7 +14,7 @@ public interface DGraph<L> extends Graph<L>
 	 */
 	public DNode<L> node(L label);
 	
-	public Set<? extends DNode<L>> nodes(L label);
+	public Collection<? extends DNode<L>> nodes(L label);
 	
 	public List<? extends DNode<L>> nodes();
 	

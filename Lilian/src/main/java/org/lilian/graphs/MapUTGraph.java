@@ -501,7 +501,8 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		UTNode<L, T> node = new MapUTNode(label);
 		
 		modCount++;
-		updateIndices();
+		 
+		//updateIndices();
 		
 		return node;
 	}
