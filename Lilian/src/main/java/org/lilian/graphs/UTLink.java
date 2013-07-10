@@ -2,7 +2,7 @@ package org.lilian.graphs;
 
 import java.util.Collection;
 
-public interface UTLink<L, T> extends TLink<L, T>, Link<L>
+public interface UTLink<L, T> extends TLink<L, T>, ULink<L>
 {
 	public UTNode<L, T> first();
 	

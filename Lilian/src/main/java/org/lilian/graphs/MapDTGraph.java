@@ -103,7 +103,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		{
 			this.label = label;
 			
-			index = nodes.size();
+			index = nodeList.size();
 			
 			// * The node adds itself to the graph's data structures
 			nodeList.add(this);

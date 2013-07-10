@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.lilian.graphs.Graph;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTLink;
 import org.lilian.graphs.UTNode;
@@ -41,7 +42,7 @@ public class ZIPGraphCompressor<L, T> implements Compressor<UTGraph<L, T>>
 				else {
 					UTGraph<?, ?> graph = (UTGraph<?, ?>)object;
 					
-					oos.writeObject(toBits(graph));
+					oos.writeObject(Functions.toBits(graph));
 					for(UTNode<?, ?> node : graph.nodes())
 						oos.writeObject(node.label());
 					for(UTLink<?, ?> link : graph.links())
@@ -64,20 +65,5 @@ public class ZIPGraphCompressor<L, T> implements Compressor<UTGraph<L, T>>
 	public double ratio(Object... object)
 	{
 		throw new UnsupportedOperationException();
-	}
-	
-	public static <L, T> BitString toBits(UTGraph<L, T> graph)
-	{
-		int n = graph.size();
-		BitString string = new BitString( (n * n + n) / 2 );
-		
-		for(int i : series(n))
-			for(int j : series(i, n))
-				if(graph.nodes().get(i).connected(graph.nodes().get(j)))
-					string.add(true);
-				else
-					string.add(false);
-		
-		return string;
 	}
 }

@@ -13,6 +13,14 @@ import java.util.List;
  */
 public class Subgraph
 {
+	/**
+	 * Generates a subgraph containing the given nodes, 
+	 * and any links existing between them in the original graph.
+	 * 
+	 * @param graph
+	 * @param nodes
+	 * @return
+	 */
 	public static <L, T> UTGraph<L, T> subgraph(UTGraph<L, T> graph, Collection<UTNode<L, T>> nodes)
 	{
 		List<UTNode<L, T>> list = new ArrayList<UTNode<L,T>>(nodes);
@@ -30,6 +38,14 @@ public class Subgraph
 		return out;
 	}
 	
+	/**
+	 * Generates a subgraph containing the nodes at the provided indices, 
+	 * and any links existing between them in the original graph.
+	 * 
+	 * @param graph
+	 * @param nodes
+	 * @return
+	 */
 	public static <L, T> UTGraph<L, T> subgraphIndices(UTGraph<L, T> graph, Collection<Integer> nodes)
 	{
 		List<UTNode<L, T>> list = new ArrayList<UTNode<L,T>>();
@@ -39,6 +55,14 @@ public class Subgraph
 		return subgraph(graph, list);
 	}
 	
+	/**
+	 * Generates a subgraph containing the given nodes, 
+	 * and any links existing between them in the original graph.
+	 * 
+	 * @param graph
+	 * @param nodes
+	 * @return
+	 */
 	public static <L, T> DTGraph<L, T> subgraph(DTGraph<L, T> graph, Collection<DTNode<L, T>> nodes)
 	{
 		List<DTNode<L, T>> list = new ArrayList<DTNode<L,T>>(nodes);
@@ -56,6 +80,14 @@ public class Subgraph
 		return out;
 	}
 	
+	/**
+	 * Generates a subgraph containing the nodes at the provided indices, 
+	 * and any links existing between them in the original graph.
+	 * 
+	 * @param graph
+	 * @param nodes
+	 * @return
+	 */
 	public static <L, T> DTGraph<L, T> subgraphIndices(DTGraph<L, T> graph, Collection<Integer> nodes)
 	{
 		List<DTNode<L, T>> list = new ArrayList<DTNode<L,T>>();

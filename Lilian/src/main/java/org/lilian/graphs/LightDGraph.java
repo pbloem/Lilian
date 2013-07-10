@@ -22,8 +22,9 @@ import org.lilian.util.Series;
  * A light-weight (ie. low memory) implementation of a directed graph.
  * 
  * This graph uses non-persistent objects for nodes and links. This means that 
- * these objects become invalid if the graph is edited after their creation, 
- * unless the edit operation is performed on the object itself.  
+ * these objects become invalid if the graph is edited in such a way that its 
+ * node indices change. If a node or link object belonging to this graph is 
+ * accessed afetr such a change, an exception will be thrown   
  * 
  * @author Peter
  *
@@ -42,6 +43,12 @@ public class LightDGraph<L> implements DGraph<L>
 	private int numLinks = 0;
 	private long modCount = 0;
 	
+	// * changes for any edit which causes the node indices to change 
+	//   (currently just removal). If this happens, all existing Node and Link 
+	//   objects lose persistence 
+	private long nodeModCount = 0;
+
+	
 	public LightDGraph()
 	{
 		this(16);
@@ -51,6 +58,8 @@ public class LightDGraph<L> implements DGraph<L>
 	{
 		out = new ArrayList<List<Integer>>(capacity);
 		in = new ArrayList<List<Integer>>(capacity); 
+		
+		labels = new ArrayList<L>(capacity);
 	}
 	
 	@Override
@@ -79,7 +88,7 @@ public class LightDGraph<L> implements DGraph<L>
 	{
 		private Integer index;
 		// The modCount of the graph for which this node is safe to use
-		private long graphState = modCount;
+		private final long nodeModState = nodeModCount;
 		private boolean dead = false;
 
 		public LightDNode(int index)
@@ -90,6 +99,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public L label()
 		{
+			check();
 			return labels.get(index);
 		}
 
@@ -110,10 +120,13 @@ public class LightDGraph<L> implements DGraph<L>
 			}
 
 			
+			in.remove((int)index);
 			out.remove((int)index);
-			out.remove((int)index);
+			labels.remove((int)index);
 
 			dead = true;
+			modCount++;
+			nodeModCount++;
 		}
 
 		private void check()
@@ -121,7 +134,7 @@ public class LightDGraph<L> implements DGraph<L>
 			if(dead)
 				throw new IllegalStateException("Node is dead (index was "+index+")");
 			
-			if(modCount != graphState)
+			if(nodeModCount != nodeModState)
 				throw new IllegalStateException("Graph was modified since node creation.");
 		}
 
@@ -134,12 +147,14 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public int degree()
 		{
+			check();
 			return inDegree() + outDegree();
 		}
 
 		@Override
 		public Collection<? extends DNode<L>> neighbors()
 		{
+			check();
 			List<Integer> indices = new ArrayList<Integer>(degree());
 			
 			for(int i : in.get(this.index))
@@ -153,6 +168,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public DNode<L> neighbor(L label)
 		{
+			check();
 			for(int i : in.get(this.index))
 				if(eq(labels.get(i), label))
 					return new LightDNode(index);
@@ -166,6 +182,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public Collection<? extends DNode<L>> neighbors(L label)
 		{
+			check();
 			List<Integer> indices = new ArrayList<Integer>(degree());
 	
 			for(int i : in.get(this.index))
@@ -181,6 +198,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public Collection<? extends DNode<L>> out()
 		{
+			check();
 			List<Integer> indices = new ArrayList<Integer>(outDegree());
 			
 			for(int i : in.get(this.index))
@@ -192,6 +210,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public Collection<? extends DNode<L>> out(L label)
 		{
+			check();
 			List<Integer> indices = new ArrayList<Integer>(outDegree());
 			
 			for(int i : out.get(this.index))
@@ -204,6 +223,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public Collection<? extends DNode<L>> in()
 		{
+			check();
 			List<Integer> indices = new ArrayList<Integer>(inDegree());
 			
 			for(int index : in.get(this.index))
@@ -215,6 +235,7 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public Collection<? extends DNode<L>> in(L label)
 		{
+			check();
 			List<Integer> indices = new ArrayList<Integer>(inDegree());
 			
 			for(int i : in.get(this.index))
@@ -227,20 +248,16 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public void connect(Node<L> to)
 		{
-
+			check();
 			int fromIndex = index, toIndex = to.index();
 			
 			out.get(fromIndex).add(toIndex);
 			in.get(toIndex).add(fromIndex);
 			
-			Collections.sort(out.get(fromIndex));
-			Collections.sort(out.get(toIndex));
+			// Collections.sort(out.get(fromIndex));
+			// Collections.sort(out.get(toIndex));
 			
-			modCount++;
-			
-			// This node object is still safe to use
-			graphState = modCount;
-			
+			modCount++;			
 			numLinks ++;
 		}
 
@@ -298,13 +315,57 @@ public class LightDGraph<L> implements DGraph<L>
 		{
 			return out.get(index).size();
 		}
+
+		@Override
+		public int hashCode()
+		{
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + (dead ? 1231 : 1237);
+			result = prime * result + ((index == null) ? 0 : index.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			LightDNode other = (LightDNode) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (dead != other.dead)
+				return false;
+			if (index == null)
+			{
+				if (other.index != null)
+					return false;
+			} else if (!index.equals(other.index))
+				return false;
+			return true;
+		}
+
+		private LightDGraph getOuterType()
+		{
+			return LightDGraph.this;
+		}
+		
+		public String toString()
+		{
+			return index() + (label() == null ? "" : "_" + label());
+		}
 	}
 	
 	private class LightDLink implements DLink<L>
 	{
 		private DNode<L> from, to;
 		
-		private long graphState = modCount;
+		private long nodeModState = nodeModCount;
 		
 		private boolean dead = false;
 		
@@ -314,21 +375,33 @@ public class LightDGraph<L> implements DGraph<L>
 			this.to = new LightDNode(to);
 		}
 		
+		private void check()
+		{
+			if(dead)
+				throw new IllegalStateException("Link object is dead");
+			
+			if(nodeModCount != nodeModState)
+				throw new IllegalStateException("Graph was modified since node creation.");
+		}		
+		
 		@Override
 		public Collection<? extends Node<L>> nodes()
 		{
+			check();
 			return Arrays.asList(from, to);
 		}
 
 		@Override
 		public Graph<L> graph()
 		{
+			check();
 			return LightDGraph.this;
 		}
 
 		@Override
 		public void remove()
 		{
+			check();
 			in.get(to.index()).remove((Integer)from.index());
 			out.get(from.index()).remove((Integer)to.index());
 			
@@ -339,19 +412,74 @@ public class LightDGraph<L> implements DGraph<L>
 		@Override
 		public boolean dead()
 		{
+			check();
 			return dead;
 		}
 
 		@Override
 		public DNode<L> first()
 		{
+			check();
 			return from;
 		}
 
 		@Override
 		public DNode<L> second()
 		{
+			check();
 			return to;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + (dead ? 1231 : 1237);
+			result = prime * result + ((from == null) ? 0 : from.hashCode());
+			result = prime * result + ((to == null) ? 0 : to.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			LightDLink other = (LightDLink) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (dead != other.dead)
+				return false;
+			if (from == null)
+			{
+				if (other.from != null)
+					return false;
+			} else if (!from.equals(other.from))
+				return false;
+			if (to == null)
+			{
+				if (other.to != null)
+					return false;
+			} else if (!to.equals(other.to))
+				return false;
+			return true;
+		}
+
+		private LightDGraph getOuterType()
+		{
+			return LightDGraph.this;
+		}
+		
+		public String toString()
+		{
+			check();
+			return from + " -> " + to;
 		}
 		
 	}
@@ -467,17 +595,18 @@ public class LightDGraph<L> implements DGraph<L>
 			
 			private void read()
 			{
-				if(next == LightDGraph.this.size())
+				if(next >= LightDGraph.this.size())
 					return;
 				
-				while(buffer.size() < BUFFER_LIMIT && next != LightDGraph.this.size())
+				while(buffer.size() < BUFFER_LIMIT && next < LightDGraph.this.size())
 				{
 					int from = next;
-					next++;
 					
 					List<Integer> tos = out.get(from);
 					for(int to : tos)
 						buffer.add(new Pair<Integer, Integer>(from, to));
+					
+					next++;
 				}
 					
 			}
@@ -531,6 +660,38 @@ public class LightDGraph<L> implements DGraph<L>
 	}
 	
 	/**
+	 * Returns a representation of the graph in Dot language format.
+	 */
+	public String toString()
+	{
+		StringBuffer sb = new StringBuffer();
+		sb.append("graph {");
+		
+		Set<DNode<L>> nodes = new HashSet<DNode<L>>(nodes());
+		
+		boolean first = true;
+		for(DLink<L> link : links())
+		{
+			if(first) 
+				first = false;
+			else 
+				sb.append("; ");
+			
+			sb.append(link);
+			
+			nodes.remove(link.first());
+			nodes.remove(link.second());
+		}
+		
+		for(DNode<L> node : nodes)
+			sb.append("; " + node);
+		
+		sb.append("}");
+		
+		return sb.toString();
+	}
+	
+	/**
 	 * Resets all neighbour list to their current capacity, plus the 
 	 * given margin. 
 	 * 
@@ -555,5 +716,47 @@ public class LightDGraph<L> implements DGraph<L>
 			
 			out.set(i, nw);
 		}
+	}
+	
+	/**
+	 * Sorts all neighbour lists
+	 * 
+	 * @param margin
+	 */
+	public void sort()
+	{
+		for(int i : Series.series(in.size()))
+			Collections.sort(in.get(i));
+		
+		for(int i : Series.series(out.size()))
+			Collections.sort(out.get(i));
+	}
+	
+	
+	
+	/**
+	 * Creates a copy of the given graph as a LightDGraph object. If the argument
+	 * is directional, the links will be copied, if it is not directional, every
+	 * link in the original will be represented by two links in the result.
+	 * 
+	 * @param graph
+	 * @return
+	 */
+	public static <L> LightDGraph<L> copy(Graph<L> graph)
+	{
+		LightDGraph<L> copy = new LightDGraph<L>(graph.size());
+		for(Node<L> node : graph.nodes())
+			copy.add(node.label());
+		
+		for(int i : Series.series(graph.size()))
+			for(int j : Series.series(graph.size()))
+			{
+				if(graph.nodes().get(i).connected(graph.nodes().get(j)))
+					copy.nodes().get(i).connect(copy.nodes().get(j));
+			}
+		
+		copy.compact(0);
+		
+		return copy;
 	}
 }

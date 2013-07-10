@@ -8,6 +8,8 @@ import org.lilian.Global;
 /**
  * Class representing a bitstring with simple getters and setters by index.
  * 
+ * We use the correspondence 1=true and 0=false between bits and boolean values.
+ * 
  * @author peter
  *
  */
@@ -119,6 +121,15 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 		return new String(ch);		
 	}
 	
+	@Override
+	public void clear()
+	{
+		for(int i : Series.series(array.length))
+			array[i] = 0;
+			
+		maxIndex = 0;
+	}
+
 	/**
 	 * Returns a representation of this bitstring as a byte array, the closest
 	 * we can get to a string of actual system bits. 
@@ -142,6 +153,16 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 	}
 	
 	/**
+	 * Returns the array backing this BitString. Use caution.
+	 * 
+	 * @return
+	 */
+	public byte[] rawData()
+	{
+		return array;
+	}
+	
+	/**
 	 * The number of bits required to pad this bitstring out to a multiple of 
 	 * eight.
 	 * @return
@@ -150,6 +171,35 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 	{
 		return (8 - size() % 8) % 8;		
 	}
+	
+	/**
+	 * The number of ones in this bitstring
+	 * @return
+	 */
+	public int numOnes()
+	{
+		int sum = 0;
+		
+		for(boolean bit : this)
+			if(bit) sum++;
+		
+		return sum;
+	}
+	
+	/**
+	 * The number of zeros in this bitstring
+	 * @return
+	 */
+	public int numZeros()
+	{
+		int sum = 0;
+		
+		for(boolean bit : this)
+			if(! bit) sum++;
+		
+		return sum;
+	}
+
 
 	/**
 	 * Zero-pads this bitstring to a multiple of 16, and returns the result as 
@@ -216,13 +266,14 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 	}
 	
 	/**
-	 * Creates a bitstring of the given length with only zero bits as elements
+	 * Creates a bitstring of the given length with only one-valued bits as elements
 	 * @param size
 	 * @return
 	 */
 	public static BitString ones(int size)
 	{
-		BitString out = new BitString(size);
+		// TODO just make a zero bitstring and invert it. 
+		BitString out = new BitString(size); 
 		for(int i = 0; i < size; i++)
 			out.add(true);
 		

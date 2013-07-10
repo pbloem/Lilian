@@ -10,7 +10,7 @@ import java.util.Set;
  * @param <L>
  * @param <T>
  */
-public interface UTNode<L, T> extends Node<L>, TNode<L, T>
+public interface UTNode<L, T> extends UNode<L>, TNode<L, T>
 {
 	public Collection<? extends UTNode<L, T>> neighbors();
 	

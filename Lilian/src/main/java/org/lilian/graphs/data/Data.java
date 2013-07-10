@@ -7,8 +7,12 @@ import java.io.IOException;
 import java.util.HashSet;
 
 import org.lilian.Global;
+import org.lilian.graphs.DGraph;
+import org.lilian.graphs.DNode;
 import org.lilian.graphs.DTGraph;
 import org.lilian.graphs.DTNode;
+import org.lilian.graphs.Graph;
+import org.lilian.graphs.LightDGraph;
 import org.lilian.graphs.MapDTGraph;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.UTGraph;
@@ -168,11 +172,11 @@ public class Data {
 	 * @return
 	 * @throws IOException
 	 */
-	public static DTGraph<String, String> edgeListDirectedUnlabeled(File file)
+	public static DGraph<String> edgeListDirectedUnlabeled(File file, boolean clean)
 			throws IOException
 	{
 		BufferedReader reader = new BufferedReader(new FileReader(file));
-		DTGraph<String, String> graph = new MapDTGraph<String, String>();
+		LightDGraph<String> graph = new LightDGraph<String>();
 				
 		String line;
 		int i = 0;
@@ -210,11 +214,11 @@ public class Data {
 						
 			ensure(graph, Math.max(a, b));
 			
-			DTNode<String, String> nodeA = graph.nodes().get(a);
+			DNode<String> nodeA = graph.nodes().get(a);
 			if(nodeA == null)
 				nodeA = graph.nodes().get(a);
 			
-			DTNode<String, String> nodeB = graph.nodes().get(b);
+			DNode<String> nodeB = graph.nodes().get(b);
 			if(nodeB == null)
 				nodeB = graph.nodes().get(b);
 			
@@ -222,15 +226,26 @@ public class Data {
 			
 			int links = graph.numLinks();
 			if(links%100000 == 0)
-				Global.log().info("Loaded " + links + " links");
+				Global.log().info("Loaded " + links + " links (n="+graph.size()+", l="+graph.numLinks()+")");
 			
 			
 		} while(line != null);
 		
+		Global.log().info("Sorting");
+		graph.sort();
+		
+		if(clean)
+		{
+			Global.log().info("Compacting");
+			graph.compact(0);
+			Global.log().info("Done");
+
+		}
+		
 		return graph;
 	}
 
-	private static void ensure(DTGraph<String, String> graph, int max)
+	private static void ensure(Graph<String> graph, int max)
 	{
 		while(graph.size() < max + 1)
 			graph.add(null);

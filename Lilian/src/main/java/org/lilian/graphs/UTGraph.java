@@ -13,7 +13,7 @@ import java.util.Set;
  * @param <L>
  * @param <T>
  */
-public interface UTGraph<L, T> extends TGraph<L, T>
+public interface UTGraph<L, T> extends TGraph<L, T>, UGraph<L>
 {
 	/**
 	 * Returns the first node in the Graph which has the given label 

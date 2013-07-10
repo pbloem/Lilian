@@ -1,12 +1,25 @@
 package org.lilian.graphs.draw;
 
-import java.awt.image.BufferedImage;
+import static org.lilian.util.Series.series;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import org.junit.Ignore;
+import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Point;
+import org.lilian.graphs.DGraph;
+import org.lilian.graphs.DLink;
+import org.lilian.graphs.DegreeIndexComparator;
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.Link;
 import org.lilian.graphs.Node;
 import org.lilian.util.BufferedImageTranscoder;
+import org.lilian.util.Series;
 
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.transcoder.TranscoderException;
@@ -117,5 +130,136 @@ public class Draw
 	{
 		
 	}
+	
+	/**
+	 * Draws a density plot of the adjacency matrix
+	 * 
+	 * @param graph
+	 * @param layout
+	 * @param width
+	 * @param height
+	 * @return
+	 */
+	public static <L> BufferedImage matrix(
+			Graph<L> graph, int width, int height)
+	{
+		return matrix(graph, width, height, null);
+	}
+	
+	public static <L> BufferedImage matrix(
+			Graph<L> graph, int width, int height, List<Integer> order)
+	{
+		boolean log = true;
+		boolean directed = graph instanceof DGraph<?>;
+		
+		float max = Float.NEGATIVE_INFINITY;
+		float[][] matrix = new float[width][];
+		for(int x = 0; x < width; x++)
+		{
+			matrix[x] = new float[height];
+			for(int y = 0; y < height; y++)
+				matrix[x][y] = 0.0f;				
+		}
+		
+		int xp, yp;
+		for(Link<L> link : graph.links())
+		{
+			int i = link.first().index(), j = link.second().index();
 
+			int ii = order == null ? i : order.get(i);
+			int jj = order == null ? j : order.get(j);
+			
+			xp = org.lilian.data.real.Draw.toPixel(ii, width, 0, graph.size()); 
+			yp = org.lilian.data.real.Draw.toPixel(jj, height, 0, graph.size());
+		
+			if(xp >= 0 && xp < width && yp >= 0 && yp < height)
+			{
+				matrix[xp][yp] ++;
+				max = Math.max(matrix[xp][yp], max);
+			}
+			
+			if(! directed)
+			{
+				// * Swap
+				int t = ii;
+				ii = jj;
+				jj = t;
+				
+				xp = org.lilian.data.real.Draw.toPixel(ii, width, 0, graph.size()); 
+				yp = org.lilian.data.real.Draw.toPixel(jj, height, 0, graph.size());
+			
+				if(xp >= 0 && xp < width && yp >= 0 && yp < height)
+				{
+					matrix[xp][yp] ++;
+					max = Math.max(matrix[xp][yp], max);
+				}
+			}
+		}
+		
+		BufferedImage image = 
+			new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		
+		Color color;
+		
+		if(log)
+			max = (float)Math.log(max + 1.0f);
+		
+		for(int x = 0; x < width; x++)
+			for(int y = 0; y < height; y++)
+			{
+				//float value = matrix[x][yRes - y - 1];
+				float value = matrix[x][y];				
+				if(log)
+					value = (float)Math.log(value + 1.0f);
+		
+				float gray = value / max;
+				
+				if(gray < 0.0)
+					color = Color.BLUE;
+				else if(gray > 1.0)
+					color = Color.RED;
+				else				
+					color  = new Color(gray, gray, gray, 1.0f);
+				
+				image.setRGB(x, y, color.getRGB());
+			}
+		
+		return image;
+	}
+	
+	/**
+	 * REMINDER: 
+	 * 
+	 * - The order has order.get(indexInOriginalGraph) = indexInOrderedGraph
+	 * - The inverseOrder has order.get(indexInOrderedGraph) = indexInOriginalGraph
+	 * 
+	 * in the order the elements represent the indices of the ordered graph
+	 * in the inverseOrder the elements represent the indices of the original graph
+	 * 
+	 * @param graph
+	 * @return
+	 */
+	public static <L> List<Integer> degreeOrdering(Graph<L> graph)
+	{
+		List<Integer> inv = new ArrayList<Integer>(Series.series(graph.size()));
+		
+		Comparator<Integer> comp =
+				Collections.reverseOrder(new DegreeIndexComparator(graph));
+		
+		Collections.sort(inv, comp);
+		
+		return inverse(inv);
+	}
+	
+	public static List<Integer> inverse(List<Integer> order)
+	{
+		List<Integer> inv = new ArrayList<Integer>(order.size());
+		for(int i : series(order.size()))
+			inv.add(null);
+		
+		for(int index : series(order.size()))
+			inv.set(order.get(index), index);
+		
+		return inv;
+	}
 }

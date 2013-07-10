@@ -1,0 +1,24 @@
+package org.lilian.graphs;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+public interface UGraph<L> extends Graph<L>
+{
+	@Override
+	public UNode<L> node(L label);
+
+	@Override
+	public Collection<? extends UNode<L>> nodes(L label);
+	
+	@Override
+
+	public List<? extends UNode<L>> nodes();
+	
+	@Override
+	public Collection<? extends ULink<L>> links();
+	
+	@Override
+	public UNode<L> add(L label);
+}

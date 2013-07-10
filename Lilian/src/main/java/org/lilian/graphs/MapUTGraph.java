@@ -101,7 +101,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		{
 			this.label = label;
 			
-			index = nodes.size();
+			index = nodeList.size();
 			
 			// * The node adds itself to the graph's data structures
 			nodeList.add(this);

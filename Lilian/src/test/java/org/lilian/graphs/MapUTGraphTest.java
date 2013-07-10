@@ -102,4 +102,14 @@ public class MapUTGraphTest
 		assertFalse(c.connected(b));
 	}
 	
+	@Test 
+	public void testIndices()
+	{
+		UTGraph<String, String> graph = Graphs.k(3, "x");
+		
+		for(Node<String> node : graph.nodes())
+			System.out.println(node.index());
+		
+	}
+	
 }

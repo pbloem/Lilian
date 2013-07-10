@@ -321,25 +321,46 @@ public class Graphs
 		return degrees;
 	}
 	
+	public static <L> void add(Graph<L> graph, Graph<L> addition)
+	{
+		List<Node<L>> nodesAdded = new ArrayList<Node<L>>(addition.size());
+		
+		// * Add all nodes
+		for(Node<L> aNode : addition.nodes())
+		{
+			Node<L> gNode = graph.add(aNode.label());
+			nodesAdded.add(gNode);
+		}
+		
+		// * Add all links
+		for(Link<L> link : addition.links())
+		{
+			// System.out.println('.');
+			int i = link.first().index(), j = link.second().index();
+			
+			nodesAdded.get(i).connect(nodesAdded.get(j));
+		}
+	}
+	
 	/**
 	 * Adds one graph to another.
 	 * 
 	 * @param graph
 	 * @param addition
 	 */
-	public static <L, T> void add(UTGraph<L, T> graph, UTGraph<L, T> addition)
+	public static <L, T> void add(TGraph<L, T> graph, TGraph<L, T> addition)
 	{
-		List<UTNode<L, T>> nodesAdded = new ArrayList<UTNode<L,T>>(addition.size());
+		List<TNode<L, T>> nodesAdded = new ArrayList<TNode<L,T>>(addition.size());
 		
 		// * Add all nodes
-		for(UTNode<L, T> aNode : addition.nodes())
+		for(TNode<L, T> aNode : addition.nodes())
 		{
-			UTNode<L, T> gNode = graph.add(aNode.label());
+			TNode<L, T> gNode = graph.add(aNode.label());
 			nodesAdded.add(gNode);
 		}
 		
 		// * Add all links
-		for(UTLink<L, T> link : addition.links())
+		for(TLink<L, T> link : addition.links())
 		{
 			// System.out.println('.');
 			int i = link.first().index(), j = link.second().index();
