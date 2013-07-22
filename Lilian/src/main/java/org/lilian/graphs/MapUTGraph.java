@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.old.BaseGraph;
@@ -48,6 +49,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 {
 	protected List<MapUTNode> nodeList = new ArrayList<MapUTNode>();
 	protected Map<L, Set<MapUTNode>> nodes = new LinkedHashMap<L, Set<MapUTNode>>();
+	protected Set<T> tags = new LinkedHashSet<T>();
 
 	protected int numEdges = 0;
 	protected long modCount = 0;
@@ -167,8 +169,8 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 			// * This graph can only contain MapDTNodes, so this is a safe cast
 			MapUTNode mdtOther = (MapUTNode) other;
 			
-			if(connected(mdtOther, tag))
-				return;
+//			if(connected(mdtOther, tag))
+//				return;
 			
 			MapUTLink link = new MapUTLink(tag, this, mdtOther);
 			
@@ -335,7 +337,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		}
 
 		@Override
-		public Collection<? extends TLink<L, T>> links(TNode<L, T> other)
+		public Collection<? extends UTLink<L, T>> links(TNode<L, T> other)
 		{
 			MapUTNode o = (MapUTNode) other;
 			
@@ -372,6 +374,22 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 				n += links.get(tag).size();
 			
 			return n;
+		}
+
+		@Override
+		public List<UTLink<L, T>> links()
+		{
+			List<UTLink<L, T>> list = new ArrayList<UTLink<L,T>>(degree());
+			for(T tag : links.keySet())
+				list.addAll(links.get(tag));
+			
+			return list;
+		}
+
+		@Override
+		public Collection<T> tags()
+		{
+			return Collections.unmodifiableCollection(links.keySet());
 		}
 	}
 
@@ -690,10 +708,86 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 	@Override
 	public Set<T> tags()
  	{
-		Set<T> tags = new HashSet<T>();
-		for(UTLink<L, T> link : links())
-			tags.add(link.tag());
+		return Collections.unmodifiableSet(tags);
+	}
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof UTGraph<?, ?>))
+			return false;
 		
-		return tags;
+		UTGraph<Object, Object> otherGraph = (UTGraph<Object, Object>) other;
+		
+		if(! otherGraph.level().equals(level()))
+			return false;
+		
+		if(size() != otherGraph.size())
+			return false;
+		
+		if(numLinks() != otherGraph.numLinks())
+			return false;
+		
+		if(labels().size() != otherGraph.labels().size())
+			return false;
+		
+		// * for all connected nodes
+		for(UTNode<L, T> node : nodes())
+		{
+			if(! node.label().equals(otherGraph.get(node.index()).label()))
+				return false;
+			
+			for(UTNode<L, T> neighbor : node.neighbors())
+			{
+				Collection<? extends UTLink<L, T>> links = node.links(neighbor);
+				Collection<? extends UTLink<Object, Object>> otherLinks = 
+						otherGraph.get(node.index())
+							.links(otherGraph.get(neighbor.index()));
+
+				if(links.size() != otherLinks.size())
+					return false;
+				
+				if(links.size() == 1)
+				{
+					// ** If there is only one link, check that there is a single 
+					//    similar link in the other graph and that it has the same tag
+					
+					if(! links.iterator().next().tag().equals(otherLinks.iterator().next().tag()))
+						return false;
+				} else {
+					// ** If there are multiple links between these two nodes,
+					//    count the occurrences of each tag and check that the 
+					//    frequencies match between graphs
+					BasicFrequencyModel<T> 
+							model = new BasicFrequencyModel<T>();
+					BasicFrequencyModel<Object>
+							otherModel = new BasicFrequencyModel<Object>();
+					
+					for(UTLink<L, T> link : links)
+						model.add(link.tag());
+					
+					for(UTLink<Object, Object> otherLink : otherLinks)
+						otherModel.add(otherLink.tag());
+					
+					for(T token : model.tokens())
+						if(otherModel.frequency(token) != model.frequency(token))
+							return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	@Override
+	public UTNode<L, T> get(int i)
+	{
+		return nodes().get(i);
+	}
+
+	@Override
+	public Class<? extends UTGraph<L, T>> level()
+	{
+		return (Class<? extends UTGraph<L, T>>) UTGraph.class;
 	}
 }

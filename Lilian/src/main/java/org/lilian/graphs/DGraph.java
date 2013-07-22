@@ -18,6 +18,9 @@ public interface DGraph<L> extends Graph<L>
 	
 	public List<? extends DNode<L>> nodes();
 	
+	@Override
+	public DNode<L> get(int i);
+	
 	public Collection<? extends DLink<L>> links();
 	
 	/**
@@ -52,5 +55,7 @@ public interface DGraph<L> extends Graph<L>
 	 * @return
 	 */
 	public long state();
+
+	public Class<? extends DGraph<L>> level();
 
 }

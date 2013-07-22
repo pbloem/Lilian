@@ -69,4 +69,14 @@ public interface TNode<L, T> extends Node<L>
 	 * @return
 	 */
 	public int index();
+	
+	/**
+	 * A collection of all the tags of links connected to this node. The precise 
+	 * definition of which links to count depends on the implementation, but it 
+	 * should agree with the logic of neighbors, ie. every link that causes a 
+	 * node to be included in neighbors should have its tag in this collection. 
+	 *  
+	 * @return
+	 */
+	public Collection<T> tags();
 }

@@ -1,7 +1,11 @@
 package org.lilian.util;
 
 import static java.lang.Math.ceil;
+import static java.lang.Math.exp;
 import static java.lang.Math.floor;
+import static java.lang.Math.log;
+import static org.apache.commons.math3.util.ArithmeticUtils.binomialCoefficientLog;
+import static org.lilian.util.Functions.logFactorial;
 import static org.lilian.util.Series.series;
 
 import java.util.*;
@@ -12,6 +16,7 @@ import java.io.IOException;
 import java.math.*;
 import java.text.*;
 
+import org.apache.commons.math3.util.ArithmeticUtils;
 import org.lilian.Global;
 import org.lilian.corpora.OVISCorpus;
 import org.lilian.data.real.Point;
@@ -413,6 +418,19 @@ public class Functions
 	}
 	
 	/**
+	 * The binary logarithm of the choose function (ie. the binomial coefficient)
+	 */
+	public static double logChoose(double sub, double total)
+	{
+		if(sub <= Integer.MAX_VALUE && total <= Integer.MAX_VALUE 
+				&& sub == (int)sub && total == (int)total)
+			return binomialCoefficientLog((int)total, (int)sub) / Math.log(2.0);
+		
+		double n = total, k = sub;
+		return logFactorial(n) - logFactorial(k) - logFactorial(n - k); 
+	}
+	 
+	/**
 	 * Equals method for objects that takes into account null values
 	 * @param a
 	 * @param b
@@ -611,12 +629,15 @@ public class Functions
 	 */
 	public static List<Integer> sample(int k, int size)
 	{
+		if(0 > k || k > size)
+			throw new IllegalArgumentException("Argument k ("+k+") must be non-negative and larger than size ("+size+")");
 		// * The algorithm we use basically simulates having an array with the 
-		//   values of o to n-1 at their own indices, and for each i, choosing a 
-		//   random index above it and swapping the two entries.
+		//   values of 0 to n - 1 at their own indices, and for each i, choosing
+		//   a random index above it and swapping the two entries.
 		//
 		//   Since we expect low k, most entries in this array will stay at 
 		//   their original index and we only stores the values that deviate.
+		
 		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
 				
 		for(int i : series(k))
@@ -637,5 +658,32 @@ public class Functions
 			result.add(map.get(i));
 		
 		return result;
+	}
+
+	/**
+	 * Uses natural logarithms
+	 * @param logA
+	 * @param logB
+	 * @return
+	 */
+	public static double logSum(double logA, double logB)
+	{
+		double logMin, logMax;
+		
+		if(logA < logB)
+		{
+			logMin = logA;
+			logMax = logB;
+		} else {
+			logMax = logA;
+			logMin = logB;
+		}
+			
+		return log(exp(logMin) * (1 + exp(logMax - logMin)));
+	}
+	
+	public static double exp2(double x)
+	{
+		return Math.exp(x);
 	}
 }

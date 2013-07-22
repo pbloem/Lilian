@@ -102,4 +102,41 @@ public class LightDGraphTest
 		assertFalse(b.connected(c));
 		assertFalse(c.connected(b));
 	}
+	
+	@Test
+	public void testEquals()
+	{
+		DGraph<String> g1 = new LightDGraph<String>();
+		g1.add("a");
+		g1.add("b");
+		g1.add("c");
+		
+		g1.node("a").connect(g1.node("b"));
+		g1.node("b").connect(g1.node("c"));
+		
+		DGraph<String> g2 = new LightDGraph<String>();
+		g2.add("a");
+		g2.add("b");
+		g2.add("c");
+		 
+		g2.node("a").connect(g2.node("b"));                    
+		g2.node("b").connect(g2.node("c"));		
+         
+		assertTrue(g1.equals(g2));
+		
+		g2.node("a").connect(g2.node("c"));
+	
+		assertFalse(g1.equals(g2));
+	}
+	
+	@Test
+	public void testNotEquals()
+	{
+		DGraph<String> g1 = new LightDGraph<String>();
+		
+		DTGraph<String, String> g2 = new MapDTGraph<String, String>();
+		
+		assertFalse(g1.equals(g2));
+		assertFalse(g2.equals(g1));	
+	}
 }

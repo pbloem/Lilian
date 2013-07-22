@@ -1,6 +1,7 @@
 package org.lilian.graphs.random;
 
 import static java.lang.Math.log;
+import static org.lilian.graphs.compression.Functions.toPairUndirected;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTNode;
 import org.lilian.util.Functions;
+import org.lilian.util.Pair;
 
 
 /**
@@ -65,15 +67,11 @@ public class RandomGraphs
 		
 		List<Integer> indices = Functions.sample(m, (n*n - n)/2);
 		
-		int c = 0;
-		for(int i : series(n))
-			for(int j : series(i + 1, n))
-			{
-				if(indices.contains(c))
-					graph.nodes().get(i).connect(graph.nodes().get(j));
-				
-				c++;
-			}
+		for(int index : indices)
+		{
+			Pair<Integer, Integer> ij = toPairUndirected(index, false);
+			graph.nodes().get(ij.first()).connect(graph.nodes().get(ij.second()));
+		}
 		
 		return graph;
 	}

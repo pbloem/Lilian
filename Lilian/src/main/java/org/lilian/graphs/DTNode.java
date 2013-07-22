@@ -13,10 +13,28 @@ import java.util.Set;
 public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 {
 	public Collection<? extends DTNode<L, T>> neighbors();
+
+	public Collection<? extends DTLink<L, T>> links();
+	
+	public Collection<? extends DTLink<L, T>> links(TNode<L, T> other);
 	
 	public DTNode<L, T> neighbor(L label);
 
 	public Collection<? extends DTNode<L, T>> neighbors(L label);
+	
+	public Collection<? extends DTNode<L, T>> out();
+	
+	public Collection<? extends DTLink<L, T>> linksOut();	
+	
+	public Collection<? extends DTLink<L, T>> linksOut(DTNode<L, T> other);
+	
+	public Collection<? extends DTNode<L, T>> out(L label);	
+	
+	public Collection<? extends DTNode<L, T>> in();
+	
+	public Collection<? extends DTLink<L, T>> linksIn();		
+	
+	public Collection<? extends DTLink<L, T>> linksIn(DTNode<L, T> other);
 	
 	public Collection<? extends DTNode<L, T>> toTag(T tag);
 

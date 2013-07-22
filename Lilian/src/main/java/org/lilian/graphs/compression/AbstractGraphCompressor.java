@@ -7,7 +7,12 @@ import java.util.List;
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.Graphs;
 import org.lilian.graphs.LightDGraph;
+import org.lilian.graphs.Node;
+import org.lilian.graphs.TGraph;
+import org.lilian.graphs.TLink;
+import org.lilian.models.OnlineModel;
 import org.lilian.util.Compressor;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 
 public abstract class AbstractGraphCompressor<N> implements Compressor<Graph<N>>
@@ -36,6 +41,41 @@ public abstract class AbstractGraphCompressor<N> implements Compressor<Graph<N>>
 	{
 		return compressedSize(graph, series(graph.size()));
 	}
+	
+	/**
+	 * Computes a self-delimiting encoding of this graph
+	 * 
+	 * @param graph
+	 */
+	public double compressedSize(Graph<N> graph, List<Integer> order)
+	{
+		// * Structure
+		double structureBits = structureBits(graph, order);
+		
+		// * Labels
+		double labelBits = 0;
+		OnlineModel<N> labelModel = new OnlineModel<N>(); 
+		labelModel.symbols(graph.labels());
+		
+		for(Node<N> node : graph.nodes())
+			labelBits += - Functions.log2(labelModel.observe(node.label()));
+				
+		// * Tags
+		
+		double tagBits = 0;
+		if(graph instanceof TGraph<?, ?>)
+		{
+			TGraph<?, ?> tgraph = (TGraph<?, ?>)graph;
+			OnlineModel<Object> tagModel = new OnlineModel<Object>();
+			
+			tagModel.add(tgraph.tags());
+			
+			for(TLink<?, ?> link : tgraph.links())
+				tagBits += - Functions.log2(tagModel.observe(link.tag()));
+		}
+		
+		return structureBits + labelBits + tagBits;
+	}
 
 	
 	/**
@@ -43,7 +83,7 @@ public abstract class AbstractGraphCompressor<N> implements Compressor<Graph<N>>
 	 * 
 	 * @param graph
 	 */
-	public abstract double compressedSize(Graph<N> graph, List<Integer> order);
+	public abstract double structureBits(Graph<N> graph, List<Integer> order);
 
 	@Override
 	public double ratio(Object... object)

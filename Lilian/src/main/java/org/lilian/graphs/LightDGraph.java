@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
@@ -358,6 +359,40 @@ public class LightDGraph<L> implements DGraph<L>
 		public String toString()
 		{
 			return index() + (label() == null ? "" : "_" + label());
+		}
+
+		@Override
+		public List<DLink<L>> links()
+		{
+			List<DLink<L>> list = new ArrayList<DLink<L>>(outDegree());
+			for(int neighbor : out.get(index))
+				list.add(new LightDLink(index, neighbor));
+			
+			for(int neighbor : out.get(index))
+				if(neighbor != index)
+					list.add(new LightDLink(neighbor, index));	
+			
+			return list;
+		}
+
+		@Override
+		public List<DLink<L>> linksOut()
+		{
+			List<DLink<L>> list = new ArrayList<DLink<L>>(outDegree());
+			for(int neighbor : out.get(index))
+				list.add(new LightDLink(index, neighbor));
+			
+			return list;
+		}
+
+		@Override
+		public List<DLink<L>> linksIn()
+		{
+			List<DLink<L>> list = new ArrayList<DLink<L>>(inDegree());
+			for(int neighbor : out.get(index))
+				list.add(new LightDLink(neighbor, index));
+			
+			return list;
 		}
 	}
 	
@@ -758,5 +793,53 @@ public class LightDGraph<L> implements DGraph<L>
 		copy.compact(0);
 		
 		return copy;
+	}
+	
+	public boolean equals(Object other)
+	{	
+		if(!(other instanceof DGraph<?>))
+			return false;
+		
+		DGraph<Object> otherGraph = (DGraph<Object>) other;
+		if(! otherGraph.level().equals(level()))
+			return false;
+		
+		if(size() != otherGraph.size())
+			return false;
+		
+		if(numLinks() != otherGraph.numLinks())
+			return false;
+		
+		if(labels().size() != otherGraph.labels().size())
+			return false;
+		
+		// * for all connected nodes
+		for(DNode<L> node : nodes())
+		{
+			if(! node.label().equals(otherGraph.get(node.index()).label()))
+				return false;
+			
+			for(DNode<L> neighbor : node.out())
+			{
+				if(! otherGraph.get(node.index()).connected(otherGraph.get(neighbor.index())))
+					return false;
+			}
+		}
+		
+		return true;	
+		
+	}
+
+	@Override
+	public DNode<L> get(int i)
+	{
+		return nodes().get(i);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Class<? extends DGraph<L>> level()
+	{
+		return (Class<? extends DGraph<L>>) DGraph.class;
 	}
 }

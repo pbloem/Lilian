@@ -7,15 +7,22 @@ public interface DNode<L> extends Node<L>
 {
 	public Collection<? extends DNode<L>> neighbors();
 	
+	@Override
+	public Collection<? extends DLink<L>> links();
+	
 	public DNode<L> neighbor(L label);
 
 	public Collection<? extends DNode<L>> neighbors(L label);
 	
 	public Collection<? extends DNode<L>> out();
 	
+	public Collection<? extends DLink<L>> linksOut();	
+	
 	public Collection<? extends DNode<L>> out(L label);	
 	
 	public Collection<? extends DNode<L>> in();
+	
+	public Collection<? extends DLink<L>> linksIn();	
 	
 	public Collection<? extends DNode<L>> in(L label);		
 	

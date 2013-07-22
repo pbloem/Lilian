@@ -27,6 +27,9 @@ public interface UTGraph<L, T> extends TGraph<L, T>, UGraph<L>
 	
 	public List<? extends UTNode<L, T>> nodes();
 	
+	@Override
+	public UTNode<L, T> get(int i);
+	
 	public Collection<? extends UTLink<L, T>> links();	
 	
 	/**
@@ -63,4 +66,7 @@ public interface UTGraph<L, T> extends TGraph<L, T>, UGraph<L>
 	 * @return
 	 */
 	public long state();
+	
+	public Class<? extends UTGraph<L, T>> level();
+
 }

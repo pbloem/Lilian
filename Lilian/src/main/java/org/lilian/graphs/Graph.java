@@ -24,6 +24,26 @@ import java.util.Set;
  * directed graphs. Letting Graph be the interface for undirected graphs violates
  * LSP.
  * 
+ * <h2>A note on equality and inheritance</h2>
+ * <p>
+ * Our choice to use inheritance in the definition of graphs presents a problem
+ * with the implementation of equals. Consider the following: a DTGraph 
+ * implementation considers another graph equal to itself if its nodes, links, 
+ * labels and tags match. For a DGraph implementation, there are no tags, so 
+ * only the nodes, links and labels are checked. The second considers itself 
+ * equal to the first, but not vice versa. The DGraph has no way of knowing that 
+ * the DTGraph has extended functionality, since it isn't aware that such
+ * functionality exists.
+ * </p><p>
+ * The solution is that equality is only defined over a single level of the 
+ * hierarchy. Each graph reports not only which graphtypes it inherits from 
+ * (through interfaces), but also which level of the graph hierarchy it 
+ * identifies with. This can be either an interface, or a class, but for two 
+ * graphs to be equal, their level must match.
+ * </p>
+ *        
+ * 
+ * 
  * 
  * @param <L>
  */
@@ -88,4 +108,14 @@ public interface Graph<L>
 	 * @return
 	 */
 	public long state();
+	
+	/**
+	 * Shorthand for nodes().get(i);
+	 * @param i
+	 * @return
+	 */
+	public Node<L> get(int i);
+	
+	public Class<? extends Graph<L>> level();
+	
 }

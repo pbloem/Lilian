@@ -5,6 +5,7 @@ import static org.lilian.util.Series.series;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math.random.BitsStreamGenerator;
@@ -14,6 +15,7 @@ import org.lilian.graphs.UGraph;
 import org.lilian.graphs.ULink;
 import org.lilian.graphs.draw.Draw;
 import org.lilian.util.BitString;
+import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
 public class Functions
@@ -21,6 +23,7 @@ public class Functions
 	
 	/**
 	 * The cost of storing the given value in prefix coding
+	 * 
 	 * @param bits
 	 * @return
 	 */
@@ -125,7 +128,7 @@ public class Functions
 	public static <L> void toBits(OutputStream stream, UGraph<L> graph, List<Integer> order)
 			throws IOException
 	{	
-		int BUFFER_SIZE = 65536;
+		int BUFFER_SIZE = 128;
 		
 		List<Integer> inv = Draw.inverse(order);
 		
@@ -140,13 +143,15 @@ public class Functions
 				
 				boolean bit = graph.nodes().get(ii).connected(graph.nodes().get(jj));
 				buffer.add(bit);
-				
+												
 				if(buffer.size() == BUFFER_SIZE)
 				{
-					stream.write(buffer.rawData());
+					stream.write(buffer.rawData());					
 					buffer.clear();
 				}
 			}
+		
+		stream.write(buffer.byteArray());
 		stream.flush();
 	}	
 	
@@ -159,7 +164,7 @@ public class Functions
 	public static <L> void toBits(OutputStream stream, DGraph<L> graph, List<Integer> order)
 			throws IOException
 	{	
-		int BUFFER_SIZE = 65536;
+		int BUFFER_SIZE = 128;
 		
 		List<Integer> inv = Draw.inverse(order);
 		
@@ -182,6 +187,35 @@ public class Functions
 				}
 			}
 		
+		stream.write(buffer.byteArray());
 		stream.flush();
 	}	
+	
+	public static int toIndexUndirected(int i, int j, boolean self)
+	{
+		int rowStart = self ? (i * (i + 1)) / 2 : (i * (i - 1)) / 2;
+		return rowStart + j;
+		
+		
+	}
+	
+	public static Pair<Integer, Integer> toPairUndirected(int index, boolean self)
+	{
+		double iDouble;
+		int i, j;
+		
+		if(self)
+		{
+			iDouble = - 0.5 + 0.5 * Math.sqrt(1.0 + 8.0 * index);
+			i = (int) Math.floor(iDouble);
+			j = index - ((i * (i + 1)) / 2);	
+		} else {
+			iDouble = 0.5 + 0.5 * Math.sqrt(1.0 + 8.0 * index);
+			i = (int) Math.floor(iDouble);
+			j = index - ((i * (i - 1)) / 2);	
+		}
+		
+		return new Pair<Integer, Integer>(i, j);
+	}
 }
+

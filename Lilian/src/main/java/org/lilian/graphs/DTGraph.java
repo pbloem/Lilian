@@ -27,6 +27,9 @@ public interface DTGraph<L, T> extends DGraph<L>, TGraph<L, T>
 	
 	public List<? extends DTNode<L, T>> nodes();
 	
+	@Override
+	public DTNode<L, T> get(int i);
+	
 	public Collection<? extends DTLink<L, T>> links();	
 	
 	/**
@@ -63,4 +66,7 @@ public interface DTGraph<L, T> extends DGraph<L>, TGraph<L, T>
 	 * @return
 	 */
 	public long state();
+	
+	public Class<? extends DTGraph<L, T>> level();
+
 }

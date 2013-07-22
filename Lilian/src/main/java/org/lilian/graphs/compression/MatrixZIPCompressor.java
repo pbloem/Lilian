@@ -17,7 +17,7 @@ public class MatrixZIPCompressor<N> extends AbstractGraphCompressor<N>
 {
 
 	@Override
-	public double compressedSize(Graph<N> graph, List<Integer> order)
+	public double structureBits(Graph<N> graph, List<Integer> order)
 	{
 		try
 		{
@@ -34,7 +34,7 @@ public class MatrixZIPCompressor<N> extends AbstractGraphCompressor<N>
 			goz.finish();
 			goz.close();
 			
-			return baos.size() + 1; // the +1 is there to distinguish between U and D
+			return baos.size() * 8 + 1; // the +1 is there to distinguish between U and D
 			
 		} catch(IOException e)
 		{

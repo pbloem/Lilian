@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.old.BaseGraph;
@@ -82,8 +83,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	
 	private class MapDTNode implements DTNode<L, T>
 	{
-		private Map<T, List<MapDTLink>> linksTo = new LinkedHashMap<T, List<MapDTLink>>();
-		private Map<T, List<MapDTLink>> linksFrom = new LinkedHashMap<T, List<MapDTLink>>();
+		private Map<T, List<MapDTLink>> linksOut = new LinkedHashMap<T, List<MapDTLink>>();
+		private Map<T, List<MapDTLink>> linksIn = new LinkedHashMap<T, List<MapDTLink>>();
 		
 		private Set<MapDTNode> neighborsTo = new LinkedHashSet<MapDTNode>();
 		private Set<MapDTNode> neighborsFrom = new LinkedHashSet<MapDTNode>();
@@ -182,20 +183,20 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			// * This graph can only contain MapDTNodes, so this is a safe cast
 			MapDTNode mdtOther = (MapDTNode)other;
 			
-			if(connected(mdtOther, tag))
-				return;
+//			if(connected(mdtOther, tag))
+//				return;
 			
 			MapDTLink link = new MapDTLink(tag, this, mdtOther);
 			
 			// * Add other as a 'to' node in this node's neighbors
-			if(! linksTo.containsKey(tag))
-				linksTo.put(tag, new LinkedList<MapDTLink>());
-			linksTo.get(tag).add(link);
+			if(! linksOut.containsKey(tag))
+				linksOut.put(tag, new LinkedList<MapDTLink>());
+			linksOut.get(tag).add(link);
 			
 			// * Add this as a 'from' node in other's neighbors
-			if(! mdtOther.linksFrom.containsKey(tag))
-				mdtOther.linksFrom.put(tag, new LinkedList<MapDTLink>());
-			mdtOther.linksFrom.get(tag).add(link);
+			if(! mdtOther.linksIn.containsKey(tag))
+				mdtOther.linksIn.put(tag, new LinkedList<MapDTLink>());
+			mdtOther.linksIn.get(tag).add(link);
 			
 			neighborsTo.add(mdtOther);
 			mdtOther.neighborsFrom.add(this);
@@ -218,9 +219,9 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			int removed = 0;
 			
 			List<MapDTLink> toRemove = new LinkedList<MapDTLink>();
-			for(T tag : linksTo.keySet())
+			for(T tag : linksOut.keySet())
 			{
-				for(MapDTLink link : linksTo.get(tag))
+				for(MapDTLink link : linksOut.get(tag))
 					if(link.second().equals(mdtOther))
 						toRemove.add(link);
 			}
@@ -347,13 +348,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public Set<? extends DNode<L>> in()
+		public Set<? extends DTNode<L, T>> in()
 		{
 			return Collections.unmodifiableSet(neighborsFrom);
 		}
 
 		@Override
-		public Set<? extends DNode<L>> in(L label)
+		public Set<? extends DTNode<L, T>> in(L label)
 		{
 			Set<MapDTNode> set = new LinkedHashSet<MapDTNode>();
 			for(MapDTNode node : neighborsFrom)
@@ -377,37 +378,20 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			if(!connected(o))
 				return null;
 			
-			for(T tag : linksTo.keySet())
-				for(MapDTLink link : linksTo.get(tag))
+			for(T tag : linksOut.keySet())
+				for(MapDTLink link : linksOut.get(tag))
 					if(link.second().equals(o))
 						return link;
 			return null;
 		}
 
 		@Override
-		public Collection<? extends DTLink<L, T>> links(TNode<L, T> other)
-		{
-			MapDTNode o = (MapDTNode) other;
-			
-			if(!connected(o))
-				return null;
-			
-			List<MapDTLink> links = new LinkedList<MapDTLink>();
-			for(T tag : linksTo.keySet())
-				for(MapDTLink link : linksTo.get(tag))
-					if(link.second().equals(o))
-						links.add(link);
-			
-			return links;
-		}
-
-		@Override
 		public boolean connected(TNode<L, T> other, T tag)
 		{
-			if(! linksTo.containsKey(tag))
+			if(! linksOut.containsKey(tag))
 				return false;
 			
-			for(MapDTLink link : linksTo.get(tag))
+			for(MapDTLink link : linksOut.get(tag))
 				if(link.second().equals(other));
 				
 			return false;
@@ -418,10 +402,10 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		{
 			List<MapDTNode> nodes = new LinkedList<MapDTNode>();
 			
-			if(! linksTo.containsKey(tag))
+			if(! linksOut.containsKey(tag))
 				return nodes;
 			
-			for(MapDTLink link : linksTo.get(tag))
+			for(MapDTLink link : linksOut.get(tag))
 				nodes.add((MapDTNode)link.second());
 				
 			return nodes;
@@ -432,10 +416,10 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		{
 			List<MapDTNode> nodes = new LinkedList<MapDTNode>();
 			
-			if(! linksFrom.containsKey(tag))
+			if(! linksIn.containsKey(tag))
 				return nodes;
 			
-			for(MapDTLink link : linksFrom.get(tag))
+			for(MapDTLink link : linksIn.get(tag))
 				nodes.add((MapDTNode)link.first());
 				
 			return nodes;
@@ -445,8 +429,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		public int inDegree()
 		{
 			int n = 0;
-			for(T tag : linksFrom.keySet())
-				n += linksFrom.get(tag).size();
+			for(T tag : linksIn.keySet())
+				n += linksIn.get(tag).size();
 			
 			return n;
 		}
@@ -455,8 +439,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		public int outDegree()
 		{
 			int n = 0;
-			for(T tag : linksTo.keySet())
-				n += linksTo.get(tag).size();
+			for(T tag : linksOut.keySet())
+				n += linksOut.get(tag).size();
 			
 			return n;
 		}
@@ -465,6 +449,92 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		public int degree()
 		{
 			return inDegree() + outDegree();
+		}
+
+		@Override
+		public List<DTLink<L, T>> links()
+		{
+			List<DTLink<L, T>> list = new ArrayList<DTLink<L,T>>(degree());
+			for(T tag : linksOut.keySet())
+				list.addAll(linksOut.get(tag));
+			
+			for(T tag : linksIn.keySet())
+				list.addAll(linksIn.get(tag));
+			
+			return list;
+		}
+
+		@Override
+		public List<DTLink<L, T>> linksOut()
+		{
+			List<DTLink<L, T>> list = new ArrayList<DTLink<L,T>>(outDegree());
+			for(T tag : linksOut.keySet())
+				list.addAll(linksOut.get(tag));
+			
+			return list;
+		}
+
+		@Override
+		public List<DTLink<L, T>> linksIn()
+		{
+			List<DTLink<L, T>> list = new ArrayList<DTLink<L,T>>(inDegree());
+			for(T tag : linksIn.keySet())
+				list.addAll(linksIn.get(tag));
+			
+			return list;
+		}
+
+		@Override
+		public Collection<T> tags()
+		{
+			HashSet<T> tags = new HashSet<T>(linksOut.keySet());
+			tags.addAll(linksIn.keySet());
+			
+			return tags;
+		}
+
+		@Override
+		public Collection<? extends DTLink<L, T>> links(TNode<L, T> other)
+		{
+			List<DTLink<L, T>> links = new ArrayList<DTLink<L, T>>(degree());
+			links.addAll(linksOut((DTNode<L, T>)other));
+			links.addAll( linksIn((DTNode<L, T>)other));
+			
+			return links();
+		}
+
+		@Override
+		public Collection<? extends DTLink<L, T>> linksOut(DTNode<L, T> other)
+		{
+			MapDTNode o = (MapDTNode) other;
+			
+			if(!connected(o))
+				return null;
+			
+			List<MapDTLink> links = new LinkedList<MapDTLink>();
+			for(T tag : linksOut.keySet())
+				for(MapDTLink link : linksOut.get(tag))
+					if(link.second().equals(o))
+						links.add(link);
+			
+			return links;
+		}
+
+		@Override
+		public Collection<? extends DTLink<L, T>> linksIn(DTNode<L, T> other)
+		{
+			MapDTNode o = (MapDTNode) other;
+			
+			if(!connected(o))
+				return null;
+			
+			List<MapDTLink> links = new LinkedList<MapDTLink>();
+			for(T tag : linksOut.keySet())
+				for(MapDTLink link : linksIn.get(tag))
+					if(link.second().equals(o))
+						links.add(link);
+			
+			return links;
 		}
 	}
 
@@ -515,13 +585,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public void remove()
 		{
-			first.linksTo.get(tag).remove(this);
-			second.linksFrom.get(tag).remove(this);
+			first.linksOut.get(tag).remove(this);
+			second.linksIn.get(tag).remove(this);
 			
 			// * check whether second should be removed from first.neighborsTo
 			boolean occurs = false;
-			for(T tag : first.linksTo.keySet())
-				for(MapDTLink link : first.linksTo.get(tag))
+			for(T tag : first.linksOut.keySet())
+				for(MapDTLink link : first.linksOut.get(tag))
 					if(link.second().equals(second))
 						occurs = true;
 			if(! occurs)
@@ -529,8 +599,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			
 			// * check whether first should be removed from second.neighborsFrom
 			occurs = false;
-			for(T tag : second.linksFrom.keySet())
-				for(MapDTLink link : second.linksFrom.get(tag))
+			for(T tag : second.linksIn.keySet())
+				for(MapDTLink link : second.linksIn.get(tag))
 					if(link.first().equals(first))
 						occurs = true;
 			if(! occurs)
@@ -738,8 +808,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 					
 					current = nodeIt.next();
 					
-					for(T tag : current.linksTo.keySet())
-						for(MapDTLink link : current.linksTo.get(tag))
+					for(T tag : current.linksOut.keySet())
+						for(MapDTLink link : current.linksOut.get(tag))
 							buffer.add(link);
 				}
 			}
@@ -764,5 +834,85 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			tags.add(link.tag());
 		
 		return tags;
+	}
+
+	@Override
+	public DTNode<L, T> get(int i)
+	{
+		return nodes().get(i);
+	}
+	
+	@Override
+	public boolean equals(Object other)
+	{
+		if(!(other instanceof DTGraph<?, ?>))
+			return false;
+		
+		DTGraph<Object, Object> otherGraph = (DTGraph<Object, Object>) other;
+		
+		if(! otherGraph.level().equals(level()))
+			return false;
+		
+		if(size() != otherGraph.size())
+			return false;
+		
+		if(numLinks() != otherGraph.numLinks())
+			return false;
+		
+		if(labels().size() != otherGraph.labels().size())
+			return false;
+		
+		// * for all connected nodes
+		for(DTNode<L, T> node : nodes())
+		{
+			if(! node.label().equals(otherGraph.get(node.index()).label()))
+				return false;
+			
+			for(DTNode<L, T> neighbor : node.neighbors())
+			{
+				Collection<? extends DTLink<L, T>> links = node.linksOut(neighbor);
+				Collection<? extends DTLink<Object, Object>> otherLinks = 
+						otherGraph.get(node.index())
+							.linksOut(otherGraph.get(neighbor.index()));
+
+				if(links.size() != otherLinks.size())
+					return false;
+				
+				if(links.size() == 1)
+				{
+					// ** If there is only one link, check that there is a single 
+					//    similar link in the other graph and that it has the same tag
+					
+					if(! links.iterator().next().tag().equals(otherLinks.iterator().next().tag()))
+						return false;
+				} else {
+					// ** If there are multiple links between these two nodes,
+					//    count the occurrences of each tag and check that the 
+					//    frequencies match between graphs
+					BasicFrequencyModel<T> 
+							model = new BasicFrequencyModel<T>();
+					BasicFrequencyModel<Object>
+							otherModel = new BasicFrequencyModel<Object>();
+					
+					for(DTLink<L, T> link : links)
+						model.add(link.tag());
+					
+					for(DTLink<Object, Object> otherLink : otherLinks)
+						otherModel.add(otherLink.tag());
+					
+					for(T token : model.tokens())
+						if(otherModel.frequency(token) != model.frequency(token))
+							return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	@Override
+	public Class<? extends DTGraph<L, T>> level()
+	{
+		return (Class<? extends DTGraph<L, T>>) DTGraph.class;
 	}
 }

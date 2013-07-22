@@ -7,6 +7,13 @@ public interface Node<L>
 {
 	public Collection<? extends Node<L>> neighbors();
 	
+	/**
+	 * Returns a collection of all links to neighboring nodes
+	 * 
+	 * @return
+	 */
+	public Collection<? extends Link<L>> links();
+	
 	public L label();
 	
 	public Node<L> neighbor(L label);

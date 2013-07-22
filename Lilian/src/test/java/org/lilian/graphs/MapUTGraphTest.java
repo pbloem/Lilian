@@ -112,4 +112,37 @@ public class MapUTGraphTest
 		
 	}
 	
+	@Test
+	public void testEquals()
+	{
+		UTGraph<String, String> g1 = new MapUTGraph<String, String>();
+		g1.add("a");
+		g1.add("b");
+		g1.add("c");
+		
+		g1.node("a").connect(g1.node("b"), "1");
+		g1.node("a").connect(g1.node("b"), "2");
+		g1.node("a").connect(g1.node("b"), "2");
+
+		g1.node("b").connect(g1.node("c"), "1");
+		
+		UTGraph<String, String> g2 = new MapUTGraph<String, String>();
+		g2.add("a");
+		g2.add("b");
+		g2.add("c");
+		 
+		g2.node("a").connect(g2.node("b"), "2");
+		g2.node("a").connect(g2.node("b"), "1");
+		g2.node("a").connect(g2.node("b"), "2");
+                             
+		g2.node("b").connect(g2.node("c"), "1");		
+         
+		assertEquals(g1, g2);
+		
+		g2.node("a").connect(g2.node("b"), "2");
+	
+		assertFalse(g1.equals(g2));
+	}
+	
+	
 }

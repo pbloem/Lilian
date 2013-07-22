@@ -1,0 +1,97 @@
+package org.lilian.graphs.random;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.lilian.Global;
+import org.lilian.data.real.AbstractGenerator;
+import org.lilian.data.real.Generator;
+import org.lilian.graphs.DGraph;
+import org.lilian.graphs.DLink;
+import org.lilian.graphs.DTGraph;
+import org.lilian.graphs.DTLink;
+import org.lilian.graphs.Graph;
+import org.lilian.graphs.Link;
+import org.lilian.graphs.UGraph;
+import org.lilian.graphs.ULink;
+import org.lilian.graphs.UTGraph;
+import org.lilian.graphs.UTLink;
+
+
+public class LinkGenerators 
+{	
+	public static class LinkGenerator<T> extends AbstractGenerator<Link<T>>
+	{
+		protected List<Link<T>> links;
+
+		public LinkGenerator(Graph<T> graph)
+		{
+			links = new ArrayList<Link<T>>(graph.links());
+		}
+
+		@Override
+		public Link<T> generate()
+		{
+			int i = Global.random.nextInt(links.size());
+			return links.get(i);
+		}		
+	}
+	
+	public static class ULinkGenerator<L> extends LinkGenerator<L>
+	{
+		public ULinkGenerator(UGraph<L> graph)
+		{
+			super(graph);
+		}
+
+		@Override
+		public ULink<L> generate()
+		{
+			return (ULink<L>)super.generate();
+		}
+	}
+
+	public static class DLinkGenerator<L> extends LinkGenerator<L>
+	{
+		public DLinkGenerator(DGraph<L> graph)
+		{
+			super(graph);
+		}
+
+		@Override
+		public DLink<L> generate()
+		{
+			return (DLink<L>)super.generate();
+		}
+	}
+	
+	public static class UTLinkGenerator<L, T> extends LinkGenerator<L>
+	{
+		public UTLinkGenerator(UTGraph<L, T> graph)
+		{
+			super(graph);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public UTLink<L, T> generate()
+		{
+			return (UTLink<L, T>)super.generate();
+		}
+	}
+
+	public static class DTLinkGenerator<L, T> extends LinkGenerator<L>
+	{
+		public DTLinkGenerator(DTGraph<L, T> graph)
+		{
+			super(graph);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public DTLink<L, T> generate()
+		{
+			return (DTLink<L, T>)super.generate();
+		}
+	}
+}
