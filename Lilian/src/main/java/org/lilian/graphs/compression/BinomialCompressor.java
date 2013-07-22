@@ -14,7 +14,6 @@ import org.lilian.graphs.Node;
 import org.lilian.graphs.UGraph;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Functions;
-import org.lilian.util.FunctionsTest;
 
 public class BinomialCompressor<N> extends AbstractGraphCompressor<N>
 {

@@ -25,6 +25,6 @@ public interface UGraph<L> extends Graph<L>
 	@Override
 	public UNode<L> add(L label);
 	
-	public Class<? extends UGraph<L>> level();
+	public Class<? extends UGraph<?>> level();
 
 }

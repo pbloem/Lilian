@@ -840,6 +840,7 @@ public class LightDGraph<L> implements DGraph<L>
 	@Override
 	public Class<? extends DGraph<L>> level()
 	{
-		return (Class<? extends DGraph<L>>) DGraph.class;
+		Object obj = DGraph.class;
+		return (Class<? extends DGraph<L>>) obj;
 	}
 }

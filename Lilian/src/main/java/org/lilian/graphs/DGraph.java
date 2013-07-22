@@ -56,6 +56,6 @@ public interface DGraph<L> extends Graph<L>
 	 */
 	public long state();
 
-	public Class<? extends DGraph<L>> level();
+	public Class<? extends DGraph<?>> level();
 
 }

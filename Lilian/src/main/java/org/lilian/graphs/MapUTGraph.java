@@ -788,6 +788,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 	@Override
 	public Class<? extends UTGraph<L, T>> level()
 	{
-		return (Class<? extends UTGraph<L, T>>) UTGraph.class;
+		Object obj = UTGraph.class;
+		return (Class<? extends UTGraph<L, T>>) obj;
 	}
 }

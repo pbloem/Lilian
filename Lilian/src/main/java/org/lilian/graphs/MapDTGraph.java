@@ -913,6 +913,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 	@Override
 	public Class<? extends DTGraph<L, T>> level()
 	{
-		return (Class<? extends DTGraph<L, T>>) DTGraph.class;
+		Object obj = DTGraph.class;
+		return (Class<? extends DTGraph<L, T>>) obj;
 	}
 }

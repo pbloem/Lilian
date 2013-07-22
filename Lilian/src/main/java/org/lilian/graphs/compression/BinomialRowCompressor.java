@@ -7,15 +7,11 @@ import static org.lilian.util.Functions.logChoose;
 import java.util.List;
 
 import org.lilian.graphs.DGraph;
-import org.lilian.graphs.DNode;
 import org.lilian.graphs.Graph;
-import org.lilian.graphs.Link;
 import org.lilian.graphs.Node;
 import org.lilian.graphs.UGraph;
 import org.lilian.graphs.draw.Draw;
-import org.lilian.models.BasicFrequencyModel;
-import org.lilian.util.Functions;
-import org.lilian.util.FunctionsTest;
+
 import org.lilian.util.Series;
 
 public class BinomialRowCompressor<N> extends AbstractGraphCompressor<N>

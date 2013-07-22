@@ -116,6 +116,6 @@ public interface Graph<L>
 	 */
 	public Node<L> get(int i);
 	
-	public Class<? extends Graph<L>> level();
+	public Class<? extends Graph<?>> level();
 	
 }

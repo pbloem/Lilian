@@ -67,6 +67,6 @@ public interface UTGraph<L, T> extends TGraph<L, T>, UGraph<L>
 	 */
 	public long state();
 	
-	public Class<? extends UTGraph<L, T>> level();
+	public Class<? extends UTGraph<?, ?>> level();
 
 }

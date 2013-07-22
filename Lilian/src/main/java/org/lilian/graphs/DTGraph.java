@@ -67,6 +67,6 @@ public interface DTGraph<L, T> extends DGraph<L>, TGraph<L, T>
 	 */
 	public long state();
 	
-	public Class<? extends DTGraph<L, T>> level();
+	public Class<? extends DTGraph<?, ?>> level();
 
 }
