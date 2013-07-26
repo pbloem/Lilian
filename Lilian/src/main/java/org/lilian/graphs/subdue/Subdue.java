@@ -17,6 +17,7 @@ import org.lilian.Global;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTNode;
+import org.lilian.graphs.algorithms.UTVF2;
 import org.lilian.graphs.subdue.Wrapping.TagToken;
 import org.lilian.graphs.subdue.Wrapping.Token;
 import org.lilian.util.Series;
@@ -108,8 +109,8 @@ public class Subdue<L, T>
 				{
 					MapUTGraph<L, T> other = iterator.next();
 					
-					UndirectedVF2<L, T> vf2 = 
-							new UndirectedVF2<L, T>(next, other, true);
+					UTVF2<L, T> vf2 = 
+							new UTVF2<L, T>(next, other, true);
 					
 					if(vf2.matches())
 						iterator.remove();

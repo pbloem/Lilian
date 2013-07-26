@@ -7,4 +7,8 @@ public interface DLink<L> extends Link<L>
 	
 	public DNode<L> second();
 	
+	public DNode<L> from();
+	
+	public DNode<L> to();
+	
 }

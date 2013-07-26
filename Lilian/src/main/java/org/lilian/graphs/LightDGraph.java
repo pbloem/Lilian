@@ -49,6 +49,8 @@ public class LightDGraph<L> implements DGraph<L>
 	//   objects lose persistence 
 	private long nodeModCount = 0;
 
+	private int hash;
+	private Long hashMod = null;
 	
 	public LightDGraph()
 	{
@@ -394,6 +396,19 @@ public class LightDGraph<L> implements DGraph<L>
 			
 			return list;
 		}
+
+		@Override
+		public Collection<? extends DLink<L>> links(Node<L> other)
+		{
+			List<DLink<L>> links = new ArrayList<DLink<L>>();
+			
+			// From this to that
+			for(int i : out.get(index()))
+				if(i == other.index())
+					links.add(new LightDLink(index(), i));
+			
+			return links;
+		}
 	}
 	
 	private class LightDLink implements DLink<L>
@@ -516,6 +531,18 @@ public class LightDGraph<L> implements DGraph<L>
 			check();
 			return from + " -> " + to;
 		}
+
+		@Override
+		public DNode<L> from()
+		{
+			return from;
+		}
+
+		@Override
+		public DNode<L> to()
+		{
+			return to;
+		}
 		
 	}
 
@@ -572,6 +599,12 @@ public class LightDGraph<L> implements DGraph<L>
 		return new LinkList();
 	}
 	
+	/**
+	 * A collection of all links in this graph.
+	 * 
+	 * @author Peter
+	 *
+	 */
 	private class LinkList extends AbstractCollection<DLink<L>>
 	{
 		@Override
@@ -794,6 +827,24 @@ public class LightDGraph<L> implements DGraph<L>
 		
 		return copy;
 	}
+	
+	@Override 
+	public int hashCode()
+	{
+		if(hashMod != null && hashMod == modCount)
+			return hash;
+		
+		hash = 1;
+		sort();
+		
+		for(int i : Series.series(in.size()) )
+		{
+		    hash = 31 * hash + (labels.get(i) == null ? 0 : labels.get(i).hashCode());
+		    hash = 31 * hash + (in.get(i) == null ? 0 : in.get(i).hashCode());
+		}
+		
+		return hash;
+	}	
 	
 	public boolean equals(Object other)
 	{	

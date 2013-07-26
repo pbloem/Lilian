@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.lilian.models.BasicFrequencyModel;
+import org.lilian.util.Functions;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.old.BaseGraph;
@@ -53,6 +54,9 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 
 	protected int numEdges = 0;
 	protected long modCount = 0;
+	
+	protected int hash;
+	protected Long hashMod = null;
 	
 	public MapUTGraph()
 	{
@@ -391,6 +395,32 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		{
 			return Collections.unmodifiableCollection(links.keySet());
 		}
+		
+		@Override
+		public int hashCode()
+		{
+			int hash = 1;
+			
+			hash = 31 * hash + (label == null ? 0 : label.hashCode());
+			
+			for(T tag : links.keySet())
+				hash = 31 * hash + (tag == null ? 0 : tag.hashCode());
+			
+			return hash;
+		}
+
+		@Override
+		public Collection<? extends UTLink<L, T>> links(Node<L> other)
+		{
+			List<UTLink<L, T>> result = new ArrayList<UTLink<L, T>>();
+			
+			for(T tag : links.keySet())
+				for(UTLink<L, T> link : links.get(tag))
+					if(link.other(this).equals(other))
+						result.add(link);
+			
+			return result;
+		}
 	}
 
 	private final class MapUTLink implements UTLink<L, T>
@@ -475,7 +505,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		
 		public String toString()
 		{
-			return first + " -- " + second + " [label="+tag+"]";
+			return first + " -- " + second + (tag == null ? "" : " [label="+tag+"]");
 		}
 
 		@Override
@@ -711,6 +741,20 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		return Collections.unmodifiableSet(tags);
 	}
 	
+	@Override 
+	public int hashCode()
+	{
+		if(hashMod != null && hashMod == modCount)
+			return hash;
+		
+		hash = 1;
+		
+		for(UTNode<L, T> node : nodes())
+		    hash = 31 * hash + (node == null ? 0 : node.hashCode());
+		
+		return hash;
+	}
+	
 	@Override
 	public boolean equals(Object other)
 	{
@@ -743,16 +787,19 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 				Collection<? extends UTLink<Object, Object>> otherLinks = 
 						otherGraph.get(node.index())
 							.links(otherGraph.get(neighbor.index()));
-
+				
 				if(links.size() != otherLinks.size())
 					return false;
-				
+
 				if(links.size() == 1)
 				{
 					// ** If there is only one link, check that there is a single 
 					//    similar link in the other graph and that it has the same tag
+					T tag = links.iterator().next().tag(); 
+					Object otherTag = otherLinks.iterator().next().tag();
 					
-					if(! links.iterator().next().tag().equals(otherLinks.iterator().next().tag()))
+					
+					if(! Functions.equals(tag, otherTag))
 						return false;
 				} else {
 					// ** If there are multiple links between these two nodes,

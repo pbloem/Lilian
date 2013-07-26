@@ -54,6 +54,8 @@ public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 	 */
 	public L label();
 	
+	public Collection<? extends DTLink<L, T>> links(Node<L> other);
+	
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 
 	 * to a single graph and cannot be exchanged between them.

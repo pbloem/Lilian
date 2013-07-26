@@ -38,6 +38,17 @@ public interface Node<L>
 	
 	public boolean connected(Node<L> other);
 	
+	/** 
+	 * Returns all links between this node and the given other node. Will only 
+	 * return links that cause this.connected(other) to be true. Ie, for directed
+	 * graphs, this method will only return links in one direction.
+	 * 
+	 * @param other
+	 * @return
+	 */
+	public Collection<? extends Link<L>> links(Node<L> other);
+
+	
 	/**
 	 * Disconnects and removes this node from the graph
 	 * 

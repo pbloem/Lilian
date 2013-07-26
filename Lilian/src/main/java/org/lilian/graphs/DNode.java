@@ -44,6 +44,8 @@ public interface DNode<L> extends Node<L>
 	
 	public boolean connected(Node<L> to);
 	
+	public Collection<? extends DLink<L>> links(Node<L> other);
+	
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 
 	 * to a single graph and cannot be exchanged between them.

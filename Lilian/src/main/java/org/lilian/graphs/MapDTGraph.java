@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.lilian.models.BasicFrequencyModel;
+import org.lilian.util.Functions;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.old.BaseGraph;
@@ -52,6 +53,9 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 
 	protected int numEdges = 0;
 	protected long modCount = 0;
+	
+	protected int hash;
+	protected Long hashMod;
 	
 	public MapDTGraph()
 	{
@@ -509,7 +513,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			MapDTNode o = (MapDTNode) other;
 			
 			if(!connected(o))
-				return null;
+				return Collections.emptyList();
 			
 			List<MapDTLink> links = new LinkedList<MapDTLink>();
 			for(T tag : linksOut.keySet())
@@ -526,12 +530,38 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 			MapDTNode o = (MapDTNode) other;
 			
 			if(!connected(o))
-				return null;
+				return Collections.emptyList();
 			
 			List<MapDTLink> links = new LinkedList<MapDTLink>();
 			for(T tag : linksOut.keySet())
 				for(MapDTLink link : linksIn.get(tag))
 					if(link.second().equals(o))
+						links.add(link);
+			
+			return links;
+		}
+		
+		@Override
+		public int hashCode()
+		{
+			int hash = 1;
+			
+			hash = 31 * hash + (label == null ? 0 : label.hashCode());
+			
+			for(T tag : linksOut.keySet())
+				hash = 31 * hash + (tag == null ? 0 : tag.hashCode());
+			
+			return hash;
+		}
+
+		@Override
+		public Collection<? extends DTLink<L, T>> links(Node<L> other)
+		{
+			List<DTLink<L, T>> links = new ArrayList<DTLink<L, T>>();
+			
+			for(T tag : linksOut.keySet())
+				for(DTLink<L, T> link : linksOut.get(tag))
+					if(link.to().equals(other))
 						links.add(link);
 			
 			return links;
@@ -558,13 +588,13 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 	
 		@Override
-		public DNode<L> first()
+		public DTNode<L, T> first()
 		{
 			return first;
 		}
 	
 		@Override
-		public DNode<L> second()
+		public DTNode<L, T> second()
 		{
 			return second;
 		}
@@ -619,7 +649,19 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		
 		public String toString()
 		{
-			return first + " -> " + second + " [label="+tag+"]";
+			return first + " -> " + second + (tag == null ? "" : " [label="+tag+"]");
+		}
+
+		@Override
+		public DTNode<L, T> from()
+		{
+			return first();
+		}
+
+		@Override
+		public DTNode<L, T> to()
+		{
+			return second();
 		}
 	}
 
@@ -842,6 +884,20 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		return nodes().get(i);
 	}
 	
+	@Override 
+	public int hashCode()
+	{
+		if(hashMod != null && hashMod == modCount)
+			return hash;
+		
+		hash = 1;
+		
+		for(DTNode<L, T> node : nodes())
+		    hash = 31 * hash + (node == null ? 0 : node.hashCode());
+		
+		return hash;
+	}
+	
 	@Override
 	public boolean equals(Object other)
 	{
@@ -882,8 +938,10 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 				{
 					// ** If there is only one link, check that there is a single 
 					//    similar link in the other graph and that it has the same tag
+					T tag = links.iterator().next().tag();
+					Object otherTag = otherLinks.iterator().next().tag();
 					
-					if(! links.iterator().next().tag().equals(otherLinks.iterator().next().tag()))
+					if(! Functions.equals(tag, otherTag))
 						return false;
 				} else {
 					// ** If there are multiple links between these two nodes,

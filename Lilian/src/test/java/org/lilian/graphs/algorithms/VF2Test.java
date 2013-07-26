@@ -1,4 +1,4 @@
-package org.lilian.graphs;
+package org.lilian.graphs.algorithms;
 
 import static org.junit.Assert.*;
 
@@ -10,7 +10,10 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.lilian.Global;
-import org.lilian.graphs.subdue.UndirectedVF2;
+import org.lilian.graphs.MapUTGraph;
+import org.lilian.graphs.UTGraph;
+import org.lilian.graphs.UTNode;
+import org.lilian.graphs.algorithms.UTVF2;
 
 public class VF2Test
 {
@@ -38,12 +41,12 @@ public class VF2Test
 		System.out.println(a);
 		System.out.println(b);
 		
-		UndirectedVF2<String, String> vfs;
+		UTVF2<String, String> vfs;
 		
-		vfs = new UndirectedVF2<String, String>(a, b, true);
+		vfs = new UTVF2<String, String>(a, b, true);
 		assertFalse(vfs.matches());
 		
-		vfs = new UndirectedVF2<String, String>(a, b, false);
+		vfs = new UTVF2<String, String>(a, b, false);
 		assertTrue(vfs.matches());
 	
 	}
@@ -102,12 +105,12 @@ public class VF2Test
 		System.out.println(a.size());
 		System.out.println(b.size());
 		
-		UndirectedVF2<String, String> vfs;
+		UTVF2<String, String> vfs;
 		
 //		vfs = new UndirectedVF2<String, BaseGraph<String>.Node>(a, b, true);
 //		assertTrue(vfs.matches());
 		
-		vfs = new UndirectedVF2<String, String>(a, b, false);
+		vfs = new UTVF2<String, String>(a, b, false);
 		assertTrue(vfs.matches());
 	
 	}
@@ -156,17 +159,17 @@ public class VF2Test
 		System.out.println(a.size());
 		System.out.println(b.size());
 		
-		UndirectedVF2<String, String> vfs;
+		UTVF2<String, String> vfs;
 		
 //		vfs = new UndirectedVF2<String, BaseGraph<String>.Node>(a, b, true);
 //		assertTrue(vfs.matches());
 		
-		vfs = new UndirectedVF2<String, String>(a, b, false);
+		vfs = new UTVF2<String, String>(a, b, false);
 		assertTrue(vfs.matches());
 		
 		
 		aa.disconnect(ag);
-		vfs = new UndirectedVF2<String, String>(a, b, false);
+		vfs = new UTVF2<String, String>(a, b, false);
 		assertFalse(vfs.matches());
 	
 	}

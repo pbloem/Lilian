@@ -1,4 +1,4 @@
-package org.lilian.graphs.subdue;
+package org.lilian.graphs.algorithms;
 
 import static org.lilian.util.Series.series;
 
@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.Node;
+import org.lilian.graphs.UGraph;
+import org.lilian.graphs.UNode;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTNode;
 import org.lilian.util.Pair;
@@ -24,10 +26,10 @@ import org.lilian.util.Series;
  * @author Peter
  *
  */
-public class UndirectedVF2<L, T>
+public class UVF2<L>
 {
 	private boolean checkLabels = true;
-	private UTGraph<L, T> g1, g2;
+	private UGraph<L> g1, g2;
 
 	private List<Integer> core1, core2; // * mappings for the current state
 	// - Each core list stores the indices of the other graph, mapped to the 
@@ -36,7 +38,7 @@ public class UndirectedVF2<L, T>
 	
 	private List<Integer> t1, t2; // * free nodes that are neighbours of matched pairs
 
-	public UndirectedVF2(UTGraph<L, T> g1, UTGraph<L, T> g2, boolean checkLabels)
+	public UVF2(UGraph<L> g1, UGraph<L> g2, boolean checkLabels)
 	{	
 		this.g1 = g1;
 		this.g2 = g2;
@@ -222,15 +224,15 @@ public class UndirectedVF2<L, T>
 	 */
 	private boolean feasible(int n1, int n2)
 	{
-		UTNode<L, T> node1 = g1.nodes().get(n1);
-		UTNode<L, T> node2 = g2.nodes().get(n2);
+		UNode<L> node1 = g1.nodes().get(n1);
+		UNode<L> node2 = g2.nodes().get(n2);
 		
 		// * check if the labels match
 		if(checkLabels && ! node1.label().equals(node2.label()))
 			return false;
 		
-		Set<UTNode<L, T>> 	neighbors1 = new HashSet<UTNode<L, T>>(node1.neighbors()),
-							neighbors2 = new HashSet<UTNode<L, T>>(node2.neighbors());
+		Set<UNode<L>> 	neighbors1 = new HashSet<UNode<L>>(node1.neighbors()),
+						neighbors2 = new HashSet<UNode<L>>(node2.neighbors());
 		
 		// * check if the degrees match
 		if(neighbors1.size() != neighbors2.size())
@@ -240,14 +242,14 @@ public class UndirectedVF2<L, T>
 		int o1 = 0, o2 = 0;
 		
 		// * count the number of neighbours in the core, the t arrays and outside
-		for(UTNode<L, T> nn1 : neighbors1)
+		for(UNode<L> nn1 : neighbors1)
 		{
 			int nn1i = nn1.index();
 			
 			if(core1.get(nn1i) != null)
 			{
 				// * check if the node that nn1 is matched to is a neighbour of n2
-				UTNode<L, T> match = g2.nodes().get(core1.get(nn1i));
+				UNode<L> match = g2.nodes().get(core1.get(nn1i));
 				
 				if(! match.connected(node2))
 					return false;
@@ -258,7 +260,7 @@ public class UndirectedVF2<L, T>
 				o1 ++;
 		}
 		
-		for(UTNode<L, T> nn2 : neighbors2)
+		for(UNode<L> nn2 : neighbors2)
 		{
 			int nn2i = nn2.index();
 			
@@ -266,7 +268,7 @@ public class UndirectedVF2<L, T>
 			{
 				// * check if the node that nn2 is matched to is a neighbour of 
 				//   n1
-				UTNode<L, T> match = g1.nodes().get(core2.get(nn2i));
+				UNode<L> match = g1.nodes().get(core2.get(nn2i));
 				
 				if(! match.connected(node1))
 					return false;

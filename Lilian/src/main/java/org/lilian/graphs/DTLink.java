@@ -7,4 +7,13 @@ public interface DTLink<L, T> extends TLink<L, T>, DLink<L>
 	public Collection<? extends DTNode<L, T>> nodes();
 
 	public DTGraph<L, T> graph();
+	
+	public DTNode<L, T> first();
+	
+	public DTNode<L, T> second();
+	
+	public DTNode<L, T> from();
+	
+	public DTNode<L, T> to();
+	
 }

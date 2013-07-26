@@ -56,7 +56,7 @@ public interface UTGraph<L, T> extends TGraph<L, T>, UGraph<L>
 	 * @return
 	 */
 	public boolean connected(L from, L to);
-	
+		
 	/**
 	 * The state of a graph indicates whether it has changed. If the value 
 	 * returned by this method has changed, then a modification has been made. 

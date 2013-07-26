@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.lilian.util.Series;
+
 /**
  * TODO: This is a polymorphism nightmare. It's too easy to call the wrong method.
  * @author Peter
@@ -21,7 +23,7 @@ public class Subgraph
 	 * @param nodes
 	 * @return
 	 */
-	public static <L, T> UTGraph<L, T> subgraph(UTGraph<L, T> graph, Collection<UTNode<L, T>> nodes)
+	public static <L, T> UTGraph<L, T> utSubgraph(UTGraph<L, T> graph, Collection<UTNode<L, T>> nodes)
 	{
 		List<UTNode<L, T>> list = new ArrayList<UTNode<L,T>>(nodes);
 		
@@ -29,11 +31,10 @@ public class Subgraph
 		for(UTNode<L, T> node : list)
 			out.add(node.label());
 		
-		for(int i : series(list.size()))
-			for(int j : series(i, list.size()))
-				for(T tag : graph.tags())
-					if(list.get(i).connected(list.get(j), tag))
-						out.nodes().get(i).connect(out.nodes().get(j), tag);
+		for(int i : series(nodes.size()))
+			for(int j : series(i, nodes.size()))
+				for(TLink<L, T> link : list.get(i).links(list.get(j)))
+					out.get(i).connect(out.get(j), link.tag());
 		
 		return out;
 	}
@@ -46,13 +47,13 @@ public class Subgraph
 	 * @param nodes
 	 * @return
 	 */
-	public static <L, T> UTGraph<L, T> subgraphIndices(UTGraph<L, T> graph, Collection<Integer> nodes)
+	public static <L, T> UTGraph<L, T> utSubgraphIndices(UTGraph<L, T> graph, Collection<Integer> nodes)
 	{
 		List<UTNode<L, T>> list = new ArrayList<UTNode<L,T>>();
 		for(int i : nodes)
 			list.add(graph.nodes().get(i));
 		
-		return subgraph(graph, list);
+		return utSubgraph(graph, list);
 	}
 	
 	/**
@@ -63,7 +64,7 @@ public class Subgraph
 	 * @param nodes
 	 * @return
 	 */
-	public static <L, T> DTGraph<L, T> subgraph(DTGraph<L, T> graph, Collection<DTNode<L, T>> nodes)
+	public static <L, T> DTGraph<L, T> dtSubgraph(DTGraph<L, T> graph, Collection<DTNode<L, T>> nodes)
 	{
 		List<DTNode<L, T>> list = new ArrayList<DTNode<L,T>>(nodes);
 		
@@ -71,12 +72,11 @@ public class Subgraph
 		for(DTNode<L, T> node : list)
 			out.add(node.label());
 		
-		for(int i : series(list.size()))
-			for(int j : series(list.size()))
-				for(T tag : graph.tags())
-					if(list.get(i).connected(list.get(j), tag))
-						out.nodes().get(i).connect(out.nodes().get(j), tag);
-		
+		for(int i : series(nodes.size()))
+			for(int j : series(nodes.size()))
+				for(DTLink<L, T> link : list.get(i).links(list.get(j)))
+					out.get(i).connect(out.get(j), link.tag());
+
 		return out;
 	}
 	
@@ -88,16 +88,16 @@ public class Subgraph
 	 * @param nodes
 	 * @return
 	 */
-	public static <L, T> DTGraph<L, T> subgraphIndices(DTGraph<L, T> graph, Collection<Integer> nodes)
+	public static <L, T> DTGraph<L, T> dtSubgraphIndices(DTGraph<L, T> graph, Collection<Integer> nodes)
 	{
 		List<DTNode<L, T>> list = new ArrayList<DTNode<L,T>>();
 		for(int i : nodes)
 			list.add(graph.nodes().get(i));
 		
-		return subgraph(graph, list);
+		return dtSubgraph(graph, list);
 	}
 	
-	public static <L> DGraph<L> subgraph(DGraph<L> graph, Collection<DNode<L>> nodes)
+	public static <L> DGraph<L> dSubgraph(DGraph<L> graph, Collection<DNode<L>> nodes)
 	{
 		List<DNode<L>> list = new ArrayList<DNode<L>>(nodes);
 		
@@ -105,21 +105,22 @@ public class Subgraph
 		for(Node<L> node : list)
 			out.add(node.label());
 		
-		for(int i : series(list.size()))
-			for(int j : series(list.size()))
-				if(list.get(i).connected(list.get(j)))
-					out.nodes().get(i).connect(out.nodes().get(j));
+		for(int i : series(nodes.size()))
+			for(int j : series(nodes.size()))
+				for(DLink<L> link : list.get(i).links(list.get(j)))
+					out.get(i).connect(out.get(j));
+
 		
 		return out;
 	}
 	
-	public static <L> DGraph<L> subgraphIndices(DGraph<L> graph, Collection<Integer> nodes)
+	public static <L> DGraph<L> dSubgraphIndices(DGraph<L> graph, Collection<Integer> nodes)
 	{
 		List<DNode<L>> list = new ArrayList<DNode<L>>();
 		for(int i : nodes)
 			list.add(graph.nodes().get(i));
 		
-		return subgraph(graph, list);
+		return dSubgraph(graph, list);
 	}
 	
 	public static <L> Graph<L> subgraph(Graph<L> graph, Collection<Node<L>> nodes)
@@ -130,10 +131,11 @@ public class Subgraph
 		for(Node<L> node : list)
 			out.add(node.label());
 		
-		for(int i : series(list.size()))
-			for(int j : series(list.size()))
-				if(list.get(i).connected(list.get(j)))
-					out.nodes().get(i).connect(out.nodes().get(j));
+		for(int i : series(nodes.size()))
+			for(int j : series(nodes.size()))
+				for(Link<L> link : list.get(i).links(list.get(j)))
+					out.get(i).connect(out.get(j));
+
 		
 		return out;
 	}
@@ -145,5 +147,30 @@ public class Subgraph
 			list.add(graph.nodes().get(i));
 		
 		return subgraph(graph, list);
+	}
+	
+	public static <L> UGraph<L> uSubgraph(UGraph<L> graph, Collection<UNode<L>> nodes)
+	{
+		List<UNode<L>> list = new ArrayList<UNode<L>>(nodes);
+		
+		UGraph<L> out = new MapUTGraph<L, String>();
+		for(UNode<L> node : list)
+			out.add(node.label());
+			
+		for(int i : series(nodes.size()))
+			for(int j : series(i, nodes.size()))
+				for(ULink<L> link : list.get(i).links(list.get(j)))
+					out.get(i).connect(out.get(j));
+		
+		return out;
+	}
+	
+	public static <L> UGraph<L> uSubgraphIndices(UGraph<L> graph, Collection<Integer> nodes)
+	{
+		List<UNode<L>> list = new ArrayList<UNode<L>>();
+		for(int i : nodes)
+			list.add(graph.nodes().get(i));
+		
+		return uSubgraph(graph, list);
 	}
 }

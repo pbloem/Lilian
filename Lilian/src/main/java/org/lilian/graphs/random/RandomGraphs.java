@@ -9,7 +9,9 @@ import java.util.List;
 
 import org.lilian.Global;
 import org.lilian.data.real.Generator;
+import org.lilian.graphs.DTGraph;
 import org.lilian.graphs.Graph;
+import org.lilian.graphs.MapDTGraph;
 import org.lilian.graphs.MapUTGraph;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTNode;
@@ -72,6 +74,27 @@ public class RandomGraphs
 			Pair<Integer, Integer> ij = toPairUndirected(index, false);
 			graph.nodes().get(ij.first()).connect(graph.nodes().get(ij.second()));
 		}
+		
+		return graph;
+	}
+	
+	/**
+	 * No self-loops
+	 * @param n
+	 * @param prob
+	 * @return
+	 */
+	public static DTGraph<String, String> randomDirected(int n, double prob)
+	{
+		MapDTGraph<String, String> graph = new MapDTGraph<String, String>();
+
+		for(int i : series(n))
+			graph.add("x");
+		
+		for(int i : series(n))
+			for(int j : series(n))
+				if(i != j && Global.random.nextDouble() < prob)
+					graph.get(i).connect(graph.get(j));
 		
 		return graph;
 	}
