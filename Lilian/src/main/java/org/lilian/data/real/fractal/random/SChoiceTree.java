@@ -72,9 +72,10 @@ public class SChoiceTree
 	 * @param code
 	 * @param symbol
 	 */
-	public void set(List<Integer> code, int symbol, double weight)
+	public void add(List<Integer> code, int symbol, double weight)
 	{
-		get(code).set(symbol, weight);
+		System.out.println(weight);
+		get(code).add(symbol, weight);
 	}
 	
 	public void count(BasicFrequencyModel<Integer> model)
@@ -155,10 +156,16 @@ public class SChoiceTree
 			if(code.isEmpty())
 				return this;
 			
-			return get(code.subList(1, code.size()));
+			if(children.isEmpty())
+				throw new RuntimeException("Code too long (child node at depth "+depth()+") code: "+code+".");
+			
+			int head = code.get(0);
+			Node child = children.get(head);
+			
+			return child.get(code.subList(1, code.size()));
 		}
 		
-		public void set(int symbol, double weight)
+		public void add(int symbol, double weight)
 		{
 			codon.add(symbol, weight);
 			max = Math.max(max, symbol);

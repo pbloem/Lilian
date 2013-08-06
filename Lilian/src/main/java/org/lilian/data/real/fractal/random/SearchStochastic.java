@@ -1,6 +1,7 @@
 package org.lilian.data.real.fractal.random;
 
 import static java.lang.Math.exp;
+import static java.lang.Math.log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -189,7 +190,7 @@ public class SearchStochastic
 				ct = ct.add(translate);
 				
 				search(rifs, newNode, point, result, current, 
-						logPrior + Math.log(ifs.probability(i) * choicePrior), cr, ct, basis);
+						logPrior + log(choicePrior) + log(ifs.probability(i)), cr, ct, basis);
 				
 				current.remove(current.size() - 1);
 			}

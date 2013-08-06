@@ -132,7 +132,6 @@ public class RIFSEM
 	{
 		resample();
 
-
 		tic();
 		findCodes();
 		Global.log().info("Finished finding codes. " + toc() + " seconds.");
@@ -161,6 +160,8 @@ public class RIFSEM
 	public void findModel()
 	{	
 		// * Look for matching codes in the code tree
+		//   This will pair up points for a given transformation, and assign a 
+		//   weight to the pair.
 		Maps maps = findMaps();
 
 		// * Frequency model for all component IFSs
@@ -210,8 +211,7 @@ public class RIFSEM
 				{
 					// * Find the map for the point pairs
 					Similitude map = findMap(maps.from(c), maps.to(c), component.get(i));
-					
-					
+
 					// * Find the weight for the frequency pairs
 					double weight = findScalar(maps.fromWeights(c),
 							maps.toWeights(c));
@@ -313,7 +313,7 @@ public class RIFSEM
 	{
 		codeTrees.clear();
 		
-		for(int i : Series.series(dataSample.size()))
+		for(int i : series(dataSample.size()))
 		{
 			List<Point> points = dataSample.get(i);
 			SChoiceTree tree = trees.get(i);
@@ -327,11 +327,10 @@ public class RIFSEM
 						SearchStochastic.search(model, tree, point, new MVN(data.get(0).get(0).dimensionality()), numSources);
 						
 				Weighted<List<Codon>> codes = result.codes();
-				for(int j : Series.series(codes.size()))
+				for(int j : series(codes.size()))
 					root.observe(codes.get(j), point, codes.weight(j));
 			}
 		}
-			
 		
 //		for(int j : series(20))
 //
@@ -381,9 +380,9 @@ public class RIFSEM
 				continue;
 			
 			// * find the pre-code (the code for the points that are mapped to this 
-			//   code by its first symbol.
+			//   code by its first symbol).
 			List<Codon> fromCode = new ArrayList<Codon>(toCode);
-			Codon codon = fromCode.remove(0);
+			Codon codon = fromCode.remove(0); // The symbol for our map
 
 			// * Collect the to and from set for each code
 			List<Point> to = new ArrayList<Point>(),
@@ -415,7 +414,7 @@ public class RIFSEM
 						//   distributions
 
 						//   We generate as many points as are in the to node.
-						//   (for depth one a handful would suffice, but for
+						//   (for depth 1 a handful would suffice, but for
 						//   higher values the amount of points generated gives
 						//   a sort of weight to this match in the codes among 
 						//   the other points)
@@ -748,6 +747,12 @@ public class RIFSEM
 			return children.get(symbol).find(code.subList(1, code.size()));
 		}
 		
+		/**
+		 * Build a choice tree. This function sets, for each node in the choice 
+		 * tree a probability distribution of the component IFSs.
+		 * 
+		 * @param tree
+		 */
 		public void build(SChoiceTree tree)
 		{
 			if(children == null || children.size() == 0)
@@ -761,6 +766,7 @@ public class RIFSEM
 			// * We calculate the score of an IFS by fitting an MVN to the points 
 			//   of this node, mapping it by each component transformation, and 
 			//   taking the log probability of the points of the matching node.
+			//   as the score
 			int best = -1;
 			double bestScore = Double.NEGATIVE_INFINITY;
 			
@@ -768,22 +774,18 @@ public class RIFSEM
 			for(int i : series(model.size()))
 				probs.add(Double.NaN);
 			
+			// * For each deterministic IFS component
 			for(int i : series(model.size()))
 			{
 				IFS<Similitude> component = model.models().get(i);
-				double logIFSPrior = log2(model.probability(i));
+				double logIFSPrior = Math.log(model.probability(i));
 			
 				double score = logIFSPrior;
-				// MVN mvn = mvn();
-				List<Point> from = points();
+				List<Point> from = points(); // * The points at this node
 				
-				// System.out.println(code() + " " + points() + " " + mvn);
-				
+				// * For each map in the component
 				for(int j : series(component.size()))
 				{
-					// System.out.println(j);
-					// MVN mapped = mvn.transform(component.get(j));
-					
 					List<Point> mapped = component.get(j).map(from);
 					Density density = new KernelDensity(mapped, KERNEL_VAR);
 					
@@ -797,11 +799,13 @@ public class RIFSEM
 					}
 					
 					if(to.isEmpty())
-						continue;
-					
-					// score += hausdorffDistance.distance(mapped, to);
-					for(Point point : to)
-						score += log2(density.density(point));
+					{
+						score = Double.NEGATIVE_INFINITY;
+					} else {
+						// score += hausdorffDistance.distance(mapped, to);
+						for(Point point : to)
+							score += Math.log(density.density(point));
+					}
 				}
 				
 				probs.set(i, score);
@@ -813,18 +817,32 @@ public class RIFSEM
 				}
 			}
 			
-		//	System.out.println(depth() + " " + best + " " + bestScore + " " + probs);
+			BasicFrequencyModel<Integer> probsNorm = new BasicFrequencyModel<Integer>();
+			for(int i : series(probs.size()))
+			{
+				double p = Math.exp(probs.get(i));
+				
+				probsNorm.add(i, p);
+			}
+			
+			// * If the probabilities are all too small, use uniform probability.
+			if(probsNorm.total() <= 0.0)
+			{
+				probsNorm = new BasicFrequencyModel<Integer>();
+				for(int i : series(probs.size()))
+					probsNorm.add(i, 1.0);
+			}
 			
 			// * Submit to the choice tree
 			if(best != -1)
 			{
 				SChoiceTree.Node node = tree.get(mapCode(code()));
-				node.clear();
+				node.clear(); 
 				
-				for(int i : Series.series(probs.size()))
+				for(int i : series(probs.size()))
 				{
 					if(! Double.isNaN(probs.get(i)))
-					node.set(i, probs.get(i));
+						node.add(i, probsNorm.probability(i));
 				}
 			}
 			
