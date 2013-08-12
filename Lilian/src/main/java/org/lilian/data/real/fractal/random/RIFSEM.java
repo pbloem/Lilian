@@ -56,7 +56,8 @@ public class RIFSEM
 	private static final int COVARIANCE_THRESHOLD = 5;
 	// * If a code has fewer than this number of points, it is not
 	//   used in reconstructing the choice tree
-	private static final int TREE_POINTS_THRESHOLD = 10; 
+	private static final int TREE_POINTS_THRESHOLD = 10;
+	private static final int SUBCYCLE = 5;
 	
 	private List<List<Point>> data;
 	private List<List<Point>> dataSample;
@@ -132,16 +133,19 @@ public class RIFSEM
 	{
 		resample();
 
-		tic();
-		findCodes();
-		Global.log().info("Finished finding codes. " + toc() + " seconds.");
-		
-		tic();
-		findTrees();
-		Global.log().info("Finished finding trees. " + toc() + " seconds.");
-		
-		for(SChoiceTree tree : trees)
-			System.out.println(tree);
+		for(int i : Series.series(SUBCYCLE))
+		{
+			tic();
+			findCodes();
+			Global.log().info("Finished finding codes. " + toc() + " seconds.");
+			
+			tic();
+			findTrees();
+			Global.log().info("Finished finding trees. " + toc() + " seconds.");
+			
+			for(SChoiceTree tree : trees)
+				System.out.println(tree);
+		}
 		
 		tic();
 		findModel();
