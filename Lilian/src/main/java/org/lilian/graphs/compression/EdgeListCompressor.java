@@ -6,6 +6,7 @@ import static org.lilian.util.Functions.logFactorial;
 
 import java.util.List;
 
+import org.lilian.Global;
 import org.lilian.graphs.DGraph;
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.Link;
@@ -34,7 +35,7 @@ public class EdgeListCompressor<N> extends AbstractGraphCompressor<N>
 		
 		BasicFrequencyModel<Node<N>> model = new BasicFrequencyModel<Node<N>>();
 		
-		long bits = 0;
+		double bits = 0;
 		
 		bits += prefix(graph.size());
 		bits += prefix(graph.numLinks());
@@ -54,9 +55,11 @@ public class EdgeListCompressor<N> extends AbstractGraphCompressor<N>
 			bits += -log2(p);
 		}
 		
-		bits -= logFactorial(graph.numLinks());
+		int l = graph.numLinks();
+		Global.log().info("source model entropy = "+model.entropy()+", logFact per line = "+logFactorial(l, 2.0)/(double)l+", log l = " + (Math.log(l) - 1)/Math.log(2.0));
 		
-		return bits;
+		
+		return bits - logFactorial(graph.numLinks(), 2.0);
 	}	
 	
 	public double directed(Graph<N> graph, List<Integer> order)
@@ -66,7 +69,7 @@ public class EdgeListCompressor<N> extends AbstractGraphCompressor<N>
 		BasicFrequencyModel<Node<N>> target = new BasicFrequencyModel<Node<N>>();
 
 		
-		long bits = 0;
+		double bits = 0;
 		
 		bits += prefix(graph.size());
 		bits += prefix(graph.numLinks());
@@ -87,7 +90,10 @@ public class EdgeListCompressor<N> extends AbstractGraphCompressor<N>
 			bits += -log2(p);
 		}
 		
-		bits -= logFactorial(graph.numLinks());
+		bits -= logFactorial(graph.numLinks(), 2.0);
+		
+		int l = graph.numLinks();
+		Global.log().info("source model entropy = "+source.entropy()+", target model entropy = "+target.entropy()+", logFact per line = "+logFactorial(l, 2.0)/(double)l+", log l = " + (Math.log(l) - 1)/Math.log(2.0));
 		
 		return bits;
 	}	

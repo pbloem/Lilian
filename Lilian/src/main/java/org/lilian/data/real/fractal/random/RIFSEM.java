@@ -57,7 +57,6 @@ public class RIFSEM
 	// * If a code has fewer than this number of points, it is not
 	//   used in reconstructing the choice tree
 	private static final int TREE_POINTS_THRESHOLD = 10;
-	private static final int SUBCYCLE = 5;
 	
 	private List<List<Point>> data;
 	private List<List<Point>> dataSample;
@@ -129,11 +128,11 @@ public class RIFSEM
 //		this.trees = dataTrees;
 //	}
 
-	public void iteration()
+	public void iteration(int treeIterations)
 	{
 		resample();
 
-		for(int i : Series.series(SUBCYCLE))
+		for(int i : Series.series(treeIterations))
 		{
 			tic();
 			findCodes();

@@ -16,6 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.lilian.models.BasicFrequencyModel;
+import org.lilian.util.Functions;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
@@ -261,7 +262,7 @@ public class LightDGraph<L> implements DGraph<L>
 			// Collections.sort(out.get(toIndex));
 			
 			modCount++;			
-			numLinks ++;
+			numLinks++;
 		}
 
 		@Override
@@ -287,9 +288,8 @@ public class LightDGraph<L> implements DGraph<L>
 		public boolean connected(Node<L> to)
 		{
 			int mine = index, his = to.index();
+			
 			if(out.get(mine).contains(his))
-				return true;
-			if(out.get(his).contains(mine))
 				return true;
 			
 			return false;
@@ -414,6 +414,7 @@ public class LightDGraph<L> implements DGraph<L>
 	private class LightDLink implements DLink<L>
 	{
 		private DNode<L> from, to;
+		
 		
 		private long nodeModState = nodeModCount;
 		
@@ -867,7 +868,7 @@ public class LightDGraph<L> implements DGraph<L>
 		// * for all connected nodes
 		for(DNode<L> node : nodes())
 		{
-			if(! node.label().equals(otherGraph.get(node.index()).label()))
+			if(! Functions.equals(node.label(), otherGraph.get(node.index()).label()))
 				return false;
 			
 			for(DNode<L> neighbor : node.out())

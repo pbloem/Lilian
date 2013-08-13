@@ -72,6 +72,12 @@ public class Functions
 		return -tmp + Math.log(2.5066282746310005 * ser / x);
 	}
 	
+	public static double logFactorial(int n, double base)
+	{
+		return logFactorial(n) / Math.log(base);
+	}
+	
+	
 	/**
 	 * Calculates the log of the factorial of an integer n. Uses gamma
 	 * functions for n > 100;
@@ -416,6 +422,12 @@ public class Functions
 	{
 		return Math.log10(x) / Math.log10(2.0);
 	}
+
+	public static double logChoose(double sub, double total, double base)
+	{
+		return logChoose(sub, total) / Math.log(2.0);
+	}	
+	
 	
 	/**
 	 * The binary logarithm of the choose function (ie. the binomial coefficient)
@@ -424,7 +436,7 @@ public class Functions
 	{
 		if(sub <= Integer.MAX_VALUE && total <= Integer.MAX_VALUE 
 				&& sub == (int)sub && total == (int)total)
-			return binomialCoefficientLog((int)total, (int)sub) / Math.log(2.0);
+			return binomialCoefficientLog((int)total, (int)sub);
 		
 		double n = total, k = sub;
 		return logFactorial(n) - logFactorial(k) - logFactorial(n - k); 

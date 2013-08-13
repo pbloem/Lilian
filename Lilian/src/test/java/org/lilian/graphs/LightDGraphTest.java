@@ -90,18 +90,39 @@ public class LightDGraphTest
 		DNode<String> a = graph.add(null),
 		              b = graph.add(null),
 		              c = graph.add(null);
-
 	
 		a.connect(b);
+		a.connect(c);
 		
 		assertTrue(a.connected(b));
 		assertFalse(a.connected(a));
 		assertFalse(b.connected(a));
-		assertFalse(a.connected(c));
+		assertTrue(a.connected(c));
 		assertFalse(c.connected(a));
 		assertFalse(b.connected(c));
 		assertFalse(c.connected(b));
 	}
+	
+	@Test
+	public void testLinks()
+	{
+		DGraph<String> graph = new LightDGraph<String>();
+		
+		DNode<String> a = graph.add(null),
+		              b = graph.add(null),
+		              c = graph.add(null);
+	
+		a.connect(b);
+		
+		a.connect(c);
+		a.connect(c);
+		
+		assertEquals(0, a.links(a).size());
+		assertEquals(1, a.links(b).size());
+		assertEquals(0, b.links(a).size());
+		assertEquals(2, a.links(c).size());
+		assertEquals(0, c.links(a).size());
+	}	
 	
 	@Test
 	public void testEquals()

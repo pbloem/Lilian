@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.lilian.Global;
 import org.lilian.graphs.DTNode;
 import org.lilian.graphs.MapDTGraph;
 import org.openrdf.model.Statement;
@@ -65,6 +66,8 @@ public class RDF
 		
 		MapDTGraph<String, String> graph = new MapDTGraph<String, String>();
 		DTNode<String, String> node1, node2;
+		
+		Global.log().info("Constructing graph");
 		
 		for (Statement statement : sesameGraph) 
 		{

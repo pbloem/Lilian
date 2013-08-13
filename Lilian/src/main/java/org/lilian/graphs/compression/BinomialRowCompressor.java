@@ -6,7 +6,9 @@ import static org.lilian.util.Functions.logChoose;
 
 import java.util.List;
 
+import org.lilian.Global;
 import org.lilian.graphs.DGraph;
+import org.lilian.graphs.DNode;
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.Node;
 import org.lilian.graphs.UGraph;
@@ -31,23 +33,29 @@ public class BinomialRowCompressor<N> extends AbstractGraphCompressor<N>
 	
 	public double undirected(Graph<N> graph, List<Integer> order)
 	{
-		int n = graph.size();
+		int n = graph.size();		
+		int k = graph.numLinks();
+
 		List<Integer> inv = Draw.inverse(order);
 		
 		long bits = 0;
 		
 		bits+= prefix(n);
+		
+		int entries = (n * (n + 1)) / 2;
+		bits += log2(entries); // Encode total number of ones (k)
+		
 		int row = 0;
 		
 		for(int index : Series.series(inv.size()))
 		{
 			Node<N> node = graph.nodes().get(inv.get(index));
 			int backDegree = 0;
-			for(Node<N> neighbor : node.neighbors())
+			for(Node<N> neighbor : node.neighbors()) // BUG?
 				if(order.get(neighbor.index()) <= order.get(node.index()))
 					backDegree++;
 				
-			bits += log2(row + 1) + logChoose(backDegree, row + 1);
+			bits += log2(row + 1) + logChoose(backDegree, row + 1, 2.0);
 			row ++;
 		}
 		
@@ -57,15 +65,20 @@ public class BinomialRowCompressor<N> extends AbstractGraphCompressor<N>
 	public double directed(DGraph<N> graph, List<Integer> order)
 	{
 		int n = graph.size();
+		int k = graph.numLinks();
+				
+		double sizeBits = prefix(n);
+		sizeBits += 2 * log2(n);
+
+		double kBits = logChoose(k, k + n - 1);
 		
-		long bits = 0;
+		double rowBits = 0.0;
+		for(DNode<N> node : graph.nodes())
+			rowBits += logChoose(node.linksIn().size(), n, 2.0); // TODO: stars and bars
 		
-		bits+= prefix(n);
+		Global.log().info("sizeBits: "+sizeBits+", kBits: "+kBits+", rowBits "+rowBits+". ");
 		
-		for(Node<N> node : graph.nodes())
-			bits += log2(n) + logChoose(node.degree(), n);
-		
-		return bits;
+		return sizeBits + kBits + rowBits;
 	}
 	
 	

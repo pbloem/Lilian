@@ -61,7 +61,12 @@ public class NeighborListCompressor<N> extends AbstractGraphCompressor<N>
 			{
 				if(order.get(neighbor.index()) <= order.get(node.index()))
 				{
-					size = 0;
+					if(size == 0)
+					{
+						bits += -log2(p(false, delimiter));
+						delimiter.add(false);
+					}
+						
 					size++;
 					
 					// * Encode the reference to the neighboring node
@@ -71,23 +76,24 @@ public class NeighborListCompressor<N> extends AbstractGraphCompressor<N>
 					if(directed) // * We encode the direction as an on-line binomial model
 					{
 						boolean direction = node.connected(neighbor);
+						
 						bits += - log2(p(direction, directions));
 						directions.add(direction);
 					}
-					
-					delimiter.add(false);
+
 				}
 			}
 			
 			// * encode the size
-			bits += prefix(size);
+			// bits += prefix(size);
 			pBits += prefix(size); 
 			
 			// * Instead of the size
-			// bits += -log2(p(true, delimiter));
-			// delimiter.add(true);
+			bits += -log2(p(true, delimiter));
+			delimiter.add(true);
 		}
-			
+		
+		Global.log().info("Symbol model entropy = "+nodes.entropy()+", delimiter model entropy = "+delimiter.entropy()+", directions model entropy = "+directions + " " +  directions.entropy()+". ");
 		
 		Global.log().info(pBits + " bits out of " + bits + " spent of encoding sizes (" + (pBits/bits)*100 + " percent). ");
 		return bits;

@@ -231,7 +231,7 @@ public class Draw
 	 * REMINDER: 
 	 * 
 	 * - The order has order.get(indexInOriginalGraph) = indexInOrderedGraph
-	 * - The inverseOrder has order.get(indexInOrderedGraph) = indexInOriginalGraph
+	 * - The inverseOrder has inverseOrder.get(indexInOrderedGraph) = indexInOriginalGraph
 	 * 
 	 * in the order the elements represent the indices of the ordered graph
 	 * in the inverseOrder the elements represent the indices of the original graph
