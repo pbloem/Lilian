@@ -399,12 +399,11 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		@Override
 		public int hashCode()
 		{
+			// * We base the hashcode on just the label. If adding links changes
+			//   the hashcode, our maps will get messed up. 
 			int hash = 1;
 			
 			hash = 31 * hash + (label == null ? 0 : label.hashCode());
-			
-			for(T tag : links.keySet())
-				hash = 31 * hash + (tag == null ? 0 : tag.hashCode());
 			
 			return hash;
 		}

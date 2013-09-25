@@ -425,10 +425,13 @@ public class Graphs
 		for(UNode<L> node : graph.nodes())
 			out.add(label);
 		
-		for(int i : series(graph.size()))
-			for(int j : series(i, graph.size()))
-					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
-						out.nodes().get(i).connect(out.nodes().get(j));
+		for(Link<L> link : graph.links())
+		{
+			int i = link.first().index();
+			int j = link.second().index();
+			
+			out.get(i).connect(out.get(j));
+		}
 		
 		return out;
 	}	
@@ -440,10 +443,13 @@ public class Graphs
 		for(DNode<L> node : graph.nodes())
 			out.add(label);
 		
-		for(int i : series(graph.size()))
-			for(int j : series(i, graph.size()))
-					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
-						out.nodes().get(i).connect(out.nodes().get(j));
+		for(Link<L> link : graph.links())
+		{
+			int i = link.first().index();
+			int j = link.second().index();
+			
+			out.get(i).connect(out.get(j));
+		}
 		
 		return out;
 	}		
@@ -459,10 +465,13 @@ public class Graphs
 		for(UTNode<L, T> node : graph.nodes())
 			out.add(label);
 		
-		for(int i : series(graph.size()))
-			for(int j : series(i, graph.size()))
-					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
-						out.nodes().get(i).connect(out.nodes().get(j));
+		for(TLink<L, T> link : graph.links())
+		{
+			int i = link.first().index();
+			int j = link.second().index();
+			
+			out.get(i).connect(out.get(j), null);
+		}
 		
 		return out;
 	}	
@@ -474,10 +483,13 @@ public class Graphs
 		for(DTNode<L, T> node : graph.nodes())
 			out.add(label);
 		
-		for(int i : series(graph.size()))
-			for(int j : series(i, graph.size()))
-					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
-						out.nodes().get(i).connect(out.nodes().get(j));
+		for(TLink<L, T> link : graph.links())
+		{
+			int i = link.first().index();
+			int j = link.second().index();
+			
+			out.get(i).connect(out.get(j), null);
+		}
 		
 		return out;
 	}	

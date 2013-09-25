@@ -2,7 +2,11 @@ package org.lilian.graphs;
 
 import static org.junit.Assert.*;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.junit.Test;
+import org.lilian.models.BasicFrequencyModel;
 
 public class MapDTGraphTest
 {
@@ -145,4 +149,61 @@ public class MapDTGraphTest
 		assertFalse(g1.equals(g2));
 	}
 	
+	private DGraph<String> legsDirected()
+	{
+		DGraph<String> graph = new MapDTGraph<String, String>();
+		
+		graph.add("a");
+		graph.add("b");
+		graph.add("c");
+		
+		graph.node("a").connect(graph.node("b"));
+		graph.node("b").connect(graph.node("c"));
+		
+		return graph;
+	}	
+	
+	@Test
+	public void directionTest()
+	{
+		DGraph<String> graph = legsDirected();
+		
+		BasicFrequencyModel<Boolean> counts = new BasicFrequencyModel<Boolean>();
+		
+		for(DNode<String> current : graph.nodes())
+		{
+			System.out.println(current.neighbors());
+			for(DNode<String> neighbor : current.neighbors())
+			{
+				System.out.println(current + "->" + neighbor + " " + current.connected(neighbor));
+				counts.add(current.connected(neighbor));
+			}
+		}
+		
+		assertEquals(0, (int)(counts.frequency(true) - counts.frequency(false)));
+	}
+	
+	@Test
+	public void containsTest()
+	{
+		DGraph<String> graph = new MapDTGraph<String, String>();
+		
+		graph.add("a");
+		graph.add("b");
+		graph.add("c");
+		
+		Set<Node<String>> set = new LinkedHashSet<Node<String>>();
+		Node<String> b = graph.node("b");
+		set.add(b);
+		
+		assertTrue(set.contains(b));
+
+		graph.node("a").connect(graph.node("b"));
+		
+		assertTrue(set.contains(b));
+
+		graph.node("b").connect(graph.node("c"));
+		
+		assertTrue(set.contains(b));
+	}
 }

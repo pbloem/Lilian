@@ -544,13 +544,16 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public int hashCode()
 		{
+			// NOTE: We do not include the links in the calculation of the 
+			// hashcode. We want the hashcode to remain invariant to 
+			// modifications of the graph. 
 			int hash = 1;
 			
 			hash = 31 * hash + (label == null ? 0 : label.hashCode());
 			
-			for(T tag : linksOut.keySet())
-				hash = 31 * hash + (tag == null ? 0 : tag.hashCode());
-			
+//			for(T tag : linksOut.keySet())
+//				hash = 31 * hash + (tag == null ? 0 : tag.hashCode());
+//			
 			return hash;
 		}
 
