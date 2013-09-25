@@ -45,7 +45,7 @@ public class IFSTest
 			for(int i : Series.series(builder.numParameters()))
 				change.add(Global.random.nextGaussian() * 0.0);
 			
-			int frames = 360;
+			int frames = 1;
 			for(int i = 0; i < frames; i++)
 			{
 				write(sierpinski, String.format("out%04d", i));
@@ -153,10 +153,10 @@ public class IFSTest
 		}
 	}
 	
-    @Test
+    // @Test
 	public void testCode2() throws IOException
 	{
-		int depth = 6;
+		int depth = 3;
 		double[] xrange = new double[]{-1.0, 1.0};
 		double[] yrange = new double[]{-1.0, 1.0};
 		
@@ -168,7 +168,7 @@ public class IFSTest
 		dir.mkdirs();
 
 		IFS<Similitude> ifs = IFSs.koch2Sim();
-		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
+		image = Draw.draw(ifs.generator(depth), 100000, 100, true); 
 		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
 		
 		image = Draw.drawCodes(ifs, xrange, yrange, 100, depth, -1);
@@ -179,7 +179,7 @@ public class IFSTest
 	}
     
     
-    @Test
+    // @Test
 	public void testCodeSmooth() throws IOException
 	{
 		int depth = 1;
@@ -207,11 +207,11 @@ public class IFSTest
 		System.out.println("codes-again: " + Functions.toc() + " seconds");
 	}
 	
-	@Test
+	// @Test
 	public void testDensities() throws IOException
 	{
 		Global.random = new Random();
-		int depth = 9;
+		int depth = 3;
 		double[] xrange = new double[]{-2.0, 2.0};
 		double[] yrange = new double[]{-2.0, 2.0};
 		
@@ -224,7 +224,7 @@ public class IFSTest
 
 		IFS<Similitude> ifs = IFSs.randomSimilitude(2, 2, 0.5);
 		
-		image = Draw.draw(ifs.generator(depth), 1000000, 1000, false); 
+		image = Draw.draw(ifs.generator(depth), 1000000, 100, false); 
 		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );	
 		
 		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, false);

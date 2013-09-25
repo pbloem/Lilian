@@ -2,6 +2,7 @@ package org.lilian.graphs;
 
 import static org.lilian.util.Series.series;
 
+import java.awt.PageAttributes.OriginType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.lilian.Global;
+import org.lilian.graphs.draw.Draw;
+import org.lilian.util.Order;
 import org.lilian.util.Series;
 import org.lilian.util.graphs.old.algorithms.BAGenerator;
 
@@ -404,6 +407,47 @@ public class Graphs
 		return out;
 	}
 	
+	public static <L> Graph<String> blank(Graph<L> graph, String label)
+	{
+		if(graph instanceof DGraph<?>)
+			return blank((DGraph<L>)graph, label);
+		
+		if(graph instanceof UGraph<?>)
+			return blank((UGraph<L>)graph, label);
+
+		throw new RuntimeException("Type of graph ("+graph.getClass()+") not recognized");
+	}	
+	
+	public static <L> UGraph<String> blank(UGraph<L> graph, String label)
+	{
+		UGraph<String> out = new MapUTGraph<String, String>();
+		
+		for(UNode<L> node : graph.nodes())
+			out.add(label);
+		
+		for(int i : series(graph.size()))
+			for(int j : series(i, graph.size()))
+					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
+						out.nodes().get(i).connect(out.nodes().get(j));
+		
+		return out;
+	}	
+	
+	public static <L> DGraph<String> blank(DGraph<L> graph, String label)
+	{
+		DGraph<String> out = new MapDTGraph<String, String>();
+		
+		for(DNode<L> node : graph.nodes())
+			out.add(label);
+		
+		for(int i : series(graph.size()))
+			for(int j : series(i, graph.size()))
+					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
+						out.nodes().get(i).connect(out.nodes().get(j));
+		
+		return out;
+	}		
+	
 	/**
 	 * Replaces labels by a given value, and tags by null
 	 * @return
@@ -421,6 +465,151 @@ public class Graphs
 						out.nodes().get(i).connect(out.nodes().get(j));
 		
 		return out;
+	}	
+	
+	public static <L, T> DTGraph<String, String> blank(DTGraph<L, T> graph, String label)
+	{
+		DTGraph<String, String> out = new MapDTGraph<String, String>();
+		
+		for(DTNode<L, T> node : graph.nodes())
+			out.add(label);
+		
+		for(int i : series(graph.size()))
+			for(int j : series(i, graph.size()))
+					if(graph.nodes().get(i).connected(graph.nodes().get(j)))
+						out.nodes().get(i).connect(out.nodes().get(j));
+		
+		return out;
+	}	
+	
+	public static <L> Graph<L> reorder(Graph<L> graph, Order order)
+	{
+		if(graph instanceof DGraph<?>)
+			return reorder((DGraph<L>)graph, order);
+		
+		if(graph instanceof UGraph<?>)
+			return reorder((UGraph<L>)graph, order);
+
+		throw new RuntimeException("Type of graph ("+graph.getClass()+") not recognized");
+	}
+	
+	public static <L> UGraph<L> reorder(UGraph<L> graph, Order order)
+	{
+		assert(graph.size() == order.size());
+		
+		UTGraph<L, String> out = new MapUTGraph<L, String>();
+		for(int newIndex : series(order.size()))
+			out.add(graph.get(order.originalIndex(newIndex)).label());
+		
+		for(ULink<L> link : graph.links())
+		{
+			int originalIndexFirst = link.first().index();
+			int originalIndexSecond = link.second().index();
+			
+			UNode<L> first = out.get(order.newIndex(originalIndexFirst));
+			UNode<L> second = out.get(order.newIndex(originalIndexSecond));
+			
+			first.connect(second);
+		}
+		
+		return out;	
+	}
+	
+	public static <L> DGraph<L> reorder(DGraph<L> graph, Order order)
+	{
+		assert(graph.size() == order.size());
+		
+		DTGraph<L, String> out = new MapDTGraph<L, String>();
+		for(int newIndex : series(order.size()))
+			out.add(graph.get(order.originalIndex(newIndex)).label());
+		
+		for(DLink<L> link : graph.links())
+		{
+			int originalIndexFirst = link.first().index();
+			int originalIndexSecond = link.second().index();
+			
+			DNode<L> first = out.get(order.newIndex(originalIndexFirst));
+			DNode<L> second = out.get(order.newIndex(originalIndexSecond));
+			
+			first.connect(second);
+		}
+		
+		return out;	
+	}	
+	
+	public static <L, T> UTGraph<L, T> reorder(UTGraph<L, T> graph, Order order)
+	{
+		assert(graph.size() == order.size());
+		
+		UTGraph<L, T> out = new MapUTGraph<L, T>();
+		for(int newIndex : series(order.size()))
+			out.add(graph.get(order.originalIndex(newIndex)).label());
+		
+		for(UTLink<L, T> link : graph.links())
+		{
+			int originalIndexFirst = link.first().index();
+			int originalIndexSecond = link.second().index();
+			
+			UTNode<L, T> first = out.get(order.newIndex(originalIndexFirst));
+			UTNode<L, T> second = out.get(order.newIndex(originalIndexSecond));
+			
+			first.connect(second, link.tag());
+		}
+		
+		return out;	
+	}
+	
+	public static <L, T> DTGraph<L, T> reorder(DTGraph<L, T> graph, Order order)
+	{
+		assert(graph.size() == order.size());
+		
+		DTGraph<L, T> out = new MapDTGraph<L, T>();
+		for(int newIndex : series(order.size()))
+			out.add(graph.get(order.originalIndex(newIndex)).label());
+		
+		for(DTLink<L, T> link : graph.links())
+		{
+			int originalIndexFirst = link.first().index();
+			int originalIndexSecond = link.second().index();
+			
+			DTNode<L, T> first = out.get(order.newIndex(originalIndexFirst));
+			DTNode<L, T> second = out.get(order.newIndex(originalIndexSecond));
+			
+			first.connect(second, link.tag());
+		}
+		
+		return out;	
+	}	
+	
+	/**
+	 * Returns a string such that two isomorphic graphs will return the same
+	 * string for equivalent orderings.
+	 * @param graph
+	 * @return
+	 */
+	public static <L> String canonicalString(Graph<L> graph)
+	{
+		return "";
+	}
+	
+	public static <L> String canonicalString(DGraph<L> graph)
+	{
+		return "";
+	}	
+	
+	public static <L> String canonicalString(UGraph<L> graph)
+	{
+		return "";
+	}
+	
+	public static <L, T> String canonicalString(DTGraph<L, T> graph)
+	{
+		return "";
+	}	
+	
+	public static <L, T> String canonicalString(UTGraph<L, T> graph)
+	{
+		return "";
 	}	
 }
 

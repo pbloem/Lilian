@@ -25,7 +25,7 @@ public class UCensusTest
 	@Test
 	public void testModelDirected()
 	{
-		DGraph<String> graph = RandomGraphs.randomDirected(200, 0.3);
+		DGraph<String> graph = RandomGraphs.randomDirected(10, 0.3);
 		
 		System.out.println(graph);
 		

@@ -15,7 +15,7 @@ public class FloydWarshallTest
 	@Test
 	public void test()
 	{
-		Graph<Integer, Integer> graph = Graphs.random(2000, 0.3);
+		Graph<Integer, Integer> graph = Graphs.random(25, 0.3);
 		
 		DijkstraDistance<Integer, Integer> dist = new DijkstraDistance<Integer, Integer>(graph);
 		FloydWarshall<Integer, Integer> fw = new FloydWarshall<Integer, Integer>(graph);

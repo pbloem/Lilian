@@ -46,9 +46,9 @@ public class GenericTests
 	public void testDistance()
 	{
 		Global.random = new Random();
-		int n = 100;
-		int r = 1000;
-		int rr = 10;
+		int n = 10;
+		int r = 10;
+		int rr = 1;
 		
 		List<Double> values = new ArrayList<Double>();
 		for(int k : series(rr))

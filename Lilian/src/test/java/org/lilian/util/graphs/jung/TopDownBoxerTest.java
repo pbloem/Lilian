@@ -36,12 +36,12 @@ public class TopDownBoxerTest
 		assertEquals(0, boxing.overCovered().size());
 	}
 	
-	@Test
+	//@Test
 	public void testBox2()
 	{
 		int l = 3;
 
-		Graph<Integer, Integer> graph = Graphs.abRandom(700, 5, 3);
+		Graph<Integer, Integer> graph = Graphs.abRandom(70, 5, 3);
 		
 		TopDownBoxer<Integer, Integer> boxer = new TopDownBoxer<Integer, Integer>(graph);
 		

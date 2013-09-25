@@ -21,7 +21,7 @@ import org.lilian.util.Series;
 public class NeuralIFSTest
 {
 
-	@Test
+	// @Test
 	public void test()
 	{
 		IFS<Similitude> master = IFSs.sierpinskiSim();
@@ -39,7 +39,7 @@ public class NeuralIFSTest
 		
 	}
 	
-    @Test
+    // @Test
 	public void testCodeSmooth() throws IOException
 	{
 		int depth = 7;

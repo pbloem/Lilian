@@ -698,4 +698,12 @@ public class Functions
 	{
 		return Math.exp(x);
 	}
+	
+    public static <T> Set<T> asSet(T... a) {
+        Set<T> set = new LinkedHashSet<T>();
+        for(T t : a)
+        	set.add(t);
+        
+        return set;
+    }
 }
