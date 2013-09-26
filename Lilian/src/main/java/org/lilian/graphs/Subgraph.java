@@ -73,7 +73,7 @@ public class Subgraph
 		
 		for(int i : series(nodes.size()))
 			for(int j : series(nodes.size()))
-				for(DTLink<L, T> link : list.get(i).links(list.get(j)))
+				for(DTLink<L, T> link : list.get(i).linksOut(list.get(j)))
 					out.get(i).connect(out.get(j), link.tag());
 
 		return out;
@@ -91,7 +91,7 @@ public class Subgraph
 	{
 		List<DTNode<L, T>> list = new ArrayList<DTNode<L,T>>();
 		for(int i : nodes)
-			list.add(graph.nodes().get(i));
+			list.add(graph.get(i));
 		
 		return dtSubgraph(graph, list);
 	}
@@ -131,7 +131,7 @@ public class Subgraph
 			out.add(node.label());
 		
 		for(int i : series(nodes.size()))
-			for(int j : series(nodes.size()))
+			for(int j : series(i, nodes.size()))
 				for(Link<L> link : list.get(i).links(list.get(j)))
 					out.get(i).connect(out.get(j));
 

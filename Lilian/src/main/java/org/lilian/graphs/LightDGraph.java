@@ -391,7 +391,7 @@ public class LightDGraph<L> implements DGraph<L>
 		public List<DLink<L>> linksIn()
 		{
 			List<DLink<L>> list = new ArrayList<DLink<L>>(inDegree());
-			for(int neighbor : out.get(index))
+			for(int neighbor : in.get(index))
 				list.add(new LightDLink(neighbor, index));
 			
 			return list;
@@ -408,6 +408,32 @@ public class LightDGraph<L> implements DGraph<L>
 					links.add(new LightDLink(index(), i));
 			
 			return links;
+		}
+
+		@Override
+		public Collection<? extends DLink<L>> linksOut(DNode<L> other)
+		{
+			List<DLink<L>> list = new ArrayList<DLink<L>>(outDegree());
+			
+			int o = other.index();
+			for(int neighbor : out.get(index))
+				if(neighbor == o)
+					list.add(new LightDLink(index, neighbor));
+			
+			return list;
+		}
+
+		@Override
+		public Collection<? extends DLink<L>> linksIn(DNode<L> other)
+		{
+			List<DLink<L>> list = new ArrayList<DLink<L>>(inDegree());
+			
+			int o = other.index();
+			for(int neighbor : in.get(index))
+				if(neighbor == 0)
+					list.add(new LightDLink(neighbor, index));
+			
+			return list;
 		}
 	}
 	
@@ -544,7 +570,14 @@ public class LightDGraph<L> implements DGraph<L>
 		{
 			return to;
 		}
-		
+
+		@Override
+		public DNode<L> other(Node<L> current)
+		{
+			if(first() != current)
+				return first();
+			return second();
+		}
 	}
 
 	private class NodeList extends AbstractList<DNode<L>>

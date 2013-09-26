@@ -15,7 +15,7 @@ public interface UTLink<L, T> extends TLink<L, T>, ULink<L>
 	 * @param current
 	 * @return
 	 */
-	public UTNode<L, T> other(UTNode<L, T> current);
+	public UTNode<L, T> other(Node<L> current);
 	
 	public Collection<? extends UTNode<L, T>> nodes();
 

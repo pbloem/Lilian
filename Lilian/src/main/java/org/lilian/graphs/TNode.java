@@ -55,7 +55,7 @@ public interface TNode<L, T> extends Node<L>
 	 */
 	public TLink<L, T> link(TNode<L, T> other);
 	
-	public Collection<? extends TLink<L, T>> links(TNode<L, T> other);
+	public Collection<? extends TLink<L, T>> links(Node<L> other);
 	
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 

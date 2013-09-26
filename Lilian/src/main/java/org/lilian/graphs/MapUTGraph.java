@@ -508,7 +508,7 @@ public class MapUTGraph<L, T> implements UTGraph<L, T>
 		}
 
 		@Override
-		public UTNode<L, T> other(UTNode<L, T> current)
+		public UTNode<L, T> other(Node<L> current)
 		{
 			if(first != current)
 				return first;

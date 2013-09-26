@@ -16,4 +16,13 @@ public interface DTLink<L, T> extends TLink<L, T>, DLink<L>
 	
 	public DTNode<L, T> to();
 	
+	/**
+	 * Returns the first node, after one occurrence of the given
+	 * node is ignored. If this link link the same node, that node is returned.
+	 * 
+	 * @param current
+	 * @return
+	 */
+	public DTNode<L, T> other(Node<L> current);
+	
 }

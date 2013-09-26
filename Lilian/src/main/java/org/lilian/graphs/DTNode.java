@@ -16,7 +16,7 @@ public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 
 	public Collection<? extends DTLink<L, T>> links();
 	
-	public Collection<? extends DTLink<L, T>> links(TNode<L, T> other);
+	public Collection<? extends DTLink<L, T>> links(Node<L> other);
 	
 	public DTNode<L, T> neighbor(L label);
 
@@ -26,7 +26,7 @@ public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 	
 	public Collection<? extends DTLink<L, T>> linksOut();	
 	
-	public Collection<? extends DTLink<L, T>> linksOut(DTNode<L, T> other);
+	public Collection<? extends DTLink<L, T>> linksOut(DNode<L> other);
 	
 	public Collection<? extends DTNode<L, T>> out(L label);	
 	
@@ -39,7 +39,7 @@ public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 	 * @param other
 	 * @return
 	 */
-	public Collection<? extends DTLink<L, T>> linksIn(DTNode<L, T> other);
+	public Collection<? extends DTLink<L, T>> linksIn(DNode<L> other);
 	
 	public Collection<? extends DTNode<L, T>> toTag(T tag);
 
@@ -58,9 +58,7 @@ public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 	 * @param other
 	 */
 	public L label();
-	
-	public Collection<? extends DTLink<L, T>> links(Node<L> other);
-	
+		
 	/**
 	 * Returns the graph object to which these nodes belong. Nodes always belong 
 	 * to a single graph and cannot be exchanged between them.

@@ -16,6 +16,8 @@ import org.lilian.graphs.Node;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
 
+import weka.core.Debug;
+
 public class RDF
 {
 	/**
@@ -26,22 +28,30 @@ public class RDF
 	 */
 	public static MapDTGraph<String, String> read(File file)
 	{
-		
+		return read(file, null);
+	}
+	
+	public static MapDTGraph<String, String> read(File file, List<String> linkWhitelist)
+	{
 		RDFDataSet testSet = new RDFFileDataSet(file, RDFFormat.RDFXML);
 
 		List<Statement> triples = testSet.getFullGraph();	
 		
-		return createDirectedGraph(triples, null, null);
+		return createDirectedGraph(triples, null, linkWhitelist);
 	}
 	
 	public static MapDTGraph<String, String> readTurtle(File file)
 	{
-		
+		return readTurtle(file, null);
+	}
+	
+	public static MapDTGraph<String, String> readTurtle(File file, List<String> linkWhitelist)
+	{
 		RDFDataSet testSet = new RDFFileDataSet(file, RDFFormat.TURTLE);
 
 		List<Statement> triples = testSet.getFullGraph();	
 		
-		return createDirectedGraph(triples, null, null);
+		return createDirectedGraph(triples, null, linkWhitelist);
 	}
 	
 	public static MapDTGraph<String, String> createDirectedGraph(
@@ -74,6 +84,7 @@ public class RDF
 		
 		for (Statement statement : sesameGraph) 
 		{
+			
 			if(vWhiteList != null)
 			{
 				if(! matches(statement.getObject().toString(), vertexWhiteList))
@@ -83,13 +94,18 @@ public class RDF
 			}
 			
 			if(eWhiteList != null)
+			{
 				if(! matches(statement.getPredicate().toString(), edgeWhiteList))
+				{
+// 					Global.log().info("Filtered predicate: " + statement.getPredicate().toString());
 					continue;
+				}
+			}
 			
 			String subject = statement.getSubject().toString(), 
 			       object = statement.getObject().toString(), 
 			       predicate = statement.getPredicate().toString();
-			
+						
 			node1 = graph.node(subject);
 			node2 = graph.node(object);
 		
@@ -127,6 +143,12 @@ public class RDF
 	 */
 	public static String simplify(String string)
 	{
+		if(string == null)
+			return null;
+		
+		if(! string.contains("/"))
+			return string;
+		
 		String[] split = string.split("/");
 		
 		return split[split.length - 1]; 

@@ -499,18 +499,11 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public Collection<? extends DTLink<L, T>> links(TNode<L, T> other)
+		public Collection<? extends DTLink<L, T>> linksOut(DNode<L> other)
 		{
-			List<DTLink<L, T>> links = new ArrayList<DTLink<L, T>>(degree());
-			links.addAll(linksOut((DTNode<L, T>)other));
-			links.addAll( linksIn((DTNode<L, T>)other));
+			if(! (other instanceof DTNode<?, ?>))
+				return Collections.emptyList(); 	
 			
-			return links();
-		}
-
-		@Override
-		public Collection<? extends DTLink<L, T>> linksOut(DTNode<L, T> other)
-		{
 			MapDTNode o = (MapDTNode) other;
 			
 			if(!connected(o))
@@ -526,8 +519,11 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		}
 
 		@Override
-		public Collection<? extends DTLink<L, T>> linksIn(DTNode<L, T> other)
+		public Collection<? extends DTLink<L, T>> linksIn(DNode<L> other)
 		{
+			if(! (other instanceof DTNode<?, ?>))
+				return Collections.emptyList();
+			
 			MapDTNode o = (MapDTNode) other;
 			
 			if(!connected(o))
@@ -561,14 +557,14 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public Collection<? extends DTLink<L, T>> links(Node<L> other)
 		{
-			List<DTLink<L, T>> links = new ArrayList<DTLink<L, T>>();
+			if(! (other instanceof DTNode<?, ?>))
+				return Collections.emptyList(); 		
 			
-			for(T tag : linksOut.keySet())
-				for(DTLink<L, T> link : linksOut.get(tag))
-					if(link.to().equals(other))
-						links.add(link);
+			List<DTLink<L, T>> links = new ArrayList<DTLink<L, T>>(degree());
+			links.addAll(linksOut( (DTNode<L, T>)other));
+			links.addAll(linksIn(  (DTNode<L, T>)other));
 			
-			return links;
+			return links();
 		}
 	}
 
@@ -666,6 +662,14 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		public DTNode<L, T> to()
 		{
 			return second();
+		}
+
+		@Override
+		public DTNode<L, T> other(Node<L> current)
+		{
+			if(first != current)
+				return first;
+			return second;
 		}
 	}
 
