@@ -491,7 +491,8 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 		@Override
 		public Collection<T> tags()
 		{
-			HashSet<T> tags = new HashSet<T>(linksOut.keySet());
+			HashSet<T> tags = new HashSet<T>();
+			tags.addAll(linksOut.keySet());
 			tags.addAll(linksIn.keySet());
 			
 			return tags;
@@ -533,7 +534,7 @@ public class MapDTGraph<L, T> implements DTGraph<L, T>
 				return Collections.emptyList();
 			
 			List<MapDTLink> links = new LinkedList<MapDTLink>();
-			for(T tag : linksOut.keySet())
+			for(T tag : linksIn.keySet())
 				for(MapDTLink link : linksIn.get(tag))
 					if(link.second().equals(o))
 						links.add(link);

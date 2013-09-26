@@ -706,4 +706,20 @@ public class Functions
         
         return set;
     }
+    
+    public static <T extends Comparable<? super T>> Comparator<T> natural()
+    {
+    	return new NaturalComparator<T>();
+    }
+    
+    public static class NaturalComparator<T extends Comparable<? super T>> 
+    	implements Comparator<T> 
+    {
+	
+	    @Override
+	    public int compare(T first, T second) 
+	    {
+	        return first.compareTo(second);
+	    }
+    }
 }

@@ -90,8 +90,10 @@ public class SubgraphGenerator<L> extends AbstractGenerator<SubgraphGenerator<L>
 				new ArrayList<Link<L>>(linksChosen));
 	}
 	
-	public class Result {
+	public class Result 
+	{
 		private List<Node<L>> nodes;
+		private List<Integer> indices;
 		private List<Link<L>> trail;
 		private double logProbability = 0.0;
 		
@@ -99,6 +101,10 @@ public class SubgraphGenerator<L> extends AbstractGenerator<SubgraphGenerator<L>
 		{
 			this.nodes = nodes;
 			this.trail = linkTrail;
+			
+			indices = new ArrayList<Integer>(nodes.size());
+			for(Node<L> node : nodes)
+				indices.add(node.index());
 			
 			calculateProbability();
 		}
@@ -142,6 +148,11 @@ public class SubgraphGenerator<L> extends AbstractGenerator<SubgraphGenerator<L>
 		{
 			return nodes;
 		}
+		
+		public List<Integer> indices()
+		{
+			return indices;
+		}
 
 		public List<Link<L>> linkTrail()
 		{
@@ -151,6 +162,11 @@ public class SubgraphGenerator<L> extends AbstractGenerator<SubgraphGenerator<L>
 		public double logProbability()
 		{
 			return logProbability;
+		}
+		
+		public double invProbability()
+		{
+			return Math.pow(2.0, -logProbability());
 		}
 		
 		public Graph<L> subgraph()

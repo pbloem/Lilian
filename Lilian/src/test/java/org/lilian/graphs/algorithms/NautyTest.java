@@ -4,6 +4,9 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 import static org.lilian.graphs.Graphs.blank;
 import static org.lilian.util.Functions.asSet;
+import static org.lilian.util.Functions.natural;
+
+import org.lilian.util.Functions.NaturalComparator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,6 +128,66 @@ public class NautyTest
 		graph.node("f").connect(graph.node("i"));
 		graph.node("g").connect(graph.node("h"));
 		graph.node("h").connect(graph.node("i"));
+		
+		return graph;
+	}
+	
+	private UGraph<String> graphLabeled()
+	{
+		UGraph<String> graph = new MapUTGraph<String, String>();
+		
+		graph.add("r");
+		graph.add("b");
+		graph.add("r");
+		graph.add("b");
+		graph.add("r");
+		graph.add("b");
+		graph.add("r");
+		graph.add("b");
+		graph.add("r");
+
+		graph.get(0).connect(graph.get(1));
+		graph.get(1).connect(graph.get(2));
+		graph.get(0).connect(graph.get(3));
+		graph.get(1).connect(graph.get(4));
+		graph.get(2).connect(graph.get(5));
+		graph.get(3).connect(graph.get(4));
+		graph.get(4).connect(graph.get(5));
+		graph.get(3).connect(graph.get(6));
+		graph.get(4).connect(graph.get(7));
+		graph.get(5).connect(graph.get(8));
+		graph.get(6).connect(graph.get(7));
+		graph.get(7).connect(graph.get(8));
+		
+		return graph;
+	}
+	
+	private UGraph<String> graphLabeled2()
+	{
+		UGraph<String> graph = new MapUTGraph<String, String>();
+		
+		graph.add("r");
+		graph.add("r");
+		graph.add("r");
+		graph.add("r");
+		graph.add("r");
+		graph.add("b");
+		graph.add("b");
+		graph.add("b");
+		graph.add("b");
+
+		graph.get(0).connect(graph.get(1));
+		graph.get(1).connect(graph.get(2));
+		graph.get(0).connect(graph.get(3));
+		graph.get(1).connect(graph.get(4));
+		graph.get(2).connect(graph.get(5));
+		graph.get(3).connect(graph.get(4));
+		graph.get(4).connect(graph.get(5));
+		graph.get(3).connect(graph.get(6));
+		graph.get(4).connect(graph.get(7));
+		graph.get(5).connect(graph.get(8));
+		graph.get(6).connect(graph.get(7));
+		graph.get(7).connect(graph.get(8));
 		
 		return graph;
 	}
@@ -267,16 +330,14 @@ public class NautyTest
 		UGraph<String> graph = Graphs.blank(graph(), "x"), orderedA, orderedB;
 		Order order;
 		
-		Nauty nauty = new Nauty();
-
 		// * Find the canonical order for the graph
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		
 		orderedA = Graphs.reorder(graph, order);
 
 		// * re-order graph and test 
 		graph = Graphs.reorder(graph, Order.random(graph.size()));
-		order = Nauty.order(graph);		
+		order = Nauty.order(graph, new NaturalComparator<String>());		
 				
 		orderedB = Graphs.reorder(graph, order);
 		
@@ -285,19 +346,53 @@ public class NautyTest
 	}
 	
 	@Test
+	public void testSearchLabeled()
+	{
+		UGraph<String> graph = graphLabeled(), orderedA, orderedB, orderedC,
+				other = graphLabeled2();
+		
+		Order order;
+		
+		// * Find the canonical order for the graph
+		order = Nauty.order(graph, new NaturalComparator<String>());
+		
+		orderedA = Graphs.reorder(graph, order);
+
+		// * re-order graph and test 
+		graph = Graphs.reorder(graph, Order.random(graph.size()));
+		order = Nauty.order(graph, new NaturalComparator<String>());		
+				
+		orderedB = Graphs.reorder(graph, order);
+		
+		// * Canonical isomorph for the other graph
+		order = Nauty.order(other, new NaturalComparator<String>());
+		orderedC = Graphs.reorder(other, order);		
+		
+		assertTrue(orderedA.equals(orderedB));
+		assertTrue(orderedB.equals(orderedA));
+		
+		assertFalse(orderedA.equals(orderedC));
+		assertFalse(orderedC.equals(orderedA));
+		
+		assertFalse(orderedB.equals(orderedC));
+		assertFalse(orderedC.equals(orderedB));
+	}	
+	
+	
+	@Test
 	public void testSearchLegs()
 	{
 		UGraph<String> graph = Graphs.blank(legs(), "x"), orderedA, orderedB;
 		Order order;
 		
 		// * Find the canonical order for the graph
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		
 		orderedA = Graphs.reorder(graph, order);
 
 		// * re-order graph and test 
 		graph = Graphs.reorder(graph, Order.random(graph.size()));
-		order = Nauty.order(graph);		
+		order = Nauty.order(graph, new NaturalComparator<String>());		
 				
 		orderedB = Graphs.reorder(graph, order);
 		
@@ -316,19 +411,19 @@ public class NautyTest
 		System.out.println(blank(legsDirected(), "x") + " " + blank(legsDirected2(), "x"));
 		
 		// * Find the canonical order for the graph
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new Functions.NaturalComparator<String>());
 		System.out.println(order + " " + graph);
 		orderedA = Graphs.reorder(graph, order);
 
 		// * Re-order graph and test 
 		graph = Graphs.reorder(graph, Order.random(graph.size()));
 		
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		System.out.println(order + " " + graph);
 		orderedB = Graphs.reorder(graph, order);
 		
 		// * Canonical isomorph for the other graph
-		order = Nauty.order(other);
+		order = Nauty.order(other, new NaturalComparator<String>());
 		System.out.println(order + " " + graph);
 		orderedC = Graphs.reorder(other, order);
 		
@@ -353,19 +448,19 @@ public class NautyTest
 		System.out.println(legsDT1() + " " + legsDT2());
 		
 		// * Find the canonical order for the graph
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		System.out.println(order + " " + graph);
 		orderedA = Graphs.reorder(graph, order);
 
 		// * Re-order graph and test 
 		graph = Graphs.reorder(graph, Order.random(graph.size()));
 		
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		System.out.println(order + " " + graph);
 		orderedB = Graphs.reorder(graph, order);
 		
 		// * Canonical isomorph for the other graph
-		order = Nauty.order(other);
+		order = Nauty.order(other, new NaturalComparator<String>());
 		System.out.println(order + " " + graph);
 		orderedC = Graphs.reorder(other, order);
 		
@@ -386,13 +481,13 @@ public class NautyTest
 		Order order;
 		
 		// * Find the canonical order for the graph
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		
 		orderedA = Graphs.reorder(graph, order);
 
 		// * re-order graph and test 
 		graph = Graphs.reorder(graph, Order.random(graph.size()));
-		order = Nauty.order(graph);		
+		order = Nauty.order(graph, new NaturalComparator<String>());		
 				
 		orderedB = Graphs.reorder(graph, order);
 		
@@ -407,13 +502,13 @@ public class NautyTest
 		Order order;
 		
 		// * Find the canonical order for the graph
-		order = Nauty.order(graph);
+		order = Nauty.order(graph, new NaturalComparator<String>());
 		
 		orderedA = Graphs.reorder(graph, order);
 
 		// * re-order graph and test 
 		graph = Graphs.reorder(graph, Order.random(graph.size()));
-		order = Nauty.order(graph);		
+		order = Nauty.order(graph, new NaturalComparator<String>());		
 				
 		orderedB = Graphs.reorder(graph, order);
 		

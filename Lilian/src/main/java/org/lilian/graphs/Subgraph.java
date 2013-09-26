@@ -9,7 +9,6 @@ import java.util.List;
 import org.lilian.util.Series;
 
 /**
- * TODO: This is a polymorphism nightmare. It's too easy to call the wrong method.
  * @author Peter
  *
  */

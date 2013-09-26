@@ -5,6 +5,7 @@ import static org.lilian.util.Series.series;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -42,44 +43,42 @@ import org.lilian.util.Series;
 public class Nauty
 {
 	
-	public static <L> Order order(Graph<L> graph)
+	public static <L> Order order(Graph<L> graph, Comparator<L> comp )
 	{
 		if(graph instanceof DGraph<?>)
-			return order((DGraph<L>)graph);
+			return order((DGraph<L>)graph, comp);
 		
 		if(graph instanceof UGraph<?>)
-			return order((UGraph<L>)graph);
+			return order((UGraph<L>)graph, comp);
 
 		throw new RuntimeException("Type of graph ("+graph.getClass()+") not recognized");		
 	}
 	
-	public static <L> Order order(UGraph<L> graph)
+	public static <L> Order order(UGraph<L> graph, Comparator<L> comp)
 	{
-		return order(graph, false, false);
+		return order(graph, comp, false, false);
 	}
 	
-	public static <L> Order order(DGraph<L> graph)
+	public static <L> Order order(DGraph<L> graph, Comparator<L> comp)
 	{
-		return order(graph, true, false);
+		return order(graph, comp, true, false);
 	}
 	
-	public static <L, T> Order order(UTGraph<L, T> graph)
+	public static <L, T> Order order(UTGraph<L, T> graph, Comparator<L> comp)
 	{
-		return order(graph, false, true);
+		return order(graph, comp, false, true);
 	}
 	
-	public static <L, T> Order order(DTGraph<L, T> graph)
+	public static <L, T> Order order(DTGraph<L, T> graph, Comparator<L> comp)
 	{
-		return order(graph, true, true);
+		return order(graph, comp, true, true);
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static <L> Order order(Graph<L> graph, boolean directed, boolean tagged)
+	private static <L> Order order(Graph<L> graph, Comparator<L> comp,  boolean directed, boolean tagged)
 	{
 		// * Start with the unit partition
-		// SPEEDUP: partition by label first
-		List<List<Node<L>>> partition = new ArrayList<List<Node<L>>>(graph.size());
-		partition.add(new ArrayList<Node<L>>(graph.nodes()));
+		List<List<Node<L>>> partition = partition(graph, comp);
 		
 		List<Object> tags = null;
 		if(tagged)
@@ -160,6 +159,26 @@ public class Nauty
 		{
 			return max.partition();
 		}
+	}
+	
+	public static <L> List<List<Node<L>>> partition(Graph<L> graph, Comparator<L> comp)
+	{
+		Map<L, List<Node<L>>> byLabel = new LinkedHashMap<L, List<Node<L>>>();
+		for(Node<L> node : graph.nodes())
+		{
+			if(! byLabel.containsKey(node.label()))
+				byLabel.put(node.label(), new ArrayList<Node<L>>());
+			byLabel.get(node.label()).add(node);
+		}
+		
+		List<L> keys = new ArrayList<L>(byLabel.keySet());
+		Collections.sort(keys, comp);
+		
+		List<List<Node<L>>> result = new ArrayList<List<Node<L>>>();
+		
+		for(L key : keys)
+			result.add(byLabel.get(key));
+		return result;
 	}
 
 	/**
@@ -426,6 +445,8 @@ public class Nauty
 	 */
 	private static <T> String toString(List<List<Node<T>>> partition, boolean directed)
 	{		
+//System.out.println(partition);
+		
 		StringBuffer buffer = new StringBuffer();
 				
 		int[] order = new int[partition.size()];

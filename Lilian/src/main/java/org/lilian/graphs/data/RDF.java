@@ -8,8 +8,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.lilian.Global;
+import org.lilian.graphs.DTGraph;
+import org.lilian.graphs.DTLink;
 import org.lilian.graphs.DTNode;
 import org.lilian.graphs.MapDTGraph;
+import org.lilian.graphs.Node;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
 
@@ -115,5 +118,30 @@ public class RDF
 			if(pattern.matcher(string).matches())
 				return true;
 		return false;
+	}
+	
+	/**
+	 * Simplifies an RDF URI to retain most of its information
+	 * @param string
+	 * @return
+	 */
+	public static String simplify(String string)
+	{
+		String[] split = string.split("/");
+		
+		return split[split.length - 1]; 
+	}
+	
+	public static DTGraph<String, String> simplify(DTGraph<String, String> graph)
+	{
+		DTGraph<String, String> out = new MapDTGraph<String, String>();
+		
+		for(Node<String> node : graph.nodes())
+			out.add(simplify(node.label()));
+		
+		for(DTLink<String, String> link : graph.links())
+			out.get(link.first().index()).connect(out.get(link.second().index()), simplify(link.tag()));
+		
+		return out;
 	}
 }

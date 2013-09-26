@@ -34,6 +34,11 @@ public interface DTNode<L, T> extends DNode<L>, TNode<L, T>
 	
 	public Collection<? extends DTLink<L, T>> linksIn();		
 	
+	/**
+	 * Returns all links from a given other node to this node
+	 * @param other
+	 * @return
+	 */
 	public Collection<? extends DTLink<L, T>> linksIn(DTNode<L, T> other);
 	
 	public Collection<? extends DTNode<L, T>> toTag(T tag);
