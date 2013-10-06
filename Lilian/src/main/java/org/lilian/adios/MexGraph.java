@@ -1332,7 +1332,7 @@ public class MexGraph<T> implements Serializable
 		 */
 		public double overlap(Set<? extends Token> set)
 		{
-			int o = Functions.setOverlap(this.members, set);
+			int o = Functions.overlap(this.members, set);
 			return ((double)o)/((double)members.size());
 		}
 		

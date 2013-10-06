@@ -145,10 +145,10 @@ public class Functions
 	 * @param b the second set
 	 * @return The the number of elements present in both sets. 
 	 */
-	public static int setOverlap(Set<?> a, Set<?> b)
+	public static int overlap(Collection<?> a, Collection<?> b)
 	{
-		Set<?> smallest;
-		Set<?> largest;
+		Collection<?> smallest;
+		Collection<?> largest;
 		if(a.size() >= b.size())
 		{
 			largest = a;

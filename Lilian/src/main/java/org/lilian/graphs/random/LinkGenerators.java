@@ -17,7 +17,11 @@ import org.lilian.graphs.ULink;
 import org.lilian.graphs.UTGraph;
 import org.lilian.graphs.UTLink;
 
-
+/**
+ * A linkgenerator prodcuees a random link from a given graph
+ * @author Peter
+ *
+ */
 public class LinkGenerators 
 {	
 	public static class LinkGenerator<T> extends AbstractGenerator<Link<T>>

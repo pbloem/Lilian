@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.lilian.data.real.AbstractGenerator;
+import org.lilian.data.real.Generator;
 import org.lilian.graphs.Graph;
 import org.lilian.graphs.Link;
 import org.lilian.graphs.Node;
@@ -28,29 +29,41 @@ import org.lilian.util.Series;
  */
 public class SubgraphGenerator<L> extends AbstractGenerator<SubgraphGenerator<L>.Result>
 {
-	private int n;
+	private int n = -1;
+	private Generator<Integer> ints;
+	
 	private Graph<L> graph;
 	private LinkGenerator<L> links;
 	
 	
 	public SubgraphGenerator(Graph<L> graph, int n)
 	{
-		super();
 		this.n = n;
 		this.graph = graph;
 		
 		links = new LinkGenerator<L>(graph);
 	}
+	
+	public SubgraphGenerator(Graph<L> graph, Generator<Integer> ints)
+	{
+		this.graph = graph;
+		this.ints = ints;
+		
+		links = new LinkGenerator<L>(graph);
+	}
+
 
 	@Override
 	public SubgraphGenerator<L>.Result generate()
 	{
-		Set<Node<L>> nodes = new LinkedHashSet<Node<L>>(n);
+		int depth = n != -1 ? n : ints.generate();
+				
+		Set<Node<L>> nodes = new LinkedHashSet<Node<L>>(depth);
 		Set<Link<L>> linksChosen = new LinkedHashSet<Link<L>>();
 		Set<Link<L>> linksCandidates = new LinkedHashSet<Link<L>>();
 		
 		boolean success = false;
-		
+				
 		while(!success)
 		{
 			nodes.clear();
@@ -67,7 +80,7 @@ public class SubgraphGenerator<L> extends AbstractGenerator<SubgraphGenerator<L>
 				for(Node<L> node : link.nodes())
 					nodes.add(node);
 				
-				if(nodes.size() == n)
+				if(nodes.size() == depth)
 				{
 					success = true;
 					break;
