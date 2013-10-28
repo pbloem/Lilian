@@ -50,7 +50,7 @@ import org.lilian.util.Series;
 public class Induction
 {
 	// * The minimal subgraph size
-	private static int MIN_DEPTH = 5, MAX_DEPTH = 8;
+	private static int MIN_DEPTH = 4, MAX_DEPTH = 7;
 	// * The minimal number of distinct occurrences required for a subgraph to be 
 	//   replaced by a symbol node
 	private static int MIN_OCCURRENCES = 5;
