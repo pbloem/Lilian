@@ -77,11 +77,6 @@
   		<artifactId>commons-io</artifactId>
   		<version>2.2</version>
   	</dependency>
-  	<dependency>
-  		<groupId>peterboem.nl</groupId>
-  		<artifactId>powerlaws</artifactId>
-  		<version>0.0.1-SNAPSHOT</version>
-  	</dependency>
     <dependency>
         <groupId>javax.media.jai</groupId>
         <artifactId>com.springsource.javax.media.jai.core</artifactId>
@@ -144,6 +139,11 @@
      	<artifactId>commons-math</artifactId>
      	<version>2.2</version>
      </dependency>
+     <dependency>
+     	<groupId>data2semantics</groupId>
+     	<artifactId>powerlaws</artifactId>
+     	<version>0.0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
    <repositories>
     <repository>
@@ -167,11 +167,14 @@
         <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
         <url>http://repository.springsource.com/maven/bundles/external</url>
     </repository>
-            <repository>
-            <url>http://repo.aduna-software.org/maven2/releases/</url>
-            <id>Aduna</id>
-        </repository>
-      
+    <repository>
+        <url>http://repo.aduna-software.org/maven2/releases/</url>
+        <id>Aduna</id>
+    </repository>
+    <repository>
+        <url>http://ducktape.wongiseng.com/jenkins/job/powerlaws/3/maven-repository/</url>
+        <id>Data2Semantics</id>
+    </repository>
   </repositories>
   <build>
 	  <resources>
@@ -183,10 +186,10 @@
 	    <plugins>
 	      <plugin>
 	        <artifactId>maven-compiler-plugin</artifactId>
-	        <version>2.3.2</version>
+	        <version>3.0</version>
 	        <configuration>
-	    		<source>1.6</source>
-	    		<target>1.6</target>
+	    		<source>1.7</source>
+	    		<target>1.7</target>
 	    		<encoding>UTF-8</encoding>
 	 		</configuration>
 	        <executions>

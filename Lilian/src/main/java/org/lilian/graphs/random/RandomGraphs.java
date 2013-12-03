@@ -37,6 +37,14 @@ public class RandomGraphs
 		return bag.graph();
 	}
 	
+	public static DTGraph<String, String> preferentialAttachmentDirected(int nodes, int toAttach)
+	{
+		DBAGenerator bag = new DBAGenerator(BA_INITIAL, toAttach);
+		bag.iterate((nodes - BA_INITIAL));
+		
+		return bag.graph();
+	}
+	
 	public static UTGraph<String, String> random(int n, double prob)
 	{
 		MapUTGraph<String, String> graph = new MapUTGraph<String, String>();

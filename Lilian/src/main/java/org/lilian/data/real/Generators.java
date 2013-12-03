@@ -37,6 +37,53 @@ public class Generators
 	}
 	
 	
+	public static Generator<Double> logisticMap(double r)
+	{
+		return new LogisticMapGenerator(r);
+	}
+	
+	public static Generator<Boolean> logisticMapBinary(double r)
+	{
+		return new LogisticMapBinaryGenerator(r);
+	}
+	
+	private static class LogisticMapGenerator extends AbstractGenerator<Double>
+	{
+		private double x = Global.random.nextDouble();
+		private double r;
+		
+		public LogisticMapGenerator(double  r)
+		{
+			this.r = r;
+			
+			for(int i : series(50))
+				generate();
+		}
+		
+		@Override
+		public Double generate()
+		{
+			x = x * r * (1.0 - x);
+			return x;
+		}
+	}
+	
+	private static class LogisticMapBinaryGenerator extends AbstractGenerator<Boolean>
+	{
+		private LogisticMapGenerator master;
+		
+		public LogisticMapBinaryGenerator(double  r)
+		{
+			master = new LogisticMapGenerator(r);
+		}
+		
+		@Override
+		public Boolean generate()
+		{
+			return master.generate() < 0.5;
+		}
+	}
+	
 	public static Generator<Integer> exponential(int lower)
 	{
 		return new ExpoGenerator(lower);

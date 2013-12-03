@@ -50,7 +50,7 @@ import org.lilian.util.Series;
 public class Induction
 {
 	// * The minimal subgraph size
-	private static int MIN_DEPTH = 4, MAX_DEPTH = 7;
+	private static int MIN_DEPTH = 4, MAX_DEPTH =5;
 	// * The minimal number of distinct occurrences required for a subgraph to be 
 	//   replaced by a symbol node
 	private static int MIN_OCCURRENCES = 5;
@@ -79,8 +79,8 @@ public class Induction
 		
 		for(int i : Series.series(samples))
 		{
-			if(samples/10 != 0 && i%(samples/10) == 0)
-				Global.log().info("it: " + i);
+			//if(samples/10 != 0 && i%(samples/10) == 0)
+			Global.log().info("sample: " + i);
 			
 			SubgraphGenerator<String>.Result result = gen.generate();
 			DTGraph<String, String> sub = 
@@ -120,7 +120,9 @@ public class Induction
 
 		if(labelMatch != null) 
 		{
-			System.out.println("To replace: " + labelStore.bestMatch());
+			System.out.println("To replace: " + labelStore.toReplace());
+			System.out.println("motif: " + labelStore.bestMatch());
+
 			
 			BasicFrequencyModel<String> bfm = new BasicFrequencyModel<String>();
 			for(Node<String> node : current.nodes())
@@ -465,16 +467,22 @@ public class Induction
 			
 			double bestLabelEntropy = Double.NEGATIVE_INFINITY, bestTagEntropy = Double.NEGATIVE_INFINITY;
 			BasicFrequencyModel<String> bestLabel = null, bestTag = null;
+			int bestI = -1;
 			
+			int i = 0;
 			for(BasicFrequencyModel<String> bfm : bfmLabels)
 			{
 				if(bfm.entropy() > bestLabelEntropy)
 				{
+					bestI = i;
 					bestLabelEntropy = bfm.entropy();
 					bestLabel = bfm;
 				}
+				i++;
 			}
-				
+			
+			System.out.println("Best label, node i: " + best.nodes().get(bestI));
+			
 			for(BasicFrequencyModel<String> bfm : bfmTags)
 			{
 				if(bfm.entropy() > bestTagEntropy)

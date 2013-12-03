@@ -127,6 +127,33 @@ public class Graphs
 		return graph;
 	}
 	
+	/**
+	 * Returns a fully connected UT graph of the given size, with the given label
+	 * on all nodes (and null for all tags)
+	 * 
+	 * @param size
+	 * @param label
+	 * @return
+	 */
+	public static DTGraph<String, String> dk(int size, String label)
+	{
+		DTGraph<String, String> graph = new MapDTGraph<String, String>();
+		
+		for(int i : Series.series(size))
+		{
+			DTNode<String, String> node = graph.add(label);
+			
+			for(int j : Series.series(graph.size() - 1 ))
+			{
+				DTNode<String, String> other = graph.nodes().get(j);
+				node.connect(other);
+				other.connect(node);
+			}
+		}
+		
+		return graph;
+	}	
+	
 	public static UTGraph<String, String> line(int n, String label)
 	{
 		UTGraph<String, String> graph = new MapUTGraph<String, String>();
