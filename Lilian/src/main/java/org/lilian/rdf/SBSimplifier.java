@@ -5,7 +5,9 @@ import static org.nodes.util.Series.series;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import org.lilian.Global;
 import org.nodes.DTGraph;
@@ -38,8 +40,7 @@ public class SBSimplifier<L, T>
 	public SBSimplifier(DTGraph<L, T> graph)
 	{
 		this.graph = MapDTGraph.copy(graph);
-		ConnectionClustering<L> cc = new ConnectionClustering<L>(graph);
-
+		cc = new ConnectionClustering<L>(graph);
 	}
 	
 	public void iterate()
@@ -74,6 +75,13 @@ public class SBSimplifier<L, T>
 		}
 
 		top.remove();
+		
+	}
+	
+	public void cleanLeaves()
+	{
+
+		
 	}
 	
 	/**
