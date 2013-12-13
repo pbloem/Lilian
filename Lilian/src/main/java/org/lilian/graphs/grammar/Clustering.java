@@ -38,16 +38,11 @@ import org.nodes.util.Order;
 import org.nodes.util.Series;
 
 /**
- * A first stab at a scaleable graph grammar induction algorithm
- * 
- * 
- * - expansion rule: replace a symbol node with a small graph
- * - substitution rule: replace a symbol node with one of a number of symbols 
- * - TODO: Record wiring information
+ * Clustering by hierarchical motif substitution.
  * @author Peter
  *
  */
-public class Induction
+public class Clustering
 {
 	// * The minimal subgraph size
 	private static int MIN_DEPTH = 4, MAX_DEPTH =5;
@@ -60,10 +55,9 @@ public class Induction
 	private DTGraph<String, String> graphOrig;
 	private DTGraph<String, String> current;
 	
-	private List<SRule> sRules = new ArrayList<SRule>();
 	private List<XRule> xRules = new ArrayList<XRule>();
 	
-	public Induction(DTGraph<String, String> graph)
+	public Clustering(DTGraph<String, String> graph)
 	{
 		this.graphOrig = graph;
 		this.current = graph;
@@ -75,7 +69,6 @@ public class Induction
 		// * Sample subgraphs
 		
 		SubgraphStore subStore = new SubgraphStore();
-		LabelStore labelStore = new LabelStore();
 		
 		for(int i : Series.series(samples))
 		{
@@ -88,95 +81,34 @@ public class Induction
 							
 			int ties = 0;
 			List<Node<String>> nodes = result.nodes();
-			for(Node<String> node : nodes)
-				for(Node<String> neighbor : node.neighbors())
-					if(! nodes.contains(neighbor))
-						for(Link<String> link : node.links(neighbor))
-							ties++;
+//			for(Node<String> node : nodes)
+//				for(Node<String> neighbor : node.neighbors())
+//					if(! nodes.contains(neighbor))
+//						for(Link<String> link : node.links(neighbor))
+//							ties++;
 									
-			subStore.observe(sub, result.indices(), result.invProbability(), ties);
-			labelStore.observe(sub, result.invProbability(), ties);
+			subStore.observe(sub, result.indices(), result.invProbability());
 		}
 		
+		DTGraph<String, String> best = subStore.bestMatch();
 		
-		DTGraph<String, String> subMatch = subStore.bestMatch();
-		DTGraph<String, String> labelMatch = labelStore.bestMatch();
+		if(best == null)
+			return false;
 		
-		// * Check if any of the subgraphs found pass the threshold for extraction
-		if(subMatch != null)
-		{
-			DTGraph<String, String> best = subStore.bestMatch();
-			System.out.println("To extract: " + best);
-
-			newXRule(best, subStore.occurrences(best));
-			
-			FrequencyModel<String> labels = new FrequencyModel<String>();
-			for(Node<String> node : current.nodes())
-				labels.add(node.label());
-			System.out.println(labels.entropy());
-			
-			return true;
-		} 
-
-		if(labelMatch != null) 
-		{
-			System.out.println("To replace: " + labelStore.toReplace());
-			System.out.println("motif: " + labelStore.bestMatch());
-
-			
-			FrequencyModel<String> bfm = new FrequencyModel<String>();
-			for(Node<String> node : current.nodes())
-				bfm.add(node.label());
-			
-			System.out.println("Graph size " + current.size() + " " + bfm.entropy());
-
-			List<String> toReplace = labelStore.toReplace();
-			
-			System.out.println("tr: " + toReplace);
-			
-			newSRule(toReplace);
-			
-			return true; 
-		}
+		System.out.println(current.size() + ", " + current.numLinks() + ", " + current.links().size() + ": ");
+		System.out.println("To extract: " + best);
 		
-		return false;
-	}
-	
-	private void newSRule(List<String> toReplace)
-	{
-		String first = toReplace.get(0);
+		newXRule(best, subStore.occurrences(best));
 		
-		boolean label = ! current.nodes(first).isEmpty();
-			
-		SRule rule = new SRule(toReplace, label);
-		
-		DTGraph<String, String> old = current;
-		
-		current = new MapDTGraph<String, String>();
-		
-		Set<String> labelSet = new HashSet<String>(toReplace);
-		
-		for(Node<String> node : old.nodes())
-			if(labelSet.contains(node.label()))
-				current.add(rule.from());
-			else
-				current.add(node.label());
-
-		for(DTLink<String, String> link : old.links())
-			if(labelSet.contains(link.tag()))
-				current.get(link.from().index()).connect(
-						current.get(link.to().index()),
-						rule.from());
-			else
-				current.get(link.from().index()).connect(
-						current.get(link.to().index()),
-						link.tag());
+		System.out.println(current.size() + ", " + current.numLinks() + ", " + current.links().size() + ": ");
+				
+		return true;
 	}
 	
 	private void newXRule(DTGraph<String, String> sub, Set<List<Integer>> occurrences)
 	{
 		XRule rule = new XRule(sub);
-		
+			
 		// * Collect the nodes that have been extracted
 		Set<Node<String>> toRemove = new HashSet<Node<String>>();
 		
@@ -222,7 +154,7 @@ public class Induction
 		
 		return true;
 	}
-	
+
 	private int numXRule = 0;
 	
 	private class XRule
@@ -243,34 +175,6 @@ public class Induction
 		private String from;
 		private DTGraph<String, String> to;
 	}
-	
-
-	private int numSRule = 0;
-
-	private class SRule
-	{
-		
-		public SRule(List<String> labels, boolean label)
-		{
-			// * Count the occurrences
-			to = new FrequencyModel<String>();
-			
-			for(String token : labels)
-				to.add(token, current.nodes(token).size());
-			
-			from = "S" + numSRule;
-			
-			numSRule++;
-		}
-		
-		public String from()
-		{
-			return from;
-		}
-		
-		private String from;
-		private FrequencyModel<String> to;
-	}
 
 	private class SubgraphStore 
 	{
@@ -281,9 +185,7 @@ public class Induction
 		private Map<DTGraph<String, String>, Set<List<Integer>>> occurrences = 
 				new LinkedHashMap<DTGraph<String, String>, Set<List<Integer>>>();
 		
-
-		
-		public void observe(DTGraph<String, String> subgraph, List<Integer> nodes, double weight, int ties)
+		public void observe(DTGraph<String, String> subgraph, List<Integer> nodes, double weight)
 		{
 			Order order = Nauty.order(subgraph, new Functions.NaturalComparator<String>());
 			DTGraph<String, String> canonical = Graphs.reorder(subgraph, order);
@@ -296,7 +198,7 @@ public class Induction
 			
 			occurrences.get(canonical).add(unmodifiableList(nodes));
 						
-			tiesSum.add(canonical, ties);
+			tiesSum.add(canonical);
 					
 		}
 		
@@ -551,4 +453,9 @@ public class Induction
 		}
 	}
 	
+	
+	public DTGraph<String, String> current()
+	{
+		return current;
+	}
 }

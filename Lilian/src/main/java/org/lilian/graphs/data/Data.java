@@ -182,7 +182,7 @@ public class Data {
 		int i = 0;
 		
 		do
-		 {
+		{
 			line = reader.readLine();
 			i++;
 			

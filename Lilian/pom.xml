@@ -144,6 +144,11 @@
      	<artifactId>powerlaws</artifactId>
      	<version>0.0.1-SNAPSHOT</version>
      </dependency>
+     <dependency>
+     	<groupId>data2semantics</groupId>
+     	<artifactId>nodes</artifactId>
+     	<version>0.0.1-SNAPSHOT</version>
+     </dependency>
   </dependencies>
    <repositories>
     <repository>
@@ -170,10 +175,6 @@
     <repository>
         <url>http://repo.aduna-software.org/maven2/releases/</url>
         <id>Aduna</id>
-    </repository>
-    <repository>
-        <url>http://ducktape.wongiseng.com/jenkins/job/powerlaws/3/maven-repository/</url>
-        <id>Data2Semantics</id>
     </repository>
   </repositories>
   <build>

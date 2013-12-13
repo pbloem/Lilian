@@ -9,6 +9,12 @@ import org.lilian.corpora.*;
 
 import static org.lilian.util.Functions.*;
 
+/**
+ * TODO: Implement equals (see org.nodes.util.FrequencyModel)
+ * @author Peter
+ *
+ * @param <T>
+ */
 public class BasicFrequencyModel<T> extends AbstractFrequencyModel<T>
 	implements SequenceModel<T> {
 
