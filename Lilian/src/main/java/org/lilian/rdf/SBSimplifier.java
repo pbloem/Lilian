@@ -32,7 +32,7 @@ public class SBSimplifier<L, T>
 	private DTGraph<L, T> graph;
 	private ConnectionClustering<L> cc;
 	private boolean keepHubs;
-	private int k, i = 0;
+	private int k, i = 0, gccSize;
 	
 	/**
 	 * Creats an SBSimplifier for a given graph. The graph is copied, and the 
@@ -47,15 +47,21 @@ public class SBSimplifier<L, T>
 	{
 		this.graph = MapDTGraph.copy(graph);
 		cc = new ConnectionClustering<L>(graph);
+		gccSize =  cc.largestCluster().size();
+				
 		this.k = k;
 		this.keepHubs = keepHubs;
+	}
+	
+	public boolean finished()
+	{
+		return gccSize < k;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public void iterate()
 	{	
-		cc = new ConnectionClustering<L>(graph);
-		int gccSize =  cc.largestCluster().size();
+
 		Global.log().info(i + ") GCC: " + gccSize + ", components: " + cc.numClusters());
 
 		if(gccSize < k)
@@ -70,6 +76,9 @@ public class SBSimplifier<L, T>
 
 		for(Node<L> hub : observer.elements())
 			remove((DTNode<L, T>)hub);
+		
+		cc = new ConnectionClustering<L>(graph);
+		gccSize =  cc.largestCluster().size();
 		
 		i++;
 	}
