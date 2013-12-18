@@ -6,8 +6,10 @@ import static org.nodes.util.Series.series;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.lilian.Global;
 import org.nodes.DTGraph;
@@ -33,6 +35,12 @@ public class SBSimplifier<L, T>
 	private ConnectionClustering<L> cc;
 	private boolean keepHubs;
 	private int k, i = 0, gccSize;
+	private List<Pattern> black;
+	
+	public SBSimplifier(DTGraph<L, T> graph, int k, boolean keepHubs)
+	{
+		this(graph, k, keepHubs, new ArrayList<String>());
+	}
 	
 	/**
 	 * Creats an SBSimplifier for a given graph. The graph is copied, and the 
@@ -42,8 +50,10 @@ public class SBSimplifier<L, T>
 	 * @param k The number of hubs to remove each iteration (0.005 of the number of nodes is a good rule of thumb)
 	 * @param keepHubs If true, the hub node is kept and replicated for every 
 	 *   position in the graph it occurs. If false, it is simply deleted. 
+	 * @param blackList List of regular expressions. Any node whose label's toString matches one or more of these
+	 *                  will not be removed.  
 	 */
-	public SBSimplifier(DTGraph<L, T> graph, int k, boolean keepHubs)
+	public SBSimplifier(DTGraph<L, T> graph, int k, boolean keepHubs, List<String> blackList)
 	{
 		this.graph = MapDTGraph.copy(graph);
 		cc = new ConnectionClustering<L>(graph);
@@ -51,11 +61,23 @@ public class SBSimplifier<L, T>
 				
 		this.k = k;
 		this.keepHubs = keepHubs;
+		
+		black = new ArrayList<Pattern>(blackList.size());
+		for(String regex : blackList)
+			Pattern.compile(regex);
 	}
 	
 	public boolean finished()
 	{
-		return gccSize < k;
+		int total = 0;
+		for (int index : cc.largestCluster())
+		{
+			Node<L> node = graph.get(index);
+			if(! org.nodes.util.Functions.matches(node.label().toString(), black))
+				total ++;
+		}
+		
+		return total < k;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -64,14 +86,16 @@ public class SBSimplifier<L, T>
 
 		Global.log().info(i + ") GCC: " + gccSize + ", components: " + cc.numClusters());
 
-		if(gccSize < k)
-			throw new RuntimeException("The largest connected component is smaller than c");
-		
 		Comparator<Node<L>> comp = new DegreeComparator<L>();
 		MaxObserver<Node<L>> observer = new MaxObserver<Node<L>>(k, comp);
+		
 		for (int index : cc.largestCluster())
-			observer.observe(graph.get(index));
-
+		{
+			Node<L> node = graph.get(index);
+			if(! org.nodes.util.Functions.matches(node.label().toString(), black))
+				observer.observe(node);
+		}
+		
 		Global.log().info("Current top hubs: " + observer.elements());
 
 		for(Node<L> hub : observer.elements())
