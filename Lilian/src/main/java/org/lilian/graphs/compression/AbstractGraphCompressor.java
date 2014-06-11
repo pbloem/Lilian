@@ -19,6 +19,10 @@ public abstract class AbstractGraphCompressor<N> implements Compressor<Graph<N>>
 {
 
 	@Override
+	/**
+	 * Note that adding multiple graphs here will cause them to be combined into 
+	 * a single disconnected graph.
+	 */
 	public double compressedSize(Object... objects)
 	{
 		if(objects.length == 1)

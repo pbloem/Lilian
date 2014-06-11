@@ -14,12 +14,12 @@ import java.util.Set;
  * @author peter
  *
  */
-public class SimpleTagSet extends AbstractCollection<Tag> implements TagSet 
+public class TinyTagSet extends AbstractCollection<Tag> implements TagSet 
 {
 	private Set<Tag> tags = new HashSet<Tag>(); 
 	private Map<String, Tag> tagMap = new HashMap<String, Tag>();	
 	
-	public SimpleTagSet()
+	public TinyTagSet()
 	{
 		addTags();
 		
@@ -31,11 +31,12 @@ public class SimpleTagSet extends AbstractCollection<Tag> implements TagSet
 	{
 		tags.add(new Tag("verb", this));  // verbs
 		tags.add(new Tag("noun", this));  // nouns
+		tags.add(new Tag("func", this));  // function words
 		tags.add(new Tag("punct", this)); // punctuation 		 
-		tags.add(new Tag("num", this));   // numbers in any form
-		tags.add(new Tag("art", this));   // articles and determiners
 		tags.add(new Tag("misc", this));  // others
-
+		tags.add(new Tag("num", this));   // numbers in any form
+		tags.add(new Tag("mod", this));   // adjectives, adverbs, qualifiers		
+		tags.add(new Tag("art", this));   // articles and determiners		
 	}
 
 	@Override

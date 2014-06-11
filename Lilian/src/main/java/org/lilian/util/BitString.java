@@ -310,6 +310,23 @@ public class BitString extends AbstractList<Boolean> implements Serializable
 			out.set(i, Global.random.nextDouble() < probTrue ? true : false);
 		
 		return out;
+	}	
+	
+	/**
+	 * Creates a bitstring of the given length with the given number of random bits 
+	 * 
+	 * @param size
+	 * @param probTrue The probability of a 'true' bit being entered
+	 * @return
+	 */
+	public static BitString random(int size, int ones)
+	{
+		BitString out = BitString.zeros(size);
+		
+		for(int i : Functions.sample(ones, size))
+			out.set(i, true);
+		
+		return out;
 	}		
 	
 	public static String toString(byte b)

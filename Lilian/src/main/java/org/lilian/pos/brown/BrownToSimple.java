@@ -295,14 +295,12 @@ public class BrownToSimple implements TagMapper {
 	@Override
 	public TagSet input()
 	{
-		// TODO Auto-generated method stub
 		return brown;
 	}
 
 	@Override
 	public TagSet output()
 	{
-		// TODO Auto-generated method stub
 		return simple;
 	}
 

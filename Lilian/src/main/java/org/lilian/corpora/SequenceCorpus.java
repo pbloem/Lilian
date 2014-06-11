@@ -10,6 +10,7 @@ package org.lilian.corpora;
  *
  * @param <T>
  */
-public interface SequenceCorpus<T> extends Corpus<T> {
+public interface SequenceCorpus<T> extends Corpus<T> 
+{
 	public SequenceIterator<T> iterator();
 }
