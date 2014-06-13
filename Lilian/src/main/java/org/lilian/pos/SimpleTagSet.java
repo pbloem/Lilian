@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,8 +18,8 @@ import java.util.Set;
  */
 public class SimpleTagSet extends AbstractCollection<Tag> implements TagSet 
 {
-	private Set<Tag> tags = new HashSet<Tag>(); 
-	private Map<String, Tag> tagMap = new HashMap<String, Tag>();	
+	private Set<Tag> tags = new LinkedHashSet<Tag>(); 
+	private Map<String, Tag> tagMap = new LinkedHashMap<String, Tag>();	
 	
 	public SimpleTagSet()
 	{

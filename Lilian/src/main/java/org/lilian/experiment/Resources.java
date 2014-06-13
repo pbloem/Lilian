@@ -29,8 +29,6 @@ import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.fractal.random.RIFSs;
 import org.lilian.grammars.Grammar;
 import org.lilian.grammars.TestGrammars;
-import org.lilian.graphs.DTGraph;
-import org.lilian.graphs.Graph;
 import org.lilian.search.Builder;
 import org.lilian.util.Series;
 
@@ -344,12 +342,12 @@ public class Resources
 //		return org.lilian.graphs.data.RDF.readTurtle(file);
 //	}
 	
-	@Resource(name="gml graph")
-	public static Graph<String> gmlGraph(@Name("file") File file) 
-		throws IOException
-	{
-		return org.lilian.graphs.data.GML.read(file);	
-	}
+//	@Resource(name="gml graph")
+//	public static Graph<String> gmlGraph(@Name("file") File file) 
+//		throws IOException
+//	{
+//		return org.lilian.graphs.data.GML.read(file);	
+//	}
 	
 //	@Resource(name="text graph")
 //	public static Graph<Vertex<String>, Edge<String>> txtGraph(

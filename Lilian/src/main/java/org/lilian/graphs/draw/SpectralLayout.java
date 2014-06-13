@@ -12,11 +12,12 @@ import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
-import org.lilian.graphs.Graph;
-import org.lilian.graphs.Node;
 import org.lilian.util.MatrixTools;
+import org.nodes.Graph;
+import org.nodes.Node;
+import org.nodes.draw.Layout;
 
-public class SpectralLayout<L> implements Layout<L>
+public class SpectralLayout<L> 
 {
 	private List<Point> points; 
 
@@ -60,7 +61,6 @@ public class SpectralLayout<L> implements Layout<L>
 		
 	}
 	
-	@Override
 	public Point point(Node<L> node)
 	{
 		return points.get(node.index());

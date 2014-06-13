@@ -2,9 +2,10 @@ package org.lilian.graphs.subdue;
 
 import static org.lilian.util.Series.series;
 
-import org.lilian.graphs.MapUTGraph;
-import org.lilian.graphs.UTGraph;
-import org.lilian.graphs.UTNode;
+import org.nodes.MapUTGraph;
+import org.nodes.UTGraph;
+import org.nodes.UTNode;
+
 
 /**
  * A wrapping represents a context within which the labels of a given graph are
@@ -343,14 +344,12 @@ public class Wrapping<L, T>
 		@Override
 		public Integer firstAnnotation()
 		{
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public Integer secondAnnotation()
 		{
-			// TODO Auto-generated method stub
 			return null;
 		}
 	}

@@ -11,10 +11,10 @@ import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import org.lilian.graphs.TGraph;
-import org.lilian.graphs.TNode;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
+import org.nodes.TGraph;
+import org.nodes.TNode;
 
 /**
  * Searches for an (inexact) isomorphism between two graphs.

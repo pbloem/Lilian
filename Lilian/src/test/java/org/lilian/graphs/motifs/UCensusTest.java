@@ -3,9 +3,9 @@ package org.lilian.graphs.motifs;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.lilian.graphs.DGraph;
-import org.lilian.graphs.UGraph;
-import org.lilian.graphs.random.RandomGraphs;
+import org.nodes.DGraph;
+import org.nodes.UGraph;
+import org.nodes.random.RandomGraphs;
 
 public class UCensusTest
 {

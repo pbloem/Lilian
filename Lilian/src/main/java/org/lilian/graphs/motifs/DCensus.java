@@ -5,12 +5,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-
-import org.lilian.graphs.DGraph;
-import org.lilian.graphs.DNode;
-import org.lilian.graphs.Subgraph;
 import org.lilian.models.BasicFrequencyModel;
-import org.lilian.graphs.algorithms.DVF2;
+import org.nodes.DGraph;
+import org.nodes.DNode;
+import org.nodes.Subgraph;
+import org.nodes.algorithms.DVF2;
 
 public class DCensus<L>
 {

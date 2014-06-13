@@ -66,6 +66,9 @@ public class PennToSimple implements TagMapper {
 		map.put("''"    , "punct");  //
 		map.put(":"    , "punct");  //		
 		map.put("-NONE-"    , "punct");  //
+		
+		map.put("$"    , "misc");  //
+
 
 		
 		map.put("CC"    , "misc"  );          //  Coordinating conjunction

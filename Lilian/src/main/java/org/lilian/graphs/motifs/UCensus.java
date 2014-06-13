@@ -9,15 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.lilian.graphs.Graph;
-import org.lilian.graphs.Node;
-import org.lilian.graphs.Subgraph;
-import org.lilian.graphs.UGraph;
-import org.lilian.graphs.UNode;
 import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Series;
-import org.lilian.graphs.algorithms.UTVF2;
-import org.lilian.graphs.algorithms.UVF2;
+import org.nodes.Subgraph;
+import org.nodes.UGraph;
+import org.nodes.UNode;
+import org.nodes.algorithms.UVF2;
 
 public class UCensus<L>
 {

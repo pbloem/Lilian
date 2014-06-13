@@ -35,7 +35,7 @@ public final class Tag {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((tag == null) ? 0 : tag.hashCode());
-		result = prime * result + ((tagSet == null) ? 0 : tagSet.hashCode());
+		result = prime * result + ((tagSet == null) ? 0 : tagSet.getClass().hashCode());
 		return result;
 	}
 
@@ -56,7 +56,7 @@ public final class Tag {
 		if (tagSet == null) {
 			if (other.tagSet != null)
 				return false;
-		} else if (!tagSet.equals(other.tagSet))
+		} else if (!tagSet.getClass().equals(other.tagSet.getClass()))
 			return false;
 		return true;
 	}
