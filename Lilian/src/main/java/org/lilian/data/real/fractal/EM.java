@@ -59,7 +59,8 @@ import org.lilian.util.Series;
  * the (log) likelihood goes to zero quite quickly with the depth, and for a bad
  * model points may lay far off the distribution's support, we revert to
  * distance to the mean as an approximation of likelihood of the data point has
- * likelihood 0 for all models. </p> How do we find the transformations given
+ * likelihood 0 for all models. 
+ * </p> How do we find the transformations given
  * the codes? We look for point pairs with codes like a=1012220 and b=012220?.
  * Since b is a left-shifted version of a, we know that applying transformation
  * 1 to b will yield a (with an error that decreases with the depth). We collect
@@ -83,7 +84,7 @@ import org.lilian.util.Series;
  * The training data should be centered on the origin for the algorithm to work.
  * The best strategy is to use {@link Maps.centered()} and {@MappedList
  * } to created a centered version of the data. the inverse of this
- * map can be used to map data back to data space if necessary.</li>
+ * map can be used to map points back to data space if necessary.</li>
  * </ul>
  * 
  * @author Peter
@@ -133,7 +134,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	private Builder<M> mapBuilder;
 	protected Builder<IFS<M>> ifsBuilder;
 	
-	protected int lastDepth = -1;
+	protected double lastDepth = -1;
 	
 	// * The variance of the mvn from which the spanning point are sampled when 
 	//   there aremany points to a single code.
@@ -183,7 +184,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		this.spanningPointsVariance = spanningPointsVariance;
 	}
 
-	public void iterate(int sampleSize, int depth)
+	public void iterate(int sampleSize, double depth)
 	{
 		modelToCodes(sampleSize, depth);
 		codesToModel();
@@ -195,7 +196,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 * @param sampleSize
 	 * @param depth
 	 */
-	protected void modelToCodes(int sampleSize, int depth)
+	protected void modelToCodes(int sampleSize, double depth)
 	{
 
 		List<Point> sample = sampleSize == -1 ? data : Datasets.sample(data,
@@ -206,7 +207,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 		for (Point point : sample)
 		{
-			Weighted<List<Integer>> codes = codes(point, model, depth, maxSources); 
+			Weighted<List<Integer>> codes = codes(point, model, (int)depth, maxSources); 
 			
 			for(int i : series(codes.size()))
 				root.observe(codes.get(i), point, codes.probability(i));
@@ -215,11 +216,14 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		lastDepth = depth;
 	}
 	
+	
 	protected abstract Weighted<List<Integer>> codes(
 			Point point, IFS<M> model, int depth, int sources);
 	
+	
 	protected abstract M findMap(List<Point> from, List<Point> to, M old);
 
+	
 	protected void codesToModel()
 	{
 		// * Look for matching codes in the code tree

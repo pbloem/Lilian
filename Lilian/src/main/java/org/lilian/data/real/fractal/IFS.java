@@ -1,6 +1,7 @@
 package org.lilian.data.real.fractal;
 
 import static java.lang.Math.exp;
+import static org.lilian.util.Functions.probRound;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -23,13 +24,14 @@ import org.lilian.data.real.weighted.Weighted;
 import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
+import org.lilian.util.Functions;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
 
 /**
  * Represents an Iterated Function System, a collection of weighted maps.
  * 
- * Iterating some initial images (probability distribution) under these maps
+ * Iterating some initial images (probability distributions) under these maps
  * will generate a fractal (eg. the Sierpinski gasket).
  * 
  * NOTE: The original code contains a great deal more functionality, some of it
@@ -43,7 +45,8 @@ public class IFS<M extends Map & Parametrizable >
 	implements Serializable, Parametrizable
 {
 
-	private static final double KRIGING_SIGMA = 0.9;
+	
+	private static final double KERNEL_SIGMA = 0.9;
 	
 	private static final long serialVersionUID = 8913224252890438800L;
 
@@ -75,16 +78,16 @@ public class IFS<M extends Map & Parametrizable >
 	/**
 	 * Returns a generator which generates points to a fixed depth. It's a 
 	 * little slower than the chaos game (about a factor of depth), but can draw
-	 * points from low-depth models and draws properly iid points.
+	 * points from low-depth models and draws properly iid. points.
 	 * 
 	 * @return
 	 */
-	public Generator<Point> generator(int depth)
+	public Generator<Point> generator(double depth)
 	{
 		return new IFSFixedDepthGenerator(depth);
 	}
 	
-	public Generator<Point> generator(int depth, Generator<Point> basis)
+	public Generator<Point> generator(double depth, Generator<Point> basis)
 	{
 		return new IFSFixedDepthGenerator(depth, basis);
 	}
@@ -119,15 +122,15 @@ public class IFS<M extends Map & Parametrizable >
 	private class IFSFixedDepthGenerator extends AbstractGenerator<Point>
 	{
 		Generator<Point> basis;
-		int depth;
+		double depth;
 	
-		public IFSFixedDepthGenerator(int depth, Generator<Point> basis)
+		public IFSFixedDepthGenerator(double depth, Generator<Point> basis)
 		{
 			this.basis = basis;
 			this.depth = depth;
 		}
 		
-		public IFSFixedDepthGenerator(int depth)
+		public IFSFixedDepthGenerator(double depth)
 		{
 			this(depth, new MVN(dimension()));
 		}
@@ -137,7 +140,9 @@ public class IFS<M extends Map & Parametrizable >
 		{
 			Point p = basis.generate();
 			
-			for(int i = 0; i < depth; i++)
+			int intDepth = (int)probRound(depth);
+			
+			for(int i = 0; i < intDepth; i++)
 				p = random().map(p);
 			
 			return p;
@@ -237,12 +242,12 @@ public class IFS<M extends Map & Parametrizable >
 		return ifs;
 	}
 	
-	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, int depth)
+	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, double depth)
 	{
 		return density(ifs, point, depth, new MVN(ifs.dimension()));
 	}
 	
-	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, int depth, MVN basis)
+	public static <M extends AffineMap> double density(IFS<M> ifs, Point point, double depth, MVN basis)
 	{
 		SearchResult result = search(ifs, point, depth, basis);
 		
@@ -311,13 +316,13 @@ public class IFS<M extends Map & Parametrizable >
 	}
 	
 	public static <M extends AffineMap> SearchResult search(
-			IFS<M> ifs, Point point, int depth)
+			IFS<M> ifs, Point point, double depth)
 	{
 		return search(ifs, point, depth, new MVN(ifs.dimension()));
 	}
 	
 	public static <M extends AffineMap> SearchResult search(
-			IFS<M> ifs, Point point, int depth, MVN basis)
+			IFS<M> ifs, Point point, double depth, MVN basis)
 	{
 		return search(ifs, point, depth, basis, 1);
 	}
@@ -337,37 +342,79 @@ public class IFS<M extends Map & Parametrizable >
 	 * @return
 	 */
 	public static <M extends AffineMap> SearchResult search(
-			IFS<M> ifs, Point point, int depth, MVN basis, int bufferLimit)
+			IFS<M> ifs, Point point, double depth, MVN basis, int bufferLimit)
 	{
-
 		SearchResult res = search(
 				ifs, point, depth, new SearchResultImpl(depth, bufferLimit),
-				new ArrayList<Integer>(depth), 0.0,
+				new ArrayList<Integer>((int)Math.ceil(depth)), 0.0,
+				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
 				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
 				basis);
 		return res;
 	}
 	
+	/**
+	 * Note that if depth is not an integer, all values in the SearchResult are 
+	 * for ceil(depth), except for the log prob, which represents a weighted mix 
+	 * between the models at the two depths.
+	 *  
+	 * @param ifs
+	 * @param point
+	 * @param depth
+	 * @param result
+	 * @param current
+	 * @param logPrior
+	 * @param transform
+	 * @param translate
+	 * @param transformOld
+	 * @param translateOld
+	 * @param basis
+	 * @return
+	 */
 	private static <M extends AffineMap> SearchResult search(
-			IFS<M> ifs, Point point, int depth, 
+			IFS<M> ifs, Point point, double depth, 
 			SearchResultImpl result, List<Integer> current, 
 			double logPrior, 
 			RealMatrix transform, RealVector translate,
+			RealMatrix transformOld, RealVector translateOld,
 			MVN basis)	
-	{
-		if(current.size() == depth)
+	{	
+		if(current.size() >= depth)
 		{
+			double deep = depth - Math.floor(depth),
+			       shallow = 1.0 - deep;
+			
+			// System.out.println(depth + " " + deep + " " + shallow);
+			
 			double logProb;
 			
-			AffineMap map = new AffineMap(transform, translate);
 			AffineMap mvnMap = basis.map();
 			
-			map = (AffineMap) map.compose(mvnMap);
+			AffineMap mapDeep = new AffineMap(transform, translate);			
+			mapDeep = (AffineMap) mapDeep.compose(mvnMap);
 			
-			if(map.invertible())
+			AffineMap mapShallow = new AffineMap(transformOld, translateOld);			
+			mapShallow = (AffineMap) mapShallow.compose(mvnMap);
+
+			
+			if(mapDeep.invertible() &&  mapShallow.invertible())
 			{
-				MVN mvn = new MVN(map);
-				logProb = logPrior + Math.log(mvn.density(point));
+				double prob;
+				if(current.size() == depth)
+				{
+					MVN mvnDeep = new MVN(mapDeep);
+					prob = mvnDeep.density(point);
+				} else{
+					MVN mvnDeep = new MVN(mapDeep);
+					MVN mvnShallow = new MVN(mapShallow);
+
+					double probDeep = mvnDeep.density(point);
+					double probShallow = mvnShallow.density(point);
+
+					prob = deep * probDeep + shallow * probShallow;
+				}
+				logProb = logPrior + Math.log(prob);
+
 			} else { 
 				logProb = Double.NEGATIVE_INFINITY;
 			}
@@ -385,7 +432,7 @@ public class IFS<M extends Map & Parametrizable >
 			ct = ct.add(translate);
 			
 			search(ifs, point, depth, result, current, 
-					logPrior + Math.log(ifs.probability(i)), cr, ct, basis);
+					logPrior + Math.log(ifs.probability(i)), cr, ct, transform, translate, basis);
 			
 			current.remove(current.size() - 1);
 		}
@@ -462,13 +509,12 @@ public class IFS<M extends Map & Parametrizable >
 		private int daTotal = 0;
 		private double mvnSigma;
 		
-		public SearchResultImpl(int depth)
+		public SearchResultImpl(double depth)
 		{
-			mvnSigma = Math.pow(KRIGING_SIGMA, depth);
-
+			mvnSigma = Math.pow(KERNEL_SIGMA, depth);
 		}
 		
-		public SearchResultImpl(int depth, int bufferLimit)
+		public SearchResultImpl(double depth, int bufferLimit)
 		{
 			this(depth);
 			this.bufferLimit = bufferLimit;
@@ -606,8 +652,8 @@ public class IFS<M extends Map & Parametrizable >
 		return dist;
 	}
 
-	public static List<List<Integer>> codes(IFS<Similitude> ifs,
-			List<Point> points, int depth)
+	public static List<List<Integer>> codes(
+			IFS<Similitude> ifs, List<Point> points, int depth)
 	{
 		List<List<Integer>> codes = new ArrayList<List<Integer>>(points.size());
 		

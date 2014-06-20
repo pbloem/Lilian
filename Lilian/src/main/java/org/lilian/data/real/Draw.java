@@ -125,7 +125,7 @@ public class Draw
 											int res,
 											boolean log)
 	{	
-		return draw(data, xrange, yrange, res, res, log, false);
+		return draw(data, xrange, yrange, res, res, log, true);
 	}
 	
 	public static BufferedImage draw(List<Point> data, 
@@ -185,13 +185,13 @@ public class Draw
 					value = (float)Math.log(value + 1.0f);
 				
 				float gray = (value - min)/(max - min);
-				
+								
 				if(gray < 0.0)
 					color = Color.BLUE;
 				else if(gray > 1.0)
 					color = Color.RED;
 				else				
-					color  = new Color(gray, gray, gray, gray);
+					color  = new Color(0.0f, 0.0f, 0.0f, gray);
 				
 				image.setRGB(x, y, color.getRGB());
 			}
@@ -222,7 +222,7 @@ public class Draw
 	
 	public static <M extends Map & Parametrizable> BufferedImage draw(
 			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
-			int xRes, int yRes, boolean log, int depth, Generator<Point> basis)
+			int xRes, int yRes, boolean log, double depth, Generator<Point> basis)
 	{
 		BufferedImage image = draw(
 				depth == -1 ? ifs.generator() : ifs.generator(depth, basis), samples, xrange, yrange, xRes, yRes, log);
@@ -338,7 +338,7 @@ public class Draw
 	{
 		
 		AffineMap inverse = (preMap != null) ? preMap.inverse() : null;
-		System.out.println(inverse);
+		//System.out.println(inverse);
 		
 		// * size of the image in coordinates
 		double 	xDelta = xrange[1] - xrange[0],
@@ -398,13 +398,13 @@ public class Draw
 					value = (float)Math.log(value + 1.0f);
 				
 				float gray = (value - min)/(max - min);
-				
+								
 				if(gray < 0.0)
 					color = Color.BLUE;
 				else if(gray > 1.0)
 					color = Color.RED;
 				else				
-					color  = new Color(gray, gray, gray, 1.0f);
+					color  = new Color(0.0f, 0.0f, 0.0f, gray);
 				
 				image.setRGB(x, y, color.getRGB());
 			}
@@ -601,7 +601,7 @@ public class Draw
 			double[] xrange, 
 			double[] yrange, 
 			int res,
-			int depth,
+			double depth,
 			boolean useApproximation)
 	{		
 		double 	xDelta = xrange[1] - xrange[0],

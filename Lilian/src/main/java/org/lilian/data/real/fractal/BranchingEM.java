@@ -100,7 +100,7 @@ public class BranchingEM extends SimEM
 			this.model = model;
 		}
 		
-		public void update(int depth)
+		public void update(double depth)
 		{
 			if(lastUpdated == iteration)
 				return;
