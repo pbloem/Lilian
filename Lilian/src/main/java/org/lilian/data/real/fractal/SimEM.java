@@ -25,7 +25,7 @@ public class SimEM extends EM<Similitude>
 
 	@Override
 	protected Weighted<List<Integer>> codes(
-			Point point, IFS<Similitude> model, int depth,
+			Point point, IFS<Similitude> model, double depth,
 			int sources)
 	{
 		IFS.SearchResult result = 

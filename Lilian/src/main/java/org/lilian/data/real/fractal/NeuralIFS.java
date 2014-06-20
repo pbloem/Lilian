@@ -40,7 +40,7 @@ public class NeuralIFS
 	
 	private static <M extends Map & Parametrizable> void search(
 			IFS<M> ifs, SearchResultImpl sr, List<Integer> prefix, 
-			Point point, Point end, double prior, int depth, double contraction)
+			Point point, Point end, double prior, double depth, double contraction)
 	{
 		// * NOTE: At this point prefix is in the reverse order of the 
 		//   code that is actually returned (since we're applying the maps

@@ -35,10 +35,10 @@ public class NeuralEM extends EM<ThreeLayer>
 	@Override
 	protected Weighted<List<Integer>> codes(
 			Point point, IFS<ThreeLayer> model,
-			int depth, int sources)
+			double depth, int sources)
 	{
 		Weighted<List<Integer>> codes = 
-				NeuralIFS.search(point, model, depth, ESTIMATED_CONTRACTION, sources).codes();
+				NeuralIFS.search(point, model, (int)depth, ESTIMATED_CONTRACTION, sources).codes();
 		// System.out.println(codes);
 		
 		return codes;

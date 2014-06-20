@@ -343,7 +343,7 @@ public class IFS<M extends Map & Parametrizable >
 	 */
 	public static <M extends AffineMap> SearchResult search(
 			IFS<M> ifs, Point point, double depth, MVN basis, int bufferLimit)
-	{
+	{	
 		SearchResult res = search(
 				ifs, point, depth, new SearchResultImpl(depth, bufferLimit),
 				new ArrayList<Integer>((int)Math.ceil(depth)), 0.0,
@@ -379,13 +379,11 @@ public class IFS<M extends Map & Parametrizable >
 			RealMatrix transformOld, RealVector translateOld,
 			MVN basis)	
 	{	
-		if(current.size() >= depth)
-		{
+		if(current.size() >= (double)depth)
+		{			
 			double deep = depth - Math.floor(depth),
 			       shallow = 1.0 - deep;
-			
-			// System.out.println(depth + " " + deep + " " + shallow);
-			
+				
 			double logProb;
 			
 			AffineMap mvnMap = basis.map();

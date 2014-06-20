@@ -394,25 +394,26 @@ public class Functions
 				removeLeavesInner(node.getChildren().get(i), list);
 	}
 	
-	private static long ticTime = -1;
+	private static ThreadLocal<Long> ticTime = new ThreadLocal<Long>();
+	
 	public static void tic()
 	{
-		ticTime = System.currentTimeMillis();
+		ticTime.set(System.currentTimeMillis());
 	}
 	
 	/** 
 	 * Returns the number of seconds since tic was last called. <br/>
 	 * <br/>
-	 * Not thread-safe (at all).
+	 * Thread safe.
 	 * 
 	 * @return A double representing the number of seconds since the last call 
 	 *         to tic(). 
 	 */
 	public static double toc()
 	{
-		if(ticTime  < 0)
+		if(ticTime.get() == null)
 			throw new IllegalStateException("Tic has not been called yet");
-		return (System.currentTimeMillis() - ticTime)/1000.0;
+		return (System.currentTimeMillis() - ticTime.get())/1000.0;
 	}
 
 	/**

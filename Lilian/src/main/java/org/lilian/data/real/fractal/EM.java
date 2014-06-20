@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.jfree.util.Log;
 import org.lilian.Global;
+import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
@@ -207,8 +208,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 		for (Point point : sample)
 		{
-			Weighted<List<Integer>> codes = codes(point, model, (int)depth, maxSources); 
-			
+			Weighted<List<Integer>> codes = codes(point, model, depth, maxSources); 
+						
 			for(int i : series(codes.size()))
 				root.observe(codes.get(i), point, codes.probability(i));
 		}
@@ -218,7 +219,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	
 	
 	protected abstract Weighted<List<Integer>> codes(
-			Point point, IFS<M> model, int depth, int sources);
+			Point point, IFS<M> model, double depth, int sources);
 	
 	
 	protected abstract M findMap(List<Point> from, List<Point> to, M old);
@@ -919,5 +920,31 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 		return model;
 	}
+	
+	public static <M extends AffineMap & Parametrizable> 
+		double bestDepth(IFS<M> model, double from, double step, double to, int samples, List<Point> data)
+	{
+		
+		double bestDepth = Double.NaN;
+		double bestLL = Double.NEGATIVE_INFINITY; 
+		
+		for(double depth : Series.series(from, step, to))
+		{
+			System.out.print(" " + depth);
 
+			List<Point> sample = Datasets.sample(data, samples);
+			
+			double ll = 0.0;
+			for(Point point : sample)
+				ll += Math.log(model.density(model, point, depth));
+				
+			if(ll > bestLL)
+			{
+				bestLL = ll;
+				bestDepth = depth;
+			}
+		}
+		System.out.println();
+		return bestDepth;
+	}
 }
