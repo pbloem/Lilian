@@ -172,10 +172,6 @@
         <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
         <url>http://repository.springsource.com/maven/bundles/external</url>
     </repository>
-    <repository>
-        <url>http://repo.aduna-software.org/maven2/releases/</url>
-        <id>Aduna</id>
-    </repository>
   </repositories>
   <build>
 	  <resources>
