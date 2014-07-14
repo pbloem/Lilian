@@ -254,6 +254,23 @@ public class IFSs
 				));
 	}
 	
+	public static IFS<Similitude> koch4SimOff(double p, double q, double r, double s)
+	{		
+		double
+			scale = 1.0/3.0,
+			a = Math.PI/3.0,
+			y = sin(a) * (1/3.0),
+			x = (1/3.0) - cos(a) * (1/3.0);
+		
+		Builder<IFS<Similitude>> builder = IFS.builder(2, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				scale, -2/3.0, 0.0, 0.0, p,
+				scale, -x, -y, a / (Math.PI * 2), q,
+				scale, x, -y, -a / (Math.PI * 2), r,
+				scale, 2/3.0, 0.0, 0.0, s
+				));
+	}
+	
 	public static IFS<Similitude> koch4DownSim()
 	{
 		double
