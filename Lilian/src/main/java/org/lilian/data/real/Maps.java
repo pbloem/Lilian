@@ -25,7 +25,7 @@ import org.lilian.util.Series;
 
 public class Maps
 {
-	public static int MAX_SVD_RETRIES = 20;
+	public static int MAX_SVD_RETRIES = 50;
 	
 	/**
 	 * Finds the best fitting affine transformation from the points in xSet to 

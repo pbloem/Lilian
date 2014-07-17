@@ -44,7 +44,7 @@ import org.lilian.util.Series;
  *   </li>
  * </ul>
  */
-public class MVN implements Density, Generator<Point>, Parametrizable
+public class MVN extends AbstractDensity implements Generator<Point>, Parametrizable
 {
 
 	private static final long serialVersionUID = 2741764705947779052L;
@@ -126,7 +126,7 @@ public class MVN implements Density, Generator<Point>, Parametrizable
 		
 		transform = new AffineMap(decomp.getL(), mean.getVector());
 
-		inverse = transform.inverse();	
+		inverse = transform.inverse();
 	}	
 	
 	public MVN(AffineMap transform)

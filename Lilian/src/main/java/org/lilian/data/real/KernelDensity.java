@@ -1,9 +1,10 @@
 package org.lilian.data.real;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class KernelDensity implements Density
+public class KernelDensity extends AbstractDensity
 {
 	private static final long serialVersionUID = -1576741835502637155L;
 	private List<MVN> mvns;
@@ -33,5 +34,4 @@ public class KernelDensity implements Density
 	{
 		return mvns.get(0).dimension();
 	}
-
 }
