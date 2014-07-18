@@ -255,28 +255,20 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 				// * Find the map for the point pairs
 				M map = findMap(maps.from(i), maps.to(i), model.get(i));
 				
-				
-				// * Find the weight for the frequency pairs
-				double weight = findScalar(maps.fromWeights(i),
+				if(map != null)
+				{
+					// * Find the weight for the frequency pairs
+					double weight = findScalar(maps.fromWeights(i),
 						maps.toWeights(i));
-
-				// * If the map contracts too much, we perturb it slightly
-//				double det = MatrixTools
-//						.getDeterminant(map.getTransformation());
-//				if (Math.abs(det) < CONTRACTION_THRESHOLD || Double.isNaN(det))
-//					map = Parameters
-//							.perturb(map,
-//									Similitude.similitudeBuilder(dimension),
-//									perturbVar);
-
-				trans.set(i, map);
-				weights.set(i, weight);
-
-				assigned.add(i);
-			} else
-			{ // No codes found with this component
+	
+					trans.set(i, map);
+					weights.set(i, weight);
+	
+					assigned.add(i);
+				} else
+					unassigned.add(i);
+			} else		
 				unassigned.add(i);
-			}
 		}
 
 		if(! unassigned.isEmpty())

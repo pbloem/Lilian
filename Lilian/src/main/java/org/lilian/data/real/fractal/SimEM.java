@@ -36,7 +36,9 @@ public class SimEM extends EM<Similitude>
 	@Override
 	protected Similitude findMap(List<Point> from, List<Point> to, Similitude old)
 	{
-		return org.lilian.data.real.Maps.findMap(from, to);
+		Similitude sim = org.lilian.data.real.Maps.findMap(from, to);
+		
+		return sim;
 	}
 
 }

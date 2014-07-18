@@ -52,7 +52,11 @@ public class Maps
 	 */
 	public static AffineMap findAffineMap(List<Point> xSet, List<Point> ySet)
 	{
-		return findMapResult(xSet, ySet).affineMap();
+		MapResult res = findMapResult(xSet, ySet);
+		if(res == null)
+			return null;
+		
+		return res.affineMap(); 
 	}
 	
 	/**
@@ -63,7 +67,11 @@ public class Maps
 	 */
 	public static Similitude findMap(List<Point> xSet, List<Point> ySet)
 	{
-		return findMapResult(xSet, ySet).similitude();
+		MapResult res = findMapResult(xSet, ySet);
+		if(res == null)
+			return null;
+		
+		return res.similitude();
 	}
 	
 	public static MapResult findMapResult(List<Point> xSet, List<Point> ySet)
@@ -137,7 +145,7 @@ public class Maps
 			{
 				retries++;
 				if(retries > MAX_SVD_RETRIES)
-					throw new RuntimeException(e);
+					return null;
 			}
 		}
 		
