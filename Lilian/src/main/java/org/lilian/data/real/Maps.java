@@ -50,9 +50,9 @@ public class Maps
 	 * 	found (this happens when the covariance matrix of x and y cannot 
 	 * 	be decomposed with a singular value decomposition) 
 	 */
-	public static AffineMap findAffineMap(List<Point> xSet, List<Point> ySet)
+	public static AffineMap findSimilitudeMap(List<Point> xSet, List<Point> ySet)
 	{
-		MapResult res = findMapResult(xSet, ySet);
+		FindSimilitudeResult res = findSimilitudeResult(xSet, ySet);
 		if(res == null)
 			return null;
 		
@@ -61,20 +61,21 @@ public class Maps
 	
 	/**
 	 * Like findAffineMap, but converts the rotation matrix to a set of angles
+	 * 
 	 * @param xSet
 	 * @param ySet
 	 * @return
 	 */
-	public static Similitude findMap(List<Point> xSet, List<Point> ySet)
+	public static Similitude findSimilitude(List<Point> xSet, List<Point> ySet)
 	{
-		MapResult res = findMapResult(xSet, ySet);
+		FindSimilitudeResult res = findSimilitudeResult(xSet, ySet);
 		if(res == null)
 			return null;
 		
 		return res.similitude();
 	}
 	
-	public static MapResult findMapResult(List<Point> xSet, List<Point> ySet)
+	public static FindSimilitudeResult findSimilitudeResult(List<Point> xSet, List<Point> ySet)
 	{
 		int dim = xSet.get(0).dimensionality();
 		int size = xSet.size();
@@ -183,17 +184,17 @@ public class Maps
 		double e = yStdDev - (trace*trace)/xStdDev;
 		
 		// * Create the MapResult
-		return new MapResult(c, r, t, e);
+		return new FindSimilitudeResult(c, r, t, e);
 	}
 	
-	public static class MapResult implements Comparable<MapResult>
+	public static class FindSimilitudeResult implements Comparable<FindSimilitudeResult>
 	{
 		double scale;
 		double error;
 		RealMatrix rotation;
 		RealVector translation;
 		
-		private MapResult(double scale, RealMatrix rotation,
+		private FindSimilitudeResult(double scale, RealMatrix rotation,
 				RealVector translation, double error)
 		{
 			super();
@@ -245,7 +246,7 @@ public class Maps
 		}
 
 		@Override
-		public int compareTo(MapResult other)
+		public int compareTo(FindSimilitudeResult other)
 		{
 			return Double.compare(this.error, other.error);
 		}

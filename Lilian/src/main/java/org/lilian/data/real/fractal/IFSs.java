@@ -509,7 +509,7 @@ public class IFSs
 			x = Datasets.sample(data, perMap);
 			y = Datasets.sample(data, perMap);
 			
-			Similitude map = Maps.findMap(x, y);
+			Similitude map = Maps.findSimilitude(x, y);
 			if(map.scalar() > 1.0)
 				map = map.inverse();
 			

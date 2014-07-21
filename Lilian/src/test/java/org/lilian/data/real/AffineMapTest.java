@@ -2,10 +2,13 @@ package org.lilian.data.real;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
+import org.lilian.Global;
 import org.lilian.search.Builder;
 import org.lilian.search.Parameters;
 import org.lilian.util.Series;
@@ -148,4 +151,59 @@ public class AffineMapTest
 		return builder.build(p);
 	}
 
+	
+	@Test
+	public void testFindMap1()
+	{
+		int dim = 5;
+		
+		AffineMap map = Parameters.random(AffineMap.affineMapBuilder(dim), 0.1);
+		
+		List<Point> x, y, yRes;
+		x = points(30, dim, 0.01);
+		y = map.map(x);
+		
+		AffineMap found = AffineMap.find(x, y);
+		
+		System.out.println("original map:" + map);
+		System.out.println("       found:" + found);
+		
+		x = points(100, dim, 0.01);
+		y = map.map(x);
+
+		yRes = found.map(x);
+		
+		for(int i : Series.series(x.size()))
+			for(int j : Series.series(dim))
+				assertEquals(y.get(i).get(j), yRes.get(i).get(j), 0.0001);
+	}
+	
+	@Test 
+	public void testFindMap2()
+	{
+		List<Point> x, y;
+		x = points(30, 5, 0.01);
+		y = x;
+		
+		AffineMap map =AffineMap.find(x, y);
+		
+		assertTrue(map.equals(AffineMap.identity(5), 0.01));
+	}
+	
+	public static List<Point> points(int num, int dim, double var)
+	{
+		Global.random = new Random();
+		List<Point> points = new ArrayList<Point>(num);
+		
+		for(int i : Series.series(num))
+		{
+			Point point = new Point(dim);
+			for(int j : Series.series(dim))
+				point.set(j, Global.random.nextGaussian() * var);
+			
+			points.add(point);
+		}
+		
+		return points;
+	}
 }

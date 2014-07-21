@@ -53,7 +53,7 @@ public class NeuralEM extends EM<ThreeLayer>
 //		else
 //			network = old;
 		
-		Similitude sim = org.lilian.data.real.Maps.findMap(from, to);
+		Similitude sim = org.lilian.data.real.Maps.findSimilitude(from, to);
 		ThreeLayer network = ThreeLayer.copy(sim, old.hiddenSize(), epochs*from.size(), learningRate, 0.1);
 		
 		// network.train(to, from, learningRate, epochs);

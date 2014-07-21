@@ -13,6 +13,14 @@ import org.lilian.Global;
 public class Parameters
 {
 
+	public static <M extends Parametrizable> M random(Builder<M> builder, double variance)
+	{
+		int n = builder.numParameters();
+		List<Double> parameters = random(n, variance);
+		
+		return builder.build(parameters);
+	}
+	
 	public static List<Double> random(int size, double var)
 	{
 		List<Double> r = new ArrayList<Double>(size);

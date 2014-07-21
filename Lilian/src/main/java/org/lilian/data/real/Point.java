@@ -13,6 +13,7 @@ import org.apache.commons.math.linear.RealVector;
 import org.hamcrest.core.IsInstanceOf;
 import org.lilian.Global;
 import org.lilian.util.distance.Metrizable;
+import org.nodes.util.Series;
 
 public class Point 
 	extends AbstractList<Double>
@@ -77,6 +78,18 @@ public class Point
 		values[index] = value;
 		
 		return old;
+	}
+	
+	/**
+	 * Sets the given values as values in this point.
+	 *  
+	 * @param values
+	 * @return
+	 */
+	public void set(List<Double> values)
+	{
+		for(int i : Series.series(Math.min(size(), values.size())))
+			set(i, values.get(i));
 	}
 	
 	@Override

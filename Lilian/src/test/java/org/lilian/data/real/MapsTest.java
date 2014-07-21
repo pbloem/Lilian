@@ -9,7 +9,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.lilian.Global;
-import org.lilian.data.real.Maps.MapResult;
+import org.lilian.data.real.Maps.FindSimilitudeResult;
 import org.lilian.search.Parameters;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
@@ -26,7 +26,7 @@ public class MapsTest
 		x = points(30, 5, 0.01);
 		y = x;
 		
-		AffineMap map = Maps.findMap(x, y);
+		AffineMap map = Maps.findSimilitude(x, y);
 		
 		assertTrue(map.equals(AffineMap.identity(5), 0.01));
 	}
@@ -38,7 +38,7 @@ public class MapsTest
 		x = points(3, 5, 0.01);
 		y = points(3, 5, 0.01);
 		
-		MapResult result = Maps.findMapResult(x, y);
+		FindSimilitudeResult result = Maps.findSimilitudeResult(x, y);
 		AffineMap map = result.affineMap();
 		
 		yC = map.map(x);
@@ -67,7 +67,7 @@ public class MapsTest
 		x = points(num, 2, 3.4);
 		y = map.map(x);
 		
-		AffineMap re = Maps.findMap(x, y);
+		AffineMap re = Maps.findSimilitude(x, y);
 	
 		for(int i = 0; i < x.size(); i++)
 		{
@@ -92,7 +92,7 @@ public class MapsTest
 		y.add(new Point(-1., 0.0));
 				
 		
-		AffineMap re = Maps.findMap(x, y);
+		AffineMap re = Maps.findSimilitude(x, y);
 	
 		for(int i = 0; i < x.size(); i++)
 			assertEquals(0.0, d.distance(y.get(i), re.map(x.get(i))), 0.01);
@@ -115,7 +115,7 @@ public class MapsTest
 		y.add(new Point(-2., 0.0));
 				
 		
-		AffineMap re = Maps.findMap(x, y);
+		AffineMap re = Maps.findSimilitude(x, y);
 	
 		for(int i = 0; i < x.size(); i++)
 			assertEquals(0.0, d.distance(y.get(i), re.map(x.get(i))), 0.01);
@@ -137,7 +137,7 @@ public class MapsTest
 		y.add(new Point(0.0, 1.0));
 		y.add(new Point(1.0, 2.0));
 				
-		AffineMap re = Maps.findMap(x, y);
+		AffineMap re = Maps.findSimilitude(x, y);
 	
 		for(int i = 0; i < x.size(); i++)
 			assertEquals(0.0, d.distance(y.get(i), re.map(x.get(i))), 0.01);
@@ -158,7 +158,7 @@ public class MapsTest
 		y.add(new Point(1.0, 1.0));
 		y.add(new Point(2.0, 2.0));
 				
-		AffineMap re = Maps.findMap(x, y);
+		AffineMap re = Maps.findSimilitude(x, y);
 	
 		for(int i = 0; i < x.size(); i++)
 			//System.out.println(x.get(i) + " " + y.get(i) + " " + re.map(x.get(i)));

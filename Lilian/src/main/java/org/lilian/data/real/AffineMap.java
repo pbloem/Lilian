@@ -1,5 +1,7 @@
 package org.lilian.data.real;
 
+import static org.lilian.util.Series.series;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -7,6 +9,7 @@ import org.apache.commons.math.linear.*;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Series;
 
 
 /**
@@ -14,6 +17,8 @@ import org.lilian.util.MatrixTools;
  */
 public class AffineMap extends AbstractMap implements Parametrizable, Serializable
 {
+	public static int MAX_SVD_RETRIES = 50;
+	
 	private static final long serialVersionUID = 7470030390150319468L;
 	
 	protected int dim = -1;
@@ -296,6 +301,64 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		out = out.add(translation); // here
 		
 		return new Point(out.getData()); // and here
+	}
+
+
+	/**
+	 * Returns the least squares solution mapping set x into set y
+	 * @param xSet
+	 * @param ySet
+	 * @return An affine map, which maps x onto a set as close as possible to 
+	 *   y (by least squares error). Null if, for whatever reason, such a map 
+	 *   could not be found.
+	 */
+	public static AffineMap find(List<Point> xSet, List<Point> ySet)
+	{
+		// * create data matrices x and y
+		//   (each point is a row)
+		RealMatrix y = new Array2DRowRealMatrix(ySet.size(), ySet.get(0).size());
+		for(int rowIndex : series(ySet.size()))
+			y.setRow(rowIndex, ySet.get(rowIndex).getBackingData());
+		
+		// -- with x we add an extra 'bias node' entry
+		RealMatrix x = new Array2DRowRealMatrix(ySet.size(), ySet.get(0).size() + 1);
+		for(int rowIndex : series(xSet.size()))
+		{
+			Point rowPoint = xSet.get(rowIndex); 
+			for(int columnIndex : series(rowPoint.size()))
+				x.setEntry(rowIndex, columnIndex, rowPoint.get(columnIndex));
+			x.setEntry(rowIndex, rowPoint.size(), 1.0); // bias node
+		}
+		
+		// * Compute the SVD of x, to find the pseudoinverse 
+		int retries = 0;
+		boolean success = false;
+		SingularValueDecomposition svd = null;
+		while(! success)
+		{
+			try 
+			{
+				svd = new SingularValueDecompositionImpl(x);
+				success = true;
+			} catch (InvalidMatrixException e)
+			{
+				retries++;
+				if(retries > MAX_SVD_RETRIES)
+					return null;
+			}
+		}
+		
+		DecompositionSolver solver = svd.getSolver();
+		RealMatrix weightsT = solver.solve(y);
+		
+		RealMatrix weights = weightsT.transpose();
+				
+		int d = ySet.get(0).size();
+		
+		RealMatrix transform = weights.getSubMatrix(0, d-1, 0, d-1);
+		RealVector translate = weights.getColumnVector(d);
+		
+		return new AffineMap(transform, translate);
 	}
 
 }

@@ -1033,7 +1033,7 @@ public class RIFSEM
 	
 	protected Similitude findMap(List<Point> from, List<Point> to, Similitude old)
 	{
-		return org.lilian.data.real.Maps.findMap(from, to);
+		return org.lilian.data.real.Maps.findSimilitude(from, to);
 	}
 	
 	public static double findScalar(List<Double> x, List<Double> y)
