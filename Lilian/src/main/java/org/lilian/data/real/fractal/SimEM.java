@@ -9,6 +9,8 @@ import org.lilian.search.Builder;
 
 public class SimEM extends EM<Similitude>
 {
+	public static final double PERTURB_VAR = 0.3;
+	
 	public SimEM(IFS<Similitude> initial, List<Point> data,
 			int numSources, double spanningPointsVariance)
 	{
@@ -20,7 +22,7 @@ public class SimEM extends EM<Similitude>
 	public SimEM(IFS<Similitude> initial, List<Point> data,
 			int numSources, Builder<Similitude> builder, double spanningPointsVariance)
 	{
-		super(initial, data, numSources,  builder, spanningPointsVariance);
+		super(initial, data, numSources, PERTURB_VAR, true, builder, spanningPointsVariance);
 	}
 
 	@Override

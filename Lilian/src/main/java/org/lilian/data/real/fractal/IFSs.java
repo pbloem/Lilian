@@ -14,6 +14,7 @@ import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
 import org.lilian.data.real.Map;
+import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Maps;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
@@ -625,6 +626,19 @@ public class IFSs
 		}
 		
 		return ifs;
+	}
+	
+	public static IFS<AffineMap> toAffine(MapModel<Similitude> in)
+	{
+		IFS<AffineMap> result = null;
+		
+		for(int i : Series.series(in.size()))
+			if(result == null)
+				result = new IFS<AffineMap>(new AffineMap(in.get(i)), in.probability(i));
+			else
+				result.addMap(new AffineMap(in.get(i)), in.probability(i));
+		
+		return result;
 	}
 	
 	private static class SpreadTarget implements Target<List<Point>>

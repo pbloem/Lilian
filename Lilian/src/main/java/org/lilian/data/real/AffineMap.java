@@ -331,24 +331,26 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 		}
 		
 		// * Compute the SVD of x, to find the pseudoinverse 
-		int retries = 0;
-		boolean success = false;
-		SingularValueDecomposition svd = null;
-		while(! success)
-		{
-			try 
-			{
-				svd = new SingularValueDecompositionImpl(x);
-				success = true;
-			} catch (InvalidMatrixException e)
-			{
-				retries++;
-				if(retries > MAX_SVD_RETRIES)
-					return null;
-			}
-		}
+//		int retries = 0;
+//		boolean success = false;
+//		SingularValueDecomposition svd = null;
+//		while(! success)
+//		{
+//			try 
+//			{
+//				svd = new SingularValueDecompositionImpl(x);
+//				success = true;
+//			} catch (InvalidMatrixException e)
+//			{
+//				retries++;
+//				if(retries > MAX_SVD_RETRIES)
+//					return null;
+//			}
+//		}
 		
-		DecompositionSolver solver = svd.getSolver();
+		QRDecomposition qr = new QRDecompositionImpl(x);
+		
+		DecompositionSolver solver = qr.getSolver();
 		RealMatrix weightsT = solver.solve(y);
 		
 		RealMatrix weights = weightsT.transpose();

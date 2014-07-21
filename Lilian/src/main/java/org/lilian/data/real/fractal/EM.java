@@ -138,7 +138,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	protected double lastDepth = -1;
 	
 	// * The variance of the mvn from which the spanning point are sampled when 
-	//   there aremany points to a single code.
+	//   there are many points to a single code.
 	//   For high values the algorithm tends to behave more deterministically,
 	//   but some maps with strong rotation won't be found. 
 	protected double spanningPointsVariance;
