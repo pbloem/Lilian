@@ -574,6 +574,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 				{
 					mvn = useSphericalMVN ? MVN.findSpherical(points) : MVN
 							.find(points);
+					
+//					mvn = MVN.find(points);
 				} catch (RuntimeException e)
 				{
 					// * Could not find proper MVN model
@@ -582,6 +584,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 			return mvn;
 		}
+		
+
 
 		/**
 		 * Print a lengthy (multiline) representation of this node to the given
@@ -676,7 +680,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 							// distributions
 
 							// We generate as many points as are in the to node.
-							// (for depth one a handful would suffice, but for
+							// (for depth 1 a handful would suffice, but for
 							// higher values the amount of points generated gives
 							// a sort of weight to this match in the codes among 
 							// the other points)
@@ -913,8 +917,16 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		return model;
 	}
 	
-	public static <M extends AffineMap & Parametrizable> 
-		double bestDepth(IFS<M> model, double from, double step, double to, int samples, List<Point> data)
+	/**
+	 * Finds the depth that gives the highest likelihood to a sample of the data 
+	 * 
+	 * @param from
+	 * @param step
+	 * @param to
+	 * @param samples
+	 * @return
+	 */
+	public static <M extends AffineMap> double depth(EM<M> em, double from, double step, double to, int samples, List<Point> data)
 	{
 		
 		double bestDepth = Double.NaN;
@@ -928,7 +940,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			
 			double ll = 0.0;
 			for(Point point : sample)
-				ll += Math.log(model.density(model, point, depth));
+				ll += Math.log(IFS.density(em.model(), point, depth, em.basis()));
 				
 			if(ll > bestLL)
 			{

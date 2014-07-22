@@ -531,7 +531,7 @@ public class IFSs
 	 * @param points
 	 * @return
 	 */
-	public static IFS<Similitude> initialPoints(double scale, List<Point> points)
+	public static IFS<Similitude> initialPoints(double scale, List<Point> points, boolean rotate)
 	{
 		int dim = points.get(0).dimensionality();
 		IFS<Similitude> model = null;
@@ -540,7 +540,13 @@ public class IFSs
 		for(Point point : points)
 		{
 			RealVector translation = point.getVector().mapMultiply(1.0 - scale);
-			Similitude map = new Similitude(scale, new Point(translation), (List<Double>)new Point((dim * dim - dim)/2));
+			
+			int n = (dim * dim - dim)/2;
+			List<Double> angles = new ArrayList<Double>(n);
+			for(int i : series(n))
+				angles.add(rotate ? Global.random.nextDouble() * Math.PI * 2.0 : 0.0);
+					
+			Similitude map = new Similitude(scale, new Point(translation), angles);
 			
 			if(model == null)
 				model = new IFS<Similitude>(map, prior);
@@ -562,8 +568,13 @@ public class IFSs
 	 */
 	public static IFS<Similitude> initialSphere(int dim, int comp, double radius, double scale)
 	{
+		return initialSphere(dim, comp, radius, scale, false);
+	}
+	
+	public static IFS<Similitude> initialSphere(int dim, int comp, double radius, double scale, boolean rotate)
+	{
 		List<Point> points = Datasets.sphere(dim, radius).generate(comp);
-		return initialPoints(scale, points);
+		return initialPoints(scale, points, rotate);
 	}	
 	
 	/**
@@ -596,7 +607,7 @@ public class IFSs
 			points.add(nw);
 		}
 		
-		return initialPoints(scale, points);
+		return initialPoints(scale, points, false);
 	}
 	
 	/**
