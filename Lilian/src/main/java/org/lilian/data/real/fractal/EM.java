@@ -111,7 +111,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	
 	public static final int DEPTH_SAMPLE = 1000;
 	
-	public static boolean UNIFORM_DEPTH = true;
+	public static boolean UNIFORM_DEPTH = false;
 	
 	// * Serial ID
 	private static final long serialVersionUID = 774467486797440172L;
@@ -293,14 +293,18 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			{
 				if(! hasNull(m))
 				{
-					double likelihood = Math.exp(logLikelihood(sample, m.ifs(), models.size()));
+					double likelihood = logLikelihood(sample, m.ifs(), models.size());
 					priors.add(likelihood);
 				} else 
 				{
-					priors.add(0.0);
+					priors.add(Double.NEGATIVE_INFINITY);
 				}
 			}
+			
+			priors = Functions.normalizeLog(priors, Math.E);
 		}
+		
+		Global.log().info("priors: " + priors);
 		
 		PreModel preModel = null;
 		for(int component : series(numComponents))

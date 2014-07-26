@@ -37,6 +37,21 @@ public class Functions
 	public static NumberFormat nf = NumberFormat.getNumberInstance();
 	
 	/**
+	 * Apprixomation of the machine epsilon.
+	 */
+	public static final double EPS;
+	
+	static {
+		double machEps = 1.0f;
+	 
+        do
+           machEps /= 2.0;
+        while ((float) (1.0 + (machEps / 2.0)) != 1.0);
+	 
+	    EPS = machEps;
+	}
+	
+	/**
 	 * Return the natural logarithm of the gamma function for the nonnegative integer x.
 	 * 
 	 * (see "Numerical recipes in c")
@@ -706,6 +721,48 @@ public class Functions
         	set.add(t);
         
         return set;
+    }
+    
+    /**
+     * Takes a list of double values representing logs likelihoods: eg.
+     * {log p_1, log p_2, ...} and returns a vector of normalized regular
+     * likelihoods: {p_1/sum p, p_2/sum_p, ...}
+     * 
+     * Since the likelihoods would underflow when exponentiated, this operation 
+     * requires some care to do most of the steps in log space until the values 
+     * are large enough that they can be exponentiated 
+     * 
+     * @param logs
+     * @param the base of the logarithm
+     * @return
+     */
+    public static List<Double> normalizeLog(List<Double> logs, double base)
+    {    	
+    	// We're implementing this algorithm:
+    	// http://stats.stackexchange.com/questions/66616/converting-normalizing-very-small-likelihood-values-to-probability
+    	
+    	List<Double> ll = new ArrayList<Double>(logs);
+    	
+    	double maxLog = Double.NEGATIVE_INFINITY;
+    	for(double l : ll)
+    		maxLog = Math.max(l, maxLog);
+    	
+    	for(int i : series(ll.size()))
+    		ll.set(i, ll.get(i) - maxLog);
+    	    	
+    	for(int i : series(ll.size()))
+    		ll.set(i, Math.pow(base, ll.get(i)));
+    	
+    	// * No need to check for underflow. Java sets to 0 automatically
+    	
+    	double sum = 0.0;
+    	for(double l : ll)
+    		sum += l;
+    	
+    	for(int i : series(ll.size()))
+    		ll.set(i, ll.get(i)/sum);
+    	
+    	return ll;
     }
     
     public static <T extends Comparable<? super T>> Comparator<T> natural()
