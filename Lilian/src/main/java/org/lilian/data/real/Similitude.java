@@ -17,7 +17,7 @@ import org.lilian.util.Series;
  * A similitude (or similarity transform) consists of rotation, a uniform 
  * scaling and a translation. 
  * 
- * In the parameter representation of a similitude the angles are normalized so 
+ * NOTE: In the parameter representation of a similitude the angles are normalized so 
  * that 1.0 represents an angle of 360 degrees (or 2 pi radians). 
  * 
  * @author Peter
@@ -52,7 +52,7 @@ public class Similitude extends AffineMap
 		init(
 				parameters.get(0), 
 				parameters.subList(1, dimension+1), 
-				parameters.subList(dimension + 1, parameters.size()));		
+				toRad(parameters.subList(dimension + 1, parameters.size())));		
 	}	
 	
 	/**
@@ -69,14 +69,16 @@ public class Similitude extends AffineMap
 		
 		if( (dim*dim - dim)/2 != a)
 			throw new IllegalArgumentException("Wrong number of angles ("+a+") for the given dimension (size of translation vector = "+dim+"). The number of angles should be (d*d - d) / 2");
-		
-		List<Double> angs = new ArrayList<Double>(angles.size());
-		for(double angle : angles)
-			angs.add(angle / (2.0 * Math.PI));
 				
-		init(scalar, translation, angs);
+		init(scalar, translation, angles);
 	}
 	
+	/**
+	 * 
+	 * @param scalar
+	 * @param translation
+	 * @param angles in radians
+	 */
 	private void init(double scalar, List<Double> translation, List<Double> angles)
 	{
 		dimension = translation.size();
@@ -85,8 +87,6 @@ public class Similitude extends AffineMap
 		this.translation = MatrixTools.toVector(translation);
 		
 		this.angles = new ArrayList<Double>(angles);
-		for(int i : Series.series(angles.size()))
-			angles.set(i, angles.get(i) * 2.0 * Math.PI);
 		
 		RealMatrix rotation = Rotation.toRotationMatrix(angles);
 		this.transformation = rotation.scalarMultiply(scalar);
@@ -110,8 +110,8 @@ public class Similitude extends AffineMap
 		for(double d : translation.getData())
 			result.add(d);
 			
-		for(double angle : angles)
-			result.add(angle / (2.0 * Math.PI));
+		
+		result.addAll(fromRad(angles));
 			
 		return result;
 	}	
@@ -170,7 +170,7 @@ public class Similitude extends AffineMap
 				newAngles.add(this.angles.get(i) + sim.angles.get(i));
 			
 			// * note that this.transformation contains both the scaling an the rotation
-			RealVector newTrans = this.transformation.operate(sim.translation).add(sim.translation);
+			RealVector newTrans = this.transformation.operate(sim.translation).add(this.translation);
 			
 			return new Similitude(newScalar, new Point(newTrans), newAngles);
 		}
@@ -243,5 +243,30 @@ public class Similitude extends AffineMap
 	{
 		return "Similitude [s" + scalar + ", a=" + angles
 				+ ", t=" + translation + "]";
+	}
+	
+	/**
+	 * Takes a list of angles in rad rep, and converts to 0-1 rep
+	 * @param in
+	 * @return
+	 */
+	public List<Double> fromRad(List<Double> in)
+	{
+		List<Double> out = new ArrayList<Double>(in.size());
+		
+		for(double angle : in)
+			out.add(angle / (2.0 * Math.PI));
+		
+		return out;
+	}
+	
+	public List<Double> toRad(List<Double> in)
+	{
+		List<Double> out = new ArrayList<Double>(in.size());
+		
+		for(double angle : in)
+			out.add(angle * (2.0 * Math.PI));
+		
+		return out;
 	}
 }

@@ -2,17 +2,25 @@ package org.lilian.data.real;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
+import org.lilian.data.real.fractal.EM;
+import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.weighted.Weighted;
 import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.search.Builder;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
+
 
 public class MVNTest
 {
@@ -112,14 +120,15 @@ public class MVNTest
 	@Test
 	public void mapTest2()
 	{
-		int dim = 2;
-		Generator<Point> gen = Datasets.three();
+		MVN mvnFrom = new MVN(2);
+		Map map = new AffineMap(Arrays.asList(0.002, 0.0, 0.0, 0.002, 0.5, -0.5));
 		
-		MVN mvnFrom = MVN.find(gen.generate(3000));
-		MVN mvnTo = MVN.find(new MVN(new Point(-0.5, -0.5), 0.01).generate(1000));
+		MVN mvnTo = MVN.find(map.map(mvnFrom.generate(1000000)));
 		
-		System.out.println(mvnFrom.map());
-		System.out.println(mvnTo.map());
+		List<Point> test = new MVN(2).generate(3); 
+		
+		System.out.println(map.map(test));
+		System.out.println(mvnTo.map().map(test));
 		
 		
 //		for(int i : Series.series(AffineMap.numParameters(dim)))
@@ -154,7 +163,7 @@ public class MVNTest
 		
 	}
 	
-	@Test
+	// @Test TODO fix
 	public void findTest()
 	{
 		MVN source = new MVN(new Point(5.0, 1.0), MatrixTools.identity(2).scalarMultiply(0.1));
@@ -198,6 +207,24 @@ public class MVNTest
 		System.out.println(MVN.find(weighted));
 
 		assertEquals(MVN.find(points, true).density(p), MVN.find(weighted).density(p), 0.000001);
+	}
+	
+	@Test
+	public void iterationTest() throws IOException
+	{
+		Map mapTo = IFSs.sierpinskiSim().compose(Arrays.asList(0,0,0,2,2));
+		Map mapFrom = IFSs.sierpinskiSim().compose(Arrays.asList(0,0,2,2));
+
+		MVN mvnFrom = new MVN((AffineMap)mapFrom);
+		MVN mvnTo = new MVN((AffineMap)mapTo);
+		
+		List<Point> from = mvnFrom.generate(1000);
+		List<Point> to = mvnTo.generate(100);
+
+		Map comp = mvnTo.map().compose(mvnFrom.map().inverse());
+		
+		EM.debug(new File("/Users/Peter/Documents/mvn-test.png"), from, comp.map(from.subList(0, 10)));
+
 	}
 	
 }

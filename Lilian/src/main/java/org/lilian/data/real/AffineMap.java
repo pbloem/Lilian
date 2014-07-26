@@ -314,6 +314,9 @@ public class AffineMap extends AbstractMap implements Parametrizable, Serializab
 	 */
 	public static AffineMap find(List<Point> xSet, List<Point> ySet)
 	{
+		if(xSet.size() == 0)
+			return null;
+		
 		// * create data matrices x and y
 		//   (each point is a row)
 		RealMatrix y = new Array2DRowRealMatrix(ySet.size(), ySet.get(0).size());

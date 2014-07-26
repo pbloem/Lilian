@@ -60,8 +60,7 @@ public class MapModel<M extends Map & Parametrizable>
 		assert(map.dimension() == dimension);
 		
 		maps.add(map);
-		weights.add(Math.abs(weight));
-				
+		weights.add(Math.abs(weight));	
 		
 		parametersFlat.addAll(map.parameters());
 		parametersFlat.add(weight);

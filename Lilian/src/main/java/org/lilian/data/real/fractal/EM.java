@@ -1,19 +1,32 @@
 package org.lilian.data.real.fractal;
 
+import static org.lilian.util.Functions.choose;
 import static org.lilian.util.Series.series;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.jfree.util.Log;
 import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
+import org.lilian.data.real.Draw;
+import org.lilian.data.real.Generators;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
@@ -93,6 +106,13 @@ import org.lilian.util.Series;
  */
 public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> implements Serializable
 {
+	private static final boolean DEBUG = true; 
+	public File DEBUG_DIR = new File(".");
+	
+	public static final int DEPTH_SAMPLE = 1000;
+	
+	public static boolean UNIFORM_DEPTH = true;
+	
 	// * Serial ID
 	private static final long serialVersionUID = 774467486797440172L;
 
@@ -102,11 +122,11 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 	// * If a code contains more than this number of points, we consider its
 	//   covariance (by fitting an MVN as described above).
-	private static final int COVARIANCE_THRESHOLD = 3;
+	private static final int COVARIANCE_THRESHOLD = -1;
 	
 	private static final boolean PERTURB_UNASSIGNED = true;
 	
-	private static final boolean UNIFORM_WEIGHTS = false;
+	private static final double ALPHA = 0.01;
 
 	// * Left-over components (with no data assigned) are given to
 	//   perturbed copies of other components. They are perturbed by adding
@@ -134,6 +154,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	// * Used for perturbing IFS models
 	private Builder<M> mapBuilder;
 	protected Builder<IFS<M>> ifsBuilder;
+	
+	private int iterations = 0;
 	
 	protected double lastDepth = -1;
 	
@@ -204,11 +226,12 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 				sampleSize);
 
 		root = new Node(-1, null); // Challenging for the GC, but should be
-									// fine...
+								   // fine...
 
 		for (Point point : sample)
 		{
-			Weighted<List<Integer>> codes = codes(point, model, depth, maxSources); 
+			Weighted<List<Integer>> codes = codes(point, model, depth, maxSources);
+			// System.out.println(codes);
 						
 			for(int i : series(codes.size()))
 				root.observe(codes.get(i), point, codes.probability(i));
@@ -222,100 +245,186 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			Point point, IFS<M> model, double depth, int sources);
 	
 	
-	protected abstract M findMap(List<Point> from, List<Point> to, M old);
-
+	protected abstract M findMap(List<Point> from, List<Point> to);
 	
+	protected abstract double logLikelihood(List<Point> sample, IFS<M> model, int depth);
+
 	protected void codesToModel()
 	{
 		// * Look for matching codes in the code tree
 		Maps maps = findMaps();
 
+		// * A model for every depth
+		List<PreModel> models = new ArrayList<PreModel>(maps.depth());
+		for(int d : series(1, maps.depth() + 1))
+			models.add(codesToModel(d, maps));
+		
+		if(DEBUG)
+		{
+			File dir = new File(DEBUG_DIR, String.format("%04d/", iterations));
+			dir.mkdirs();
+			
+			for(int i : series(models.size()))
+				if(!hasNull(models.get(i)))
+				{
+					BufferedImage image = Draw.draw(models.get(i).ifs(), 100000, 1000, true);
+					try
+					{
+						ImageIO.write(image, "PNG", new File(dir, String.format("%d.png", i)));
+					} catch (IOException e)
+					{
+						throw new RuntimeException(e);
+					}
+				} else {
+					Global.log().info("null at depth " + i);
+				}
+		}
+		
+		List<Double> priors = new ArrayList<Double>(numComponents);
+		if(UNIFORM_DEPTH)
+		{
+			for(int i : series(models.size()))
+				priors.add(1.0);
+		} else
+		{
+			List<Point> sample = Datasets.sample(data, DEPTH_SAMPLE);
+			
+			for(PreModel m : models)
+			{
+				if(! hasNull(m))
+				{
+					double likelihood = Math.exp(logLikelihood(sample, m.ifs(), models.size()));
+					priors.add(likelihood);
+				} else 
+				{
+					priors.add(0.0);
+				}
+			}
+		}
+		
+		PreModel preModel = null;
+		for(int component : series(numComponents))
+		{
+			List<M> comps = new ArrayList<M>(models.size());
+			List<Double> weights = new ArrayList<Double>(models.size());
+			for(int d : series(models.size()))
+			{
+				comps.add(models.get(d).get(component));
+				weights.add(models.get(d).weight(component));
+			}
+			
+			// * combine the maps
+			M combinedMap = combine(comps, weights);
+			
+			// * combine the weights
+			double priorSum = 0.0;
+			for(int d : series(models.size()))
+				if(models.get(d) != null)
+					priorSum += priors.get(d);
+			
+			double combinedWeight = 0.0;
+			for(int d : series(models.size()))
+				if(models.get(d) != null)
+					combinedWeight += weights.get(d) * priors.get(d)/priorSum;
+			
+			if(preModel == null)
+				preModel = new PreModel(combinedMap, combinedWeight);
+			else
+				preModel.addMap(combinedMap, combinedWeight);
+		}
+		
+		model = checkNullComponents(preModel);
+		
+		iterations++;
+	}
+	
+	
+	private IFS<M> checkNullComponents(PreModel pre)
+	{
+		if(allNull(pre))
+			throw new IllegalStateException("All components in model are null.");
+	
+		if(!hasNull(pre))
+			return pre.ifs();
+		
+		String model;
+			
+		// * collect the good components
+		List<Integer> good = new ArrayList<Integer>(numComponents),
+		              bad  = new ArrayList<Integer>(numComponents);
+		
+		for(int k : series(numComponents))
+			if(pre.get(k) != null)
+				good.add(k);
+			else
+				bad.add(k);
+		
+		Global.log().info("Bad components: " + bad + ", good:" + good);
+		
+		// * Assign each bad component to a good one
+		Map<Integer, List<Integer>> map = new LinkedHashMap<Integer, List<Integer>>();
+		for(int k : series(numComponents))
+			if(pre.get(k) == null)
+			{
+				int rGood = choose(good);
+				if(! map.containsKey(rGood))
+				{
+					map.put(rGood, new ArrayList<Integer>(numComponents));
+					map.get(rGood).add(rGood);
+				}
+				
+				map.get(rGood).add(k);
+			}
+		
+		for(List<Integer> comps : map.values())
+		{
+			M initialComponent = pre.get(comps.get(0));
+			double initialWeight = pre.weight(comps.get(0));
+			
+			for(int i : comps)
+			{
+				// * Create a new, perturbed component 
+				M component = Parameters.perturb(initialComponent, mapBuilder, perturbVar);
+				double weight = initialWeight / numComponents;
+				
+				pre.set(i, component, weight);
+			}
+		}
+		
+		return pre.ifs();
+	}
+	
+	private boolean hasNull(PreModel model)
+	{
+		for(M map : model)
+			if(map == null)
+				return true;
+		return false;
+	}
+	
+	private boolean allNull(PreModel model)
+	{
+		for(M map : model)
+			if(map != null)
+				return false;
+		return true;
+	}
+
+	protected PreModel codesToModel(int depth, Maps maps)
+	{
 		// * Frequencies of components over all codes
 		BasicFrequencyModel<Integer> priors = new BasicFrequencyModel<Integer>();
 		root.count(priors);
 
-		List<M> trans = new ArrayList<M>(numComponents);
-		for (int i : Series.series(numComponents))
-			trans.add(null);
+		PreModel model = null;
 
-		List<Double> weights = new ArrayList<Double>(numComponents);
-		for (int i : Series.series(numComponents))
-			weights.add(1.0 / numComponents);
-
-		// * Keep check of components which were unassigned
-		List<Integer> assigned = new ArrayList<Integer>(numComponents);
-		List<Integer> unassigned = new ArrayList<Integer>(numComponents);
-
-		for (int i : Series.series(numComponents))
-		{
-			int n = maps.size(i);
-
-			if (n != 0) // codes found containing this comp
-			{
-				// * Find the map for the point pairs
-				M map = findMap(maps.from(i), maps.to(i), model.get(i));
-				
-				if(map != null)
-				{
-					// * Find the weight for the frequency pairs
-					double weight = findScalar(maps.fromWeights(i),
-						maps.toWeights(i));
+		for (int component : Series.series(numComponents))
+			if(model == null)
+				model= new PreModel(maps.getMap(component, depth), maps.getWeight(component, depth));
+			else
+				model.addMap(maps.getMap(component, depth), maps.getWeight(component, depth));			
 	
-					trans.set(i, map);
-					weights.set(i, weight);
-	
-					assigned.add(i);
-				} else
-					unassigned.add(i);
-			} else		
-				unassigned.add(i);
-		}
-
-		if(! unassigned.isEmpty())
-			Global.log().info("unassigned: " + unassigned);
-		
-		if (assigned.isEmpty())
-			throw new IllegalStateException(
-					"No points were assigned to any components");
-
-		// * For each unassigned component, take a random assigned component and
-		// perturb it slightly.
-		for (int i : unassigned)
-		{
-			if(PERTURB_UNASSIGNED) 
-			{
-				int j = assigned.get(Global.random.nextInt(assigned.size()));
-				M source = trans.get(j);
-				double sourceWeight = weights.get(j);
-	
-				M perturbed0 = Parameters.perturb(source, mapBuilder, perturbVar);
-	
-				M perturbed1 = Parameters.perturb(source, mapBuilder, perturbVar);
-	
-	//			// * Make sure that both are contractive
-	//			perturbed0 = perturbed0.scalar() > 1.0 ? perturbed0.inverse()
-	//					: perturbed0;
-	//			perturbed1 = perturbed1.scalar() > 1.0 ? perturbed1.inverse()
-	//					: perturbed1;
-	
-				trans.set(i, perturbed0);
-				trans.set(j, perturbed1);
-	
-				weights.set(i, sourceWeight / 2.0);
-				weights.set(j, sourceWeight / 2.0);
-			} else {
-				trans.set(i, model.get(i));
-				weights.set(i, model.probability(i));
-			}
-		}
-				
-		if(UNIFORM_WEIGHTS)
-			for(int i : series(0, numComponents))
-				weights.set(i, 1.0/numComponents);
-				
-		model = new IFS<M>(trans.get(0), weights.get(0));
-		for (int i : series(1, numComponents))
-			model.addMap(trans.get(i), weights.get(i));
+		return model;
 	}
 
 	/**
@@ -341,6 +450,14 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 		return sumYX / sumXX;
 	}
+	
+	/**
+	 * Combines the given maps into a linear 
+	 * @param maps
+	 * @param weights
+	 * @return
+	 */
+	public abstract M combine(List<M> maps, List<Double> weights);
 
 	/**
 	 * Returns, for each component, a set of domain and range points that define
@@ -353,10 +470,19 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	{
 		Maps maps = new Maps();
 		root.findPairs(maps);
-
+		
+		if(DEBUG)
+			try
+			{
+				maps.debug(DEBUG_DIR);
+			} catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		
 		return maps;
 	}
-
+	
 	/**
 	 * @return The current iteration's model.
 	 */
@@ -572,10 +698,10 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			if (mvn == null)
 				try
 				{
-					mvn = useSphericalMVN ? MVN.findSpherical(points) : MVN
-							.find(points);
-					
-//					mvn = MVN.find(points);
+//					mvn = useSphericalMVN ? MVN.findSpherical(points) : MVN
+//							.find(points);
+
+					mvn = MVN.find(points);
 				} catch (RuntimeException e)
 				{
 					// * Could not find proper MVN model
@@ -658,40 +784,63 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 				// * Find the node that matches
 				Node nodeFrom = root.find(codeFrom);
+
 				if (nodeFrom != null)
-				{
+				{				
 					int m = Math
 							.min(nodeFrom.points().size(), this.points().size());
 
 					MVN from = nodeFrom.mvn(), to = mvn();
 
 					if (from != null & to != null)
-					{
+					{	
 						if (m < COVARIANCE_THRESHOLD) // Not enough points to
-														// consider covariance
+												      // consider covariance
 						{
 							for (int i : series(points.size()))
-								maps.add(t, from.mean(), to.mean());
+								maps.add(t, from.mean(), to.mean(), code);
 						} else
 						{
-							// Consider the covariance by taking not just the
-							// means,
-							// but points close to zero mapped to both
-							// distributions
+							AffineMap map = (AffineMap) to.map().compose(from.map().inverse()); 
+							
+							List<Point> newFrom = new ArrayList<Point>();
+							
+							for(Point toPoint : points())
+							{
+								Point bestFrom = null;
+								double bestDistance = Double.POSITIVE_INFINITY;
+								
+								for(Point fromPoint : nodeFrom.points())
+								{
+									double distance = map.map(fromPoint).distance(toPoint);
+									if(distance <= bestDistance)
+									{
+										bestFrom = fromPoint;
+										bestDistance = distance;
+									}
+								}
+															
+								newFrom.add(bestFrom);
+								maps.add(t, bestFrom, toPoint, code);
+							}
+							
+//							try
+//							{
+//								File dir = new File("maptest/"+code+"/");
+//								dir.mkdirs();
+//								
+//								debug(new File(dir, "points.png"), nodeFrom.points(), points());
+//								debug(new File(dir, "dists.png"), from.generate(100), to.generate(100));
+//								debug(new File(dir, iterations+" "+code+".png"), nodeFrom.points(), map.map(nodeFrom.points()));
+//								debug(new File(dir, "final.png"), newFrom, points());
+//
+//							} catch (IOException e)
+//							{
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+//							}
+							
 
-							// We generate as many points as are in the to node.
-							// (for depth 1 a handful would suffice, but for
-							// higher values the amount of points generated gives
-							// a sort of weight to this match in the codes among 
-							// the other points)
-							List<Point> points = new MVN(dimension, spanningPointsVariance)
-									.generate(points().size());
-
-							List<Point> pf = from.map().map(points);
-							List<Point> pt = to.map().map(points);
-
-							for (int i = 0; i < points.size(); i++)
-								maps.add(t, pf.get(i), pt.get(i));
 						}
 					} else
 					{
@@ -701,9 +850,35 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 					// Register the drop in frequency as the symbol t gets added
 					// to the code
-					maps.weight(t, nodeFrom.frequency(), this.frequency());
+					maps.weight(t, nodeFrom.frequency(), this.frequency(), code);
 				}
 			}
+		}
+
+		private List<Point> pair(List<Point> froms, List<Point> tos,
+				AffineMap map)
+		{			
+			List<Point> result = new ArrayList<Point>(tos.size());
+			
+			for(Point to : tos)
+			{
+				Point bestFrom = null;
+				double bestDistance = Double.POSITIVE_INFINITY;
+				
+				for(Point from : froms)
+				{
+					double distance = map.map(from).distance(to);
+					if(distance <= bestDistance)
+					{
+						bestFrom = from;
+						bestDistance = distance;
+					}
+				}
+				
+				result.add(bestFrom);
+			}
+			
+			return result;
 		}
 
 		public String toString()
@@ -723,17 +898,60 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 */
 	protected class Maps
 	{
-		// * The inner list stores all 'from' points. We store one such list for
-		// each component
-		private List<List<Point>> from = new ArrayList<List<Point>>();
-		// * The inner list stores all 'to' points. We store one such list for
-		// each component
-		private List<List<Point>> to = new ArrayList<List<Point>>();
+		// * This class stores the mapping from component to depth to a list of 
+		//   things
+		private class Cor<T> extends LinkedHashMap<Integer, Map<Integer, List<T>>>
+		{
+			
+			public void add(int component, int depth, T thing)
+			{
+				ensure(component, depth);
+				get(component).get(depth).add(thing);
+			}
+			
+			public List<T> get(int component, int depth)
+			{
+				if(!containsKey(component))
+					return Collections.emptyList();
+				
+				Map<Integer, List<T>> map = get(component);
+				
+				if(! map.containsKey(depth))
+					return Collections.emptyList();
+				
+				return map.get(depth);
+			}
+			
+			public void ensure(int component, int depth)
+			{
+				Maps.this.depth = Math.max(depth, Maps.this.depth); 
+				Maps.this.maxComponent = Math.max(component, Maps.this.maxComponent); 
 
-		// * The same but for the weights (inner lists store frequencies)
-		private List<List<Double>> fromWeights = new ArrayList<List<Double>>();
-		private List<List<Double>> toWeights = new ArrayList<List<Double>>();
+				
+				for(int c : series(component+1))
+				{
+					if(! this.containsKey(c))
+						this.put(c, new LinkedHashMap<Integer, List<T>>());
+					
+					Map<Integer, List<T>> map = this.get(c);
+					for(int d : series(depth+1))
+					{
+						if(!map.containsKey(d))
+							map.put(d, new ArrayList<T>());
+					}
+						
+				}
+			}
+		}
 
+		private Cor<Point>    fromPoints = new Cor<Point>(); 
+		private Cor<Point>      toPoints = new Cor<Point>(); 
+		private Cor<Double>  fromWeights = new Cor<Double>(); 
+		private Cor<Double>    toWeights = new Cor<Double>(); 
+		private Cor<List<Integer>> codes = new Cor<List<Integer>>(); 
+
+		private int depth = 0;
+		private int maxComponent = 0;
 		/**
 		 * The number of point pairs stored for a given component
 		 * 
@@ -741,10 +959,24 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 *            The component index
 		 * @return The number of point pairs stored for component i
 		 */
-		public int size(int i)
+		public int size(int component)
 		{
-			ensure(i);
-			return from.get(i).size();
+			Map<Integer, List<Point>> map = fromPoints.get(component);
+			int sum = 0;
+			for(List<Point> values : map.values())
+				sum += values.size();
+			
+			return sum;
+		}
+
+		public int size(int component, int depth)
+		{
+			return fromPoints.get(component).get(depth).size();
+		}
+		
+		public int depth()
+		{
+			return depth;
 		}
 
 		/**
@@ -757,11 +989,10 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param to
 		 *            The to point
 		 */
-		public void add(int component, Point from, Point to)
+		public void add(int component, Point from, Point to, List<Integer> code)
 		{
-			ensure(component);
-			this.from.get(component).add(from);
-			this.to.get(component).add(to);
+			fromPoints.add(component, code.size(), from);
+			toPoints.add(component, code.size(), to);
 		}
 
 		/**
@@ -775,27 +1006,10 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param to
 		 *            The to frequency
 		 */
-		public void weight(int component, double from, double to)
+		public void weight(int component, double from, double to, List<Integer> code)
 		{
-			ensure(component);
-			this.fromWeights.get(component).add(from);
-			this.toWeights.get(component).add(to);
-		}
-
-		/**
-		 * Ensure that lists exist for the given component (and below)
-		 */
-		private void ensure(int component)
-		{
-			while (from.size() <= component)
-				from.add(new ArrayList<Point>());
-			while (to.size() <= component)
-				to.add(new ArrayList<Point>());
-
-			while (fromWeights.size() <= component)
-				fromWeights.add(new ArrayList<Double>());
-			while (toWeights.size() <= component)
-				toWeights.add(new ArrayList<Double>());
+			fromWeights.add(component, code.size(), from);
+			  toWeights.add(component, code.size(), to);
 		}
 
 		/**
@@ -805,12 +1019,9 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param component
 		 * @return
 		 */
-		public List<Point> from(int component)
+		public List<Point> from(int component, int depth)
 		{
-			if (component < from.size())
-				return from.get(component);
-
-			return Collections.emptyList();
+			return fromPoints.get(component, depth);
 		}
 
 		/**
@@ -820,12 +1031,9 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param component
 		 * @return
 		 */
-		public List<Point> to(int component)
+		public List<Point> to(int component, int depth)
 		{
-			if (component < to.size())
-				return to.get(component);
-
-			return Collections.emptyList();
+			return toPoints.get(component, depth);
 		}
 
 		/**
@@ -835,12 +1043,9 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param component
 		 * @return
 		 */
-		public List<Double> fromWeights(int component)
+		public List<Double> fromWeights(int component, int depth)
 		{
-			if (component < fromWeights.size())
-				return fromWeights.get(component);
-
-			return Collections.emptyList();
+			return fromWeights.get(component, depth);
 		}
 
 		/**
@@ -850,27 +1055,160 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param component
 		 * @return
 		 */
-		public List<Double> toWeights(int component)
+		public List<Double> toWeights(int component, int depth)
 		{
-			if (component < toWeights.size())
-				return toWeights.get(component);
-
-			return Collections.emptyList();
+			return toWeights.get(component, depth);
 		}
-
-		@Override
-		public String toString()
+		
+		public M getMap(int component, int depth)
 		{
-			String out = "";
-
-			for (int i : Series.series(from.size()))
+			List<Point> from = fromPoints.get(component, depth), 
+			              to = toPoints.get(component, depth);
+			
+			return findMap(from, to);
+		}
+		
+		/**
+		 * 
+		 */
+		public double getMapError(int component, int depth, M map, double alpha)
+		{	
+			if(map == null)
+				return 0.0;
+			
+			List<Point> from = fromPoints.get(component, depth), 
+		              toGold = toPoints.get(component, depth),
+			        toMapped = map.map(from);
+					
+			double mean = 0.0;
+			
+			double c = 1.0 / Math.sqrt(Math.pow(2.0 * Math.PI * alpha, (double) dimension));
+			for(int i : series(from.size()))
 			{
-				out += i + ":" + from(i).size() + "_" + to(i).size() + " ";
+				Point gold = toGold.get(i), mapped = toMapped.get(i); 
+				double sqDistance = gold.sqDistance(mapped);
+				
+				double prob = c * Math.exp(-sqDistance/(2.0 * alpha));
+				
+				mean += prob;
+			}
+		
+			mean = mean / from.size();
+			
+			return mean;
+		}
+		
+		public double getWeight(int component, int depth)
+		{
+			List<Double> x = fromWeights.get(component, depth);
+			List<Double> y = toWeights.get(component, depth);
+			
+			if(x.size() == 0)
+				return 0.0;
+			
+			double sumXX = 0.0;
+			double sumYX = 0.0;
+
+			for (int i = 0; i < x.size(); i++)
+			{
+				sumXX += x.get(i) * x.get(i);
+				sumYX += y.get(i) * x.get(i);
 			}
 
-			return out;
+			return sumYX / sumXX;
 		}
+		
+		public double getWeightError(int component, int depth, double weight, double alpha)
+		{	
+			if(weight == 0.0)
+				return 0.0;
+			
+			List<Double> from = fromWeights.get(component, depth);
+			List<Double> toGold = toWeights.get(component, depth),
+			        	 toMapped = new ArrayList<Double>(toGold.size());
+			
+			for(double f : from)
+				toMapped.add(weight * f);
+				
+					
+			double mean = 0.0;
+			
+			double c = 1.0 / Math.sqrt(2.0 * Math.PI * alpha);
+			for(int i : series(from.size()))
+			{
+				Double gold = toGold.get(i), mapped = toMapped.get(i); 
+				double diff = gold - mapped;
+				diff = diff * diff;
+				
+				double prob = c * Math.exp(-diff / (2.0 * alpha));
+				
+				mean += prob;
+			}
+		
+			mean = mean / from.size();
+			
+			return mean;
+		}
+
+//		@Override
+//		public String toString()
+//		{
+//			String out = "";
+//
+//			for (int i : Series.series(from.size()))
+//			{
+//				out += i + ":" + from(i).size() + "_" + to(i).size() + " ";
+//			}
+//
+//			return out;
+//		}
+		
+		/**
+		 * Writes out some images
+		 * @param baseDir
+		 * @throws IOException
+		 */
+		public void debug(File baseDir) throws IOException
+		{
+			for(int c : series(maxComponent + 1))
+				for(int d : series(1, depth + 1))
+				{
+					File dir = new File(baseDir, String.format("%04d/comp%d/depth-%d.png", iterations, c, d));
+					dir.mkdirs();
+				
+					EM.debug(dir, fromPoints.get(c, d), toPoints.get(c, d));
+				}
+		}
+		
 	}
+	
+	public static void debug(File file, List<Point> from, List<Point> to)
+			throws IOException
+		{
+			int res = 250;
+			
+			BufferedImage fromImage = Draw.draw(from, res, true),
+			              toImage = Draw.draw(to, res, true);
+			
+			BufferedImage result = new BufferedImage(res, res, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D graphics = result.createGraphics();
+			
+			graphics.setBackground(Color.white);
+			graphics.clearRect(0, 0, result.getWidth(), result.getHeight());		
+			
+			graphics.setComposite(AlphaComposite.SrcAtop);
+			
+			// * Colorize
+			fromImage = Draw.colorize(Color.red).filter(fromImage, null);
+			graphics.drawImage(fromImage, 0, 0, null);
+			
+			toImage = Draw.colorize(Color.green).filter(toImage, null);
+			graphics.drawImage(toImage, 0, 0, null);
+		
+			graphics.dispose();
+			
+			ImageIO.write(result, "PNG", file);
+		}	
 
 	/**
 	 * A convenience method to quickly learn an EM model for a given dataset.
@@ -942,7 +1280,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			for(Point point : sample)
 				ll += Math.log(IFS.density(em.model(), point, depth, em.basis()));
 				
-			if(ll > bestLL)
+			if(ll >= bestLL)
 			{
 				bestLL = ll;
 				bestDepth = depth;
@@ -951,4 +1289,62 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		System.out.println();
 		return bestDepth;
 	}
+	
+
+	/**
+	 * Let's us store the ingredients of a model, but allows null values
+	 * @author Peter
+	 *
+	 */
+	protected class PreModel extends AbstractList<M>
+	{
+		List<M> maps = new ArrayList<M>(numComponents);
+		List<Double> weights = new  ArrayList<Double>(numComponents);
+		
+		public PreModel(M map, double weight)
+		{
+			addMap(map, weight);
+		}
+		
+		public void addMap(M map, double weight)
+		{
+			maps.add(map);
+			weights.add(weight);
+		}
+		
+		public M get(int i)
+		{
+			return maps.get(i);
+		}
+		
+		public void set(int i, M map, double weight)
+		{			
+			maps.set(i, map);
+			weights.set(i, weight);
+		}
+		
+		public double weight(int i)
+		{
+			return weights.get(i);
+		}
+		
+		public IFS<M> ifs()
+		{
+			IFS<M> model =  null;
+			for(int i: series(maps.size()))
+				if(model == null)
+					model = new IFS<M>(maps.get(i), weights.get(i));
+				else
+					model.addMap(maps.get(i), weights.get(i));
+			
+			return model;
+		}
+
+		@Override
+		public int size()
+		{
+			return maps.size();
+		}
+	}
+	
 }

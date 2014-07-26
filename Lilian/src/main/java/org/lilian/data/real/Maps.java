@@ -77,6 +77,9 @@ public class Maps
 	
 	public static FindSimilitudeResult findSimilitudeResult(List<Point> xSet, List<Point> ySet)
 	{
+		if(xSet.size() == 0)
+			return null;
+			
 		int dim = xSet.get(0).dimensionality();
 		int size = xSet.size();
 		

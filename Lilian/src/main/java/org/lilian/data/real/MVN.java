@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.math.MathException;
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.CholeskyDecomposition;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
@@ -20,6 +21,7 @@ import org.apache.commons.math.linear.NotSymmetricMatrixException;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.apache.commons.math.linear.SingularMatrixException;
+import org.apache.commons.math.stat.correlation.Covariance;
 import org.lilian.Global;
 import org.lilian.data.real.weighted.Weighted;
 import org.lilian.data.real.weighted.WeightedLists;
@@ -284,7 +286,7 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 	
 		// * Calculate the covariance
 		RealVector difference;
-		RealMatrix cov = MatrixTools.identity(dim);
+		RealMatrix cov = new Array2DRowRealMatrix(dim, dim);
 		
 		for(Point x : points)
 		{
@@ -293,6 +295,17 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 		}
 		
 		cov = cov.scalarMultiply(1.0/(size-(biased?0:1)));
+		
+//		RealMatrix data = new Array2DRowRealMatrix(size, dim);
+//		for(int i : series(size))
+//			data.setRow(i, points.get(i).getBackingData());
+//		
+//		Covariance covComp = new Covariance(data);
+//		RealMatrix covCompare = covComp.getCovarianceMatrix();
+//		
+//		System.out.println(covCompare);
+//		System.out.println(cov);
+		
 		
 		return new MVN(new Point(mean), cov);
 	}
@@ -334,7 +347,7 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 			
 		// * Calculate the covariance
 		RealVector difference;
-		RealMatrix cov = MatrixTools.identity(dim);
+		RealMatrix cov = new Array2DRowRealMatrix(dim, dim);
 		
 		for(int i : series(points.size()))
 		{

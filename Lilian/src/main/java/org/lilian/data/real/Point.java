@@ -110,6 +110,11 @@ public class Point
 		return distance(this, other);
 	}
 	
+	public double sqDistance(Point other)
+	{
+		return sqDistance(this, other);
+	}
+	
 	/**
 	 * Returns this Point represented as a one dimensional matrix.
 	 */
@@ -155,6 +160,11 @@ public class Point
 	 */
 	public static double distance(Point a, Point b)
 	{
+		return Math.sqrt(sqDistance(a, b));
+	}
+
+	public static double sqDistance(Point a, Point b)
+	{
 		Point mi, ma;
 		if(a.values.length < b.values.length)
 		{
@@ -181,9 +191,9 @@ public class Point
 			distSq += d * d;
 		}
 		
-		return Math.sqrt(distSq);
+		return distSq;
 	}
-
+	
 	public static Point random(int dim, double var)
 	{
 		Point p = new Point(dim);
