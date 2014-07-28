@@ -543,6 +543,14 @@ public class Functions
 	
 	}
 	
+	public static int draw(Collection<Double> probabilities)
+	{
+		double sum = 0.0;
+		for(double p : probabilities)
+			sum += p;
+		
+		return draw(probabilities, sum);
+	}
 	
 	/**
 	 * Draws an integer according to specified probabilities.

@@ -214,6 +214,13 @@ public class Draw
 	}
 	
 	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, int res, boolean log, List<Double> mixture)
+	{
+		return draw(ifs, samples, new double[]{-1.0, 1.0}, new double[]{-1.0, 1.0}, 
+				res, res, log, -1, null, mixture);
+	}
+	
+	public static <M extends Map & Parametrizable> BufferedImage draw(
 			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
 			int xRes, int yRes, boolean log)
 	{
@@ -224,8 +231,23 @@ public class Draw
 			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
 			int xRes, int yRes, boolean log, double depth, Generator<Point> basis)
 	{
-		BufferedImage image = draw(
-				depth == -1 ? ifs.generator() : ifs.generator(depth, basis), samples, xrange, yrange, xRes, yRes, log);
+		return draw(ifs, samples, xrange, yrange, xRes, yRes, log, depth, basis, null);
+	}
+	
+	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
+			int xRes, int yRes, boolean log, double depth, Generator<Point> basis, List<Double> mixture)
+	{
+		Generator<Point> gen = null;
+		
+		if(mixture != null)
+			gen = IFSs.mixtureGenerator(mixture, ifs);
+		else if(depth == -1)
+			gen = ifs.generator();
+		else
+			gen = ifs.generator(depth, basis);
+			
+		BufferedImage image = draw(gen, samples, xrange, yrange, xRes, yRes, log);
 			
 		List<Point> frame = new ArrayList<Point>(6);
 		frame.add(new Point(-1.0, -1.0));

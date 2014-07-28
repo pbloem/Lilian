@@ -76,12 +76,16 @@ public class SimEM extends EM<Similitude>
 				vect = vect.add(maps.get(i).getTranslation().mapMultiply(weights.get(i)/wSum));
 				scalar += maps.get(i).scalar() * (weights.get(i)/wSum);
 				
+				System.out.println(i + ", " + weights.get(i)/wSum + ": " + rotation + " " +maps.get(i).getTranslation() + " " + maps.get(i).scalar());
+				
 				allNull = false;
 			}
 		}
 		
 		if(allNull)
 			return null;
+		
+		System.out.println("fin : " + mat + " " + vect + " " + scalar);
 		
 		List<Double> angles = Rotation.findAngles(mat);
 
@@ -98,8 +102,13 @@ public class SimEM extends EM<Similitude>
 	protected double logLikelihood(List<Point> sample, IFS<Similitude> model, int depth)
 	{
 		double ll = 0.0;
-		for(Point p : sample) 
-			ll += Math.log(IFS.density(model, p, depth, basis()));
+		
+		for(Point p : sample)
+		{
+			double density = IFS.density(model, p, depth, basis());
+			ll += Math.log(density);
+			
+		}
 		
 		return ll;
 	}

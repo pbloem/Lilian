@@ -11,8 +11,10 @@ import java.util.List;
 
 import org.apache.commons.math.linear.RealVector;
 import org.lilian.Global;
+import org.lilian.data.real.AbstractGenerator;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Datasets;
+import org.lilian.data.real.Generator;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.MapModel;
 import org.lilian.data.real.Maps;
@@ -23,6 +25,7 @@ import org.lilian.search.Parameters;
 import org.lilian.search.Parametrizable;
 import org.lilian.search.evo.ES;
 import org.lilian.search.evo.Target;
+import org.lilian.util.Functions;
 import org.lilian.util.Series;
 
 
@@ -149,7 +152,16 @@ public class IFSs
 				0.5, -0.5,-0.5, 0.0, p2
 				));
 	}			
-	
+	public static IFS<Similitude> sierpinskiSmall()
+	{	
+		Builder<IFS<Similitude>> builder = 
+				IFS.builder(3, Similitude.similitudeBuilder(2));
+		return builder.build(Arrays.asList(
+				0.1,  0.0, 0.5, 0.0, 1.0, 
+				0.1,  0.5,-0.5, 0.0, 1.0, 
+				0.1, -0.5,-0.5, 0.0, 1.0
+			));
+	}
 	/**
 	 * Generates a sierpinski gasket with non-uniform component weights
 	 * 
@@ -1039,5 +1051,34 @@ public class IFSs
 //		
 //		return model;	
 //	}		
+	public static <M extends Map & Parametrizable> Generator<Point> mixtureGenerator(List<Double> mix, IFS<M> ifs)
+	{
+		return new MixtureGenerator<M>(mix, ifs);
+	}
+	
+	private static class MixtureGenerator<M extends Map & Parametrizable> 
+		extends AbstractGenerator<Point>
+	{
+		private List<Double> mixture;
+		private double sum = 0.0;
+		private IFS<M> ifs;
+		
+		public MixtureGenerator(List<Double> mixture, IFS<M> ifs)
+		{
+			this.mixture = mixture;
+			this.ifs = ifs;
+			
+			for(double p : mixture)
+				sum += p;
+		}
 
+		@Override
+		public Point generate()
+		{
+			int d = Functions.draw(mixture, sum);
+			return ifs.generator(d+1).generate();
+		}
+		
+	}
 }
+

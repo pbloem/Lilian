@@ -106,10 +106,10 @@ import org.lilian.util.Series;
  */
 public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> implements Serializable
 {
-	private static final boolean DEBUG = true; 
+	private static final boolean DEBUG = false; 
 	public File DEBUG_DIR = new File(".");
 	
-	public static final int DEPTH_SAMPLE = 1000;
+	public static final int DEPTH_SAMPLE = 500;
 	
 	public static boolean UNIFORM_DEPTH = false;
 	
@@ -225,9 +225,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		List<Point> sample = sampleSize == -1 ? data : Datasets.sample(data,
 				sampleSize);
 
-		root = new Node(-1, null); // Challenging for the GC, but should be
-								   // fine...
-
+		root = new Node(-1, null);
+		
 		for (Point point : sample)
 		{
 			Weighted<List<Integer>> codes = codes(point, model, depth, maxSources);
@@ -259,6 +258,34 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		for(int d : series(1, maps.depth() + 1))
 			models.add(codesToModel(d, maps));
 		
+		List<Double> priors = new ArrayList<Double>(numComponents);
+		if(UNIFORM_DEPTH || allContainNull(models))
+		{
+			for(int i : series(models.size()))
+				priors.add(1.0);
+		} else
+		{
+			List<Point> sample = Datasets.sample(data, DEPTH_SAMPLE);
+			
+			for(int d : series(models.size()))
+			{
+				PreModel m = models.get(d);
+				if(! hasNull(m))
+				{
+					double likelihood = logLikelihood(sample, m.ifs(), d+1);
+					priors.add(likelihood);
+				} else 
+				{
+					priors.add(Double.NEGATIVE_INFINITY);
+				}
+			}
+			
+			Global.log().info("logpriors: " + priors);
+			priors = Functions.normalizeLog(priors, Math.E);
+		}
+		
+		Global.log().info("priors: " + priors);
+		
 		if(DEBUG)
 		{
 			File dir = new File(DEBUG_DIR, String.format("%04d/", iterations));
@@ -267,7 +294,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			for(int i : series(models.size()))
 				if(!hasNull(models.get(i)))
 				{
-					BufferedImage image = Draw.draw(models.get(i).ifs(), 100000, 1000, true);
+					BufferedImage image = Draw.draw(models.get(i).ifs(), 100000, new double[]{-1.0, 1.0},new double[]{-1.0, 1.0}, 1000, 1000, true, (double)i+1, basis());
+					
 					try
 					{
 						ImageIO.write(image, "PNG", new File(dir, String.format("%d.png", i)));
@@ -280,31 +308,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 				}
 		}
 		
-		List<Double> priors = new ArrayList<Double>(numComponents);
-		if(UNIFORM_DEPTH)
-		{
-			for(int i : series(models.size()))
-				priors.add(1.0);
-		} else
-		{
-			List<Point> sample = Datasets.sample(data, DEPTH_SAMPLE);
-			
-			for(PreModel m : models)
-			{
-				if(! hasNull(m))
-				{
-					double likelihood = logLikelihood(sample, m.ifs(), models.size());
-					priors.add(likelihood);
-				} else 
-				{
-					priors.add(Double.NEGATIVE_INFINITY);
-				}
-			}
-			
-			priors = Functions.normalizeLog(priors, Math.E);
-		}
 		
-		Global.log().info("priors: " + priors);
 		
 		PreModel preModel = null;
 		for(int component : series(numComponents))
@@ -318,7 +322,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			}
 			
 			// * combine the maps
-			M combinedMap = combine(comps, weights);
+			M combinedMap = combine(comps, priors);
 			
 			// * combine the weights
 			double priorSum = 0.0;
@@ -410,6 +414,14 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	{
 		for(M map : model)
 			if(map != null)
+				return false;
+		return true;
+	}
+	
+	private boolean allContainNull(List<PreModel> models)
+	{
+		for(PreModel model : models)
+			if(!hasNull(model))
 				return false;
 		return true;
 	}
