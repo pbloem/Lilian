@@ -1,12 +1,24 @@
 package org.lilian.data.real;
 
+import static org.lilian.util.Series.series;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.ArrayRealVector;
+import org.apache.commons.math.linear.InvalidMatrixException;
+import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
+import org.apache.commons.math.linear.SingularValueDecomposition;
+import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.lilian.Global;
+import org.lilian.data.real.Maps.FindSimilitudeResult;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.search.evo.Target;
@@ -269,4 +281,431 @@ public class Similitude extends AffineMap
 		
 		return out;
 	}
+	
+	public static Similitude find(List<Point> xSet, List<Point> ySet)
+	{
+		if(xSet.size() == 0)
+			return null;
+			
+		int dim = xSet.get(0).dimensionality();
+		int size = xSet.size();
+		
+		// * Calculate the means
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector xMean = new ArrayRealVector(dim);
+		for(Point x : xSet)
+			xMean = xMean.add(x.getBackingData());
+		xMean.mapMultiplyToSelf(1.0/xSet.size());
+		
+		RealVector yMean = new ArrayRealVector(dim);
+		for(Point y : ySet)
+			yMean = yMean.add(y.getBackingData());
+		yMean.mapMultiplyToSelf(1.0/xSet.size());
+				
+		// * Calculate the standard deviations
+		RealVector difference;
+		double norm;
+		
+		double xStdDev = 0.0;
+		for(Point x : xSet)
+		{
+			difference = x.getVector().subtract(xMean);
+			norm = difference.getNorm();
+			xStdDev += norm * norm;
+		}	
+		xStdDev = xStdDev / xSet.size();
+		
+		double yStdDev = 0.0;
+		for(Point y : ySet)
+		{
+			difference = y.getVector().subtract(yMean);
+			norm = difference.getNorm();
+			yStdDev += norm * norm;
+		}	
+		yStdDev = yStdDev / ySet.size();
+	
+		// * Calculate the covariance martix
+	
+		RealVector xDifference, yDifference;
+		
+		RealMatrix covariance = new Array2DRowRealMatrix(dim, dim);
+		
+		for(int i = 0; i < size;i++)
+		{
+			xDifference = xSet.get(i).getVector().subtract(xMean);
+			yDifference = ySet.get(i).getVector().subtract(yMean);
+			
+			
+			RealMatrix term = yDifference.outerProduct(xDifference); 
+			covariance =  covariance.add(term);
+		}
+		
+		covariance = covariance.scalarMultiply(1.0/size);
+		
+		// * Find U, V and S
+		int retries = 0;
+		boolean success = false;
+		SingularValueDecomposition svd = null;
+		while(! success)
+		{
+			try 
+			{
+				svd = new SingularValueDecompositionImpl(covariance);
+				success = true;
+			} catch (InvalidMatrixException e)
+			{
+				retries++;
+				if(retries > MAX_SVD_RETRIES)
+					return null;
+			}
+		}
+		
+	
+		RealMatrix u  = svd.getU();
+		RealMatrix vt = svd.getVT();
+		
+		RealMatrix s = MatrixTools.identity(dim);
+		double det = new LUDecompositionImpl(covariance).getDeterminant();	
+		if(det < 0)
+			s.setEntry(dim-1, dim-1, -1.0);
+		
+		// * Calculate R
+		RealMatrix r =  u.multiply(s).multiply(vt);
+		
+		double detU = new LUDecompositionImpl(u).getDeterminant();	
+		//   a matrix and it's trans have the same det
+		double detV = new LUDecompositionImpl(vt).getDeterminant(); 
+				
+		// * Calculate c
+		double trace = 0.0;
+		//   obtain the non-ordered singular values
+		RealVector values = MatrixTools.diag(svd.getS()); 
+		//   trace of DS
+		for(int i = 0; i < dim-1; i++)
+			trace += values.getEntry(i);
+		trace += detU*detV < 0 ? -values.getEntry(dim-1) : values.getEntry(dim-1);
+		
+		double c = (1.0 / xStdDev) * trace;
+		
+		// * Calculate t
+		RealVector t = yMean.subtract(r.scalarMultiply(c).operate(xMean));
+		
+		// * Calculate the error
+		double e = yStdDev - (trace*trace)/xStdDev;
+		
+		List<Double> angles = Rotation.findAngles(r);
+		
+		return new Similitude(c, new Point(t), angles);
+	}
+	
+
+	public static Similitude find(List<Point> xSet, List<Point> ySet, List<Double> weights)
+	{
+		return find(xSet, ySet, weights, new LinkedHashMap<String, Double>());
+	}
+	
+	public static Similitude find(List<Point> xSet, List<Point> ySet, List<Double> weights, HashMap<String, Double> extra)
+	{
+		List<Point> xs = new ArrayList<Point>(xSet.size());
+		List<Point> ys = new ArrayList<Point>(ySet.size());
+		List<Double> ws = new ArrayList<Double>(weights.size());
+		
+		for(int i : series(xSet.size()))
+			if(weights.get(i) > 0.0)
+			{
+				xs.add(xSet.get(i));
+				ys.add(ySet.get(i));
+				ws.add(weights.get(i));
+			}
+		
+		xSet = xs;
+		ySet = ys;
+		weights = ws;
+		
+		if(xSet.size() == 0)
+			return null;
+			
+		int dim = xSet.get(0).dimensionality();
+		int size = xSet.size();
+		
+		double weightSum = 0.0;
+		for(double weight : weights)
+			weightSum += weight;
+		
+		// * Calculate the means
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector xMean = new ArrayRealVector(dim);
+		for(int i : series(xSet.size()))
+		{
+			Point x = xSet.get(i);
+			xMean = xMean.add(x.getVector().mapMultiply(weights.get(i)));
+		}
+		xMean.mapMultiplyToSelf(1.0/weightSum);
+		
+		RealVector yMean = new ArrayRealVector(dim);
+		for(int i : series(ySet.size()))
+		{
+			Point y = ySet.get(i);
+			yMean = yMean.add(y.getVector().mapMultiply(weights.get(i)));
+		}
+		yMean.mapMultiplyToSelf(1.0/weightSum);
+				
+		// * Calculate the standard deviations		
+		double xStdDev = 0.0;
+		for(int i : series(xSet.size()))
+		{
+			Point x = xSet.get(i);
+			RealVector difference = x.getVector().subtract(xMean);
+			double norm = difference.getNorm();
+			
+			xStdDev += norm * norm * weights.get(i);
+		}	
+		xStdDev = xStdDev / weightSum;
+		
+		double yStdDev = 0.0;
+		for(int i : series(ySet.size()))
+		{
+			Point y = ySet.get(i);
+			RealVector difference = y.getVector().subtract(yMean);
+			double norm = difference.getNorm();
+			
+			yStdDev += norm * norm * weights.get(i);
+		}	
+		yStdDev = yStdDev / weightSum;
+	
+		// * Calculate the covariance martix
+	
+		RealVector xDifference, yDifference;
+		
+		RealMatrix covariance = new Array2DRowRealMatrix(dim, dim);
+		
+		for(int i = 0; i < size;i++)
+		{
+			xDifference = xSet.get(i).getVector().subtract(xMean);
+			yDifference = ySet.get(i).getVector().subtract(yMean);
+			
+			
+			RealMatrix term = yDifference.outerProduct(xDifference).scalarMultiply(weights.get(i)); 
+			covariance =  covariance.add(term);
+		}
+		
+		covariance = covariance.scalarMultiply(1.0/weightSum); // I think we can leave this one out ....
+		
+		// * Find U, V and S
+		int retries = 0;
+		boolean success = false;
+		SingularValueDecomposition svd = null;
+		while(! success)
+		{
+			try 
+			{
+				svd = new SingularValueDecompositionImpl(covariance);
+				success = true;
+			} catch (InvalidMatrixException e)
+			{
+				retries++;
+				if(retries > MAX_SVD_RETRIES)
+					return null;
+			}
+		}
+	
+		RealMatrix u  = svd.getU();
+		RealMatrix vt = svd.getVT();
+		
+		RealMatrix s = MatrixTools.identity(dim);
+		double det = new LUDecompositionImpl(covariance).getDeterminant();	
+		if(det < 0)
+			s.setEntry(dim-1, dim-1, -1.0);
+		
+		// * Calculate R
+		RealMatrix r =  u.multiply(s).multiply(vt);
+		
+		double detU = new LUDecompositionImpl(u).getDeterminant();	
+		//   a matrix and it's trans have the same det
+		double detV = new LUDecompositionImpl(vt).getDeterminant(); 
+				
+		// * Calculate c
+		double trace = 0.0;
+		//   obtain the non-ordered singular values
+		
+		RealVector values = MatrixTools.diag(svd.getS()); 
+		//   trace of DS
+		for(int i = 0; i < dim-1; i++)
+			trace += values.getEntry(i);
+		trace += detU*detV < 0 ? - values.getEntry(dim-1) : values.getEntry(dim-1);
+		
+		double c = (trace / xStdDev);
+		
+		// * Calculate t
+		RealVector t = yMean.subtract(r.scalarMultiply(c).operate(xMean));
+		
+		double e = yStdDev - (trace*trace) / xStdDev;
+		double stdDev = e / (weights.size() * dim);
+		
+		extra.put("error", e);
+		extra.put("std dev", stdDev);
+		
+		List<Double> angles = Rotation.findAngles(r);
+		
+		return new Similitude(c, new Point(t), angles);
+	}
+	
+	public static Similitude find(List<Point> from, List<Point> to, RealMatrix cor)
+	{
+		return find(from, to, cor, new HashMap<String, Double>());
+	
+	}
+
+	/**
+	 * Same as above, but in this case, the points in x and y do not correspond. 
+	 * Instead the matrix cor gives a weight to each pair.
+	 * 
+	 * Each row in cor contains the values for a given 'to' point, each column for a given from point.
+	 * @param from
+	 * @param to
+	 * @param cor
+	 * @param extra
+	 * @return
+	 */
+	public static Similitude find(List<Point> from, List<Point> to, RealMatrix cor, HashMap<String, Double> extra)
+	{
+		// TODO Implement as a series of matrix multiplications
+		
+		if(from.size() == 0)
+			return null;
+			
+		int dim = from.get(0).dimensionality();
+		int size = from.size();
+		
+		double weightSum = 0.0;
+		for(int row : series(cor.getRowDimension()))
+			for(int column : series(cor.getColumnDimension()))
+				weightSum += cor.getEntry(row, column);
+		
+		RealVector fromWeights = cor.preMultiply(new ArrayRealVector(cor.getRowDimension(), 1.0));
+		RealVector toWeights = cor.operate(new ArrayRealVector(cor.getColumnDimension(), 1.0));
+		
+		// * Calculate the means
+		//  (optimize by doing in place summation manually on a double[]
+		RealVector fromMean = new ArrayRealVector(dim);
+		for(int i : series(from.size()))
+		{
+			Point f = from.get(i);
+			fromMean = fromMean.add(f.getVector().mapMultiply(fromWeights.getEntry(i)));
+		}
+		fromMean.mapMultiplyToSelf(1.0/weightSum);
+		
+		RealVector toMean = new ArrayRealVector(dim);
+		for(int i : series(to.size()))
+		{
+			Point t = to.get(i);
+			toMean = toMean.add(t.getVector().mapMultiply(toWeights.getEntry(i)));
+		}
+		toMean.mapMultiplyToSelf(1.0/weightSum);
+				
+		// * Calculate the standard deviations		
+		double fromStdDev = 0.0;
+		for(int i : series(from.size()))
+		{
+			Point x = from.get(i);
+			RealVector difference = x.getVector().subtract(fromMean);
+			double norm = difference.getNorm();
+			
+			fromStdDev += norm * norm * fromWeights.getEntry(i);
+		}	
+		fromStdDev = fromStdDev / weightSum;
+		
+		double toStdDev = 0.0;
+		for(int i : series(to.size()))
+		{
+			Point y = to.get(i);
+			RealVector difference = y.getVector().subtract(toMean);
+			double norm = difference.getNorm();
+			
+			toStdDev += norm * norm * toWeights.getEntry(i);
+		}	
+		toStdDev = toStdDev / weightSum;
+	
+		// * Calculate the covariance martix
+	
+		RealVector fDifference, tDifference;
+		
+		RealMatrix covariance = new Array2DRowRealMatrix(dim, dim);
+		
+		for(int f : series(from.size()))
+			for(int t : series(to.size()))
+			{
+				fDifference = from.get(f).getVector().subtract(fromMean);
+				tDifference = to.get(t).getVector().subtract(toMean);
+				
+				
+				RealMatrix term = tDifference.outerProduct(fDifference).scalarMultiply(cor.getEntry(t, f)); 
+				covariance =  covariance.add(term);
+			}
+		
+		covariance = covariance.scalarMultiply(1.0/weightSum); // I think we can leave this one out ....
+		
+		// * Find U, V and S
+		int retries = 0;
+		boolean success = false;
+		SingularValueDecomposition svd = null;
+		while(! success)
+		{
+			try 
+			{
+				svd = new SingularValueDecompositionImpl(covariance);
+				success = true;
+			} catch (InvalidMatrixException e)
+			{
+				retries++;
+				if(retries > MAX_SVD_RETRIES)
+				{
+					Global.log().warning("Could not find SVD decomposition for matrix: " + covariance);
+					
+					return null;
+				}
+			}
+		}
+	
+		RealMatrix u  = svd.getU();
+		RealMatrix vt = svd.getVT();
+		
+		RealMatrix s = MatrixTools.identity(dim);
+		double det = new LUDecompositionImpl(covariance).getDeterminant();	
+		if(det < 0)
+			s.setEntry(dim-1, dim-1, -1.0);
+		
+		// * Calculate R
+		RealMatrix r =  u.multiply(s).multiply(vt);
+		
+		double detU = new LUDecompositionImpl(u).getDeterminant();	
+		//   a matrix and it's trans have the same det
+		double detV = new LUDecompositionImpl(vt).getDeterminant(); 
+				
+		// * Calculate c
+		double trace = 0.0;
+		//   obtain the non-ordered singular values
+		
+		RealVector values = MatrixTools.diag(svd.getS()); 
+		//   trace of DS
+		for(int i = 0; i < dim-1; i++)
+			trace += values.getEntry(i);
+		trace += detU*detV < 0 ? - values.getEntry(dim-1) : values.getEntry(dim-1);
+		
+		double c = (trace / fromStdDev);
+		
+		// * Calculate t
+		RealVector t = toMean.subtract(r.scalarMultiply(c).operate(fromMean));
+		
+		double e = toStdDev - (trace*trace) / fromStdDev;
+		double stdDev = e / (weightSum * dim);
+		
+		extra.put("error", e);
+		extra.put("std dev", stdDev);
+		
+		List<Double> angles = Rotation.findAngles(r);
+		
+		return new Similitude(c, new Point(t), angles);
+	}	
+	
 }

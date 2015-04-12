@@ -48,7 +48,6 @@ import org.lilian.util.Series;
  */
 public class MVN extends AbstractDensity implements Generator<Point>, Parametrizable
 {
-
 	private static final long serialVersionUID = 2741764705947779052L;
 
 	public static final double THRESHOLD = 10E-10;
@@ -195,6 +194,32 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 		double exponent = -0.5 * diff.dotProduct( covInv.operate(diff) ); 
 
 		return scalar * exp(exponent);	
+	}
+	
+	public double logDensity(Point p)
+	{
+		double det = abs( MatrixTools.getDeterminant(covariance()));
+		if(MatrixTools.isSingular(covariance()))
+			return 0.0;
+		
+		RealMatrix covInv = null;
+		try {
+			covInv = MatrixTools.inverse(covariance());
+		} catch(SingularMatrixException e)
+		{
+			System.out.println(covariance());
+			System.out.println(covariance.isSingular());
+			System.out.println(MatrixTools.isSingular(covariance()));
+			
+			throw e;
+		}
+		
+		RealVector diff = p.getVector().subtract(mean().getVector());
+		
+		double scalar = 1.0 / (pow(2.0 * PI, dimension()/2.0) * pow(det, 0.5)) ;
+		double exponent = -0.5 * diff.dotProduct( covInv.operate(diff) ); 
+
+		return Math.log(scalar) + exponent;	
 	}
 	
 	public AffineMap map()
@@ -484,4 +509,16 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 		}
 		
 	}
+	
+	public static double logDensity(Point x, Point mean, double dev)
+	{
+		int dim = x.dimensionality();
+		
+		double constant = - (dim/2.0) * (LOG2PI + Math.log(dev));
+		double norm = x.getVector().subtract(mean.getBackingData()).getNorm();
+		
+		return constant - (1.0 / (2.0 * dev)) * (norm * norm);
+	}
+	
+	private static final double LOG2PI = Math.log(2.0 * Math.PI);
 }

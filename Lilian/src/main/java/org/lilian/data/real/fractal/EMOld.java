@@ -104,15 +104,13 @@ import org.lilian.util.Series;
  * @author Peter
  * 
  */
-public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> implements Serializable
+public abstract class EMOld<M extends org.lilian.data.real.Map & Parametrizable> implements Serializable
 {
-	private static final boolean DEBUG = false; 
+	private static final boolean DEBUG = true; 
 	public File DEBUG_DIR = new File(".");
 	
 	public static final int DEPTH_SAMPLE = 500;
-	
-	public static boolean UNIFORM_DEPTH = false;
-	
+		
 	// * Serial ID
 	private static final long serialVersionUID = 774467486797440172L;
 
@@ -145,6 +143,8 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	protected int numComponents;
 	protected int dimension;
 	
+	protected List<Double> stds;
+	
 	// * The maximum number of endpoints to distribute responsibility over
 	private int maxSources; 
 
@@ -167,20 +167,63 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 	/**
 	 * Sets up the EM algorithm with a given initial model.
-	 * 
+	 * @deprecated
 	 */
-	public EM(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder, double spanningPointsVariance)
+	public EMOld(IFS<M> initial, List<Point> data, int numSources, Builder<M> builder, double spanningPointsVariance)
 	{
 		this(initial, data, numSources, 0.3, 
 				true, 
 			builder, spanningPointsVariance);
 	}
+	
+	/**
+	 * Sets up an EM algorithm with a uniform depth mixture
+	 * @param initial
+	 * @param data
+	 * @param numSources
+	 * @param builder
+	 * @param spanningPointsVariance
+	 */
+	public EMOld(IFS<M> initial, List<Point> data, Builder<M> builder)
+	{
+		this(initial, data, 1, 0.3, true, builder);
+	}
 
+	public EMOld(IFS<M> initial, List<Point> data, int maxSources, double perturbVar,
+			boolean useSphericalMVN, Builder<M> builder)
+	{
+		this.maxSources = maxSources;
+		
+		this.numComponents = initial.size();
+		this.dimension = initial.dimension();
+		this.data = data;
+		this.useSphericalMVN = useSphericalMVN;
+		this.perturbVar = perturbVar;
+
+		if (dimension != data.get(0).dimensionality())
+			throw new IllegalArgumentException("Data dimension ("
+					+ data.get(0).dimensionality()
+					+ ") must match initial model argument (" + dimension + ")");
+
+		model = initial;
+
+		root = new Node(-1, null);
+
+		this.mapBuilder = builder;
+		this.ifsBuilder = IFS.builder(numComponents, mapBuilder);
+
+		basis = useSphericalMVN ? MVN.findSpherical(data) : MVN.find(data);
+		
+		stds = new ArrayList<Double>(numComponents);
+		for(int i : series(numComponents))
+			stds.add(0.01); // TODO make better
+	}
+	
 	/**
 	 * Sets up the EM algorithm with a given initial model.
-	 * 
+	 * @deprecated
 	 */
-	public EM(IFS<M> initial, List<Point> data, int maxSources, double perturbVar,
+	public EMOld(IFS<M> initial, List<Point> data, int maxSources, double perturbVar,
 			boolean useSphericalMVN, Builder<M> builder, double spanningPointsVariance)
 	{
 		this.maxSources = maxSources;
@@ -205,12 +248,33 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 
 		basis = useSphericalMVN ? MVN.findSpherical(data) : MVN.find(data);
 		this.spanningPointsVariance = spanningPointsVariance;
+		
+		stds = new ArrayList<Double>(numComponents);
+		for(int i : series(numComponents))
+			stds.add(0.01); // TODO make better
 	}
 
+	/**
+	 * Iterates with a uniform mixture over the depths
+	 * @param sampleSize
+	 * @param depth
+	 */
 	public void iterate(int sampleSize, double depth)
 	{
 		modelToCodes(sampleSize, depth);
-		codesToModel();
+		codesToModel(-1);
+	}
+	
+	/**
+	 * Iterates using a likelihood mixture over the depths
+	 * @param sampleSize
+	 * @param depth
+	 * @param depthSampleSize
+	 */
+	public void iterate(int sampleSize, double depth, int depthSampleSize)
+	{
+		modelToCodes(sampleSize, depth);
+		codesToModel(depthSampleSize);
 	}
 
 	/**
@@ -244,11 +308,11 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			Point point, IFS<M> model, double depth, int sources);
 	
 	
-	protected abstract M findMap(List<Point> from, List<Point> to);
-	
+	protected abstract M findMap(List<Point> from, List<Point> to, List<Double> weights, int k);
+
 	protected abstract double logLikelihood(List<Point> sample, IFS<M> model, int depth);
 
-	protected void codesToModel()
+	protected void codesToModel(int depthSampleSize)
 	{
 		// * Look for matching codes in the code tree
 		Maps maps = findMaps();
@@ -258,14 +322,16 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		for(int d : series(1, maps.depth() + 1))
 			models.add(codesToModel(d, maps));
 		
+		Global.log().info("New stds " + stds);
+		
 		List<Double> priors = new ArrayList<Double>(numComponents);
-		if(UNIFORM_DEPTH || allContainNull(models))
+		if(depthSampleSize < 0 || allContainNull(models))
 		{
 			for(int i : series(models.size()))
 				priors.add(1.0);
 		} else
 		{
-			List<Point> sample = Datasets.sample(data, DEPTH_SAMPLE);
+			List<Point> sample = Datasets.sample(data, depthSampleSize);
 			
 			for(int d : series(models.size()))
 			{
@@ -806,62 +872,39 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 					int m = Math
 							.min(nodeFrom.points().size(), this.points().size());
 
-					MVN from = nodeFrom.mvn(), to = mvn();
+					MVN fromMVN = nodeFrom.mvn(), toMVN = mvn();
 
-					if (from != null & to != null)
+					if (fromMVN != null & toMVN != null)
 					{	
-						if (m < COVARIANCE_THRESHOLD) // Not enough points to
-												      // consider covariance
-						{
-							for (int i : series(points.size()))
-								maps.add(t, from.mean(), to.mean(), code);
-						} else
-						{
-							AffineMap map = (AffineMap) to.map().compose(from.map().inverse()); 
+							M map = model.get(t);
 							
-							List<Point> newFrom = new ArrayList<Point>();
+							List<Point> froms = nodeFrom.points(), tos = points();
 							
-							for(Point toPoint : points())
+							for(Point to : tos)
 							{
-								Point bestFrom = null;
-								double bestDistance = Double.POSITIVE_INFINITY;
 								
-								for(Point fromPoint : nodeFrom.points())
+								List<Double> responsibilities = new ArrayList<Double>(froms.size());
+								double sum = 0.0;
+								
+								for(Point from : froms)
 								{
-									double distance = map.map(fromPoint).distance(toPoint);
-									if(distance <= bestDistance)
-									{
-										bestFrom = fromPoint;
-										bestDistance = distance;
-									}
+									MVN component = new MVN(map.map(from), Math.sqrt(stds.get(t)));
+									double likelihood = component.density(to);
+									
+									responsibilities.add(likelihood);
+									sum += likelihood;
 								}
-															
-								newFrom.add(bestFrom);
-								maps.add(t, bestFrom, toPoint, code);
+								
+								System.out.println(sum);
+								
+								for(int i : series(froms.size()))
+								{
+									double responsibility = responsibilities.get(i) / sum;
+									maps.add(t,	code, froms.get(i), to, responsibility);
+								}
 							}
-							
-//							try
-//							{
-//								File dir = new File("maptest/"+code+"/");
-//								dir.mkdirs();
-//								
-//								debug(new File(dir, "points.png"), nodeFrom.points(), points());
-//								debug(new File(dir, "dists.png"), from.generate(100), to.generate(100));
-//								debug(new File(dir, iterations+" "+code+".png"), nodeFrom.points(), map.map(nodeFrom.points()));
-//								debug(new File(dir, "final.png"), newFrom, points());
-//
-//							} catch (IOException e)
-//							{
-//								// TODO Auto-generated catch block
-//								e.printStackTrace();
-//							}
-							
-
-						}
 					} else
 					{
-						// Global.log().info("Points for code " + code +
-						// " formed deficient MVN. No points added to pairs.");
 					}
 
 					// Register the drop in frequency as the symbol t gets added
@@ -869,32 +912,6 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 					maps.weight(t, nodeFrom.frequency(), this.frequency(), code);
 				}
 			}
-		}
-
-		private List<Point> pair(List<Point> froms, List<Point> tos,
-				AffineMap map)
-		{			
-			List<Point> result = new ArrayList<Point>(tos.size());
-			
-			for(Point to : tos)
-			{
-				Point bestFrom = null;
-				double bestDistance = Double.POSITIVE_INFINITY;
-				
-				for(Point from : froms)
-				{
-					double distance = map.map(from).distance(to);
-					if(distance <= bestDistance)
-					{
-						bestFrom = from;
-						bestDistance = distance;
-					}
-				}
-				
-				result.add(bestFrom);
-			}
-			
-			return result;
 		}
 
 		public String toString()
@@ -961,10 +978,13 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		}
 
 		private Cor<Point>    fromPoints = new Cor<Point>(); 
-		private Cor<Point>      toPoints = new Cor<Point>(); 
+		private Cor<Point>      toPoints = new Cor<Point>();
+		private Cor<Double>   responsibilities = new Cor<Double>();
+		
 		private Cor<Double>  fromWeights = new Cor<Double>(); 
 		private Cor<Double>    toWeights = new Cor<Double>(); 
-		private Cor<List<Integer>> codes = new Cor<List<Integer>>(); 
+		
+		private Cor<List<Integer>> codes = new Cor<List<Integer>>();
 
 		private int depth = 0;
 		private int maxComponent = 0;
@@ -1005,10 +1025,11 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 		 * @param to
 		 *            The to point
 		 */
-		public void add(int component, Point from, Point to, List<Integer> code)
+		public void add(int component, List<Integer> code, Point from, Point to, double responsibility)
 		{
 			fromPoints.add(component, code.size(), from);
 			toPoints.add(component, code.size(), to);
+			responsibilities.add(component, code.size(), responsibility);
 		}
 
 		/**
@@ -1081,7 +1102,9 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 			List<Point> from = fromPoints.get(component, depth), 
 			              to = toPoints.get(component, depth);
 			
-			return findMap(from, to);
+			List<Double> weights = responsibilities.get(component, depth);
+			
+			return findMap(from, to, weights, component);
 		}
 		
 		/**
@@ -1192,7 +1215,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 					File dir = new File(baseDir, String.format("%04d/comp%d/depth-%d.png", iterations, c, d));
 					dir.mkdirs();
 				
-					EM.debug(dir, fromPoints.get(c, d), toPoints.get(c, d));
+					EMOld.debug(dir, fromPoints.get(c, d), toPoints.get(c, d));
 				}
 		}
 		
@@ -1241,7 +1264,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	{
 		int dim = data.get(0).dimensionality();
 
-		EM<Similitude> em = new SimEM(
+		EMOld<Similitude> em = new SimEM(
 				IFSs.initialSphere(dim, components, 1.0, 0.5), 
 				data, 1, Similitude.similitudeBuilder(dim), 0.01);
 
@@ -1280,7 +1303,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	 * @param samples
 	 * @return
 	 */
-	public static <M extends AffineMap> double depth(EM<M> em, double from, double step, double to, int samples, List<Point> data)
+	public static <M extends AffineMap> double depth(EMOld<M> em, double from, double step, double to, int samples, List<Point> data)
 	{
 		
 		double bestDepth = Double.NaN;
@@ -1308,7 +1331,7 @@ public abstract class EM<M extends org.lilian.data.real.Map & Parametrizable> im
 	
 
 	/**
-	 * Let's us store the ingredients of a model, but allows null values
+	 * Lets us store the ingredients of a model, but allows null values
 	 * @author Peter
 	 *
 	 */

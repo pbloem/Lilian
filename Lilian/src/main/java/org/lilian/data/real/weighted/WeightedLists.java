@@ -3,11 +3,14 @@ package org.lilian.data.real.weighted;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
 import org.lilian.Global;
+import org.lilian.data.real.Map;
+import org.lilian.data.real.Point;
 import org.lilian.util.Series;
 
 public class WeightedLists
@@ -22,6 +25,12 @@ public class WeightedLists
 	public static <T> Weighted<T> combine(List<T> items, List<Double> weights)
 	{
 		return new WeightedList<T>(items, weights);
+	}
+	
+	public static Weighted<Point> map(Map map, Weighted<Point> points)
+	{
+		List<Point> mapped = map.map(points);
+		return combine(mapped, points.weights());
 	}
 	
 	private static class WeightedList<T> implements Weighted<T>, Serializable
@@ -332,6 +341,21 @@ public class WeightedLists
 				res += (i==0 ? ", " : "") + get(i) + "("+probability(i)+")"; 
 				
 			return res+ "]";
+		}
+
+		@Override
+		public List<Double> weights()
+		{	
+			return Collections.unmodifiableList(weights);
+		}
+
+		@Override
+		public boolean addAll(Weighted<? extends T> other)
+		{
+			for(int i : Series.series(other.size()))
+				add(other.get(i), other.weight(i));
+			
+			return true;
 		}
 		
 	}

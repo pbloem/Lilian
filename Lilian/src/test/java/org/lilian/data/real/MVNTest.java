@@ -12,7 +12,7 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
-import org.lilian.data.real.fractal.EM;
+import org.lilian.data.real.fractal.EMOld;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.weighted.Weighted;
@@ -223,7 +223,7 @@ public class MVNTest
 
 		Map comp = mvnTo.map().compose(mvnFrom.map().inverse());
 		
-		EM.debug(new File("/Users/Peter/Documents/mvn-test.png"), from, comp.map(from.subList(0, 10)));
+		EMOld.debug(new File("/Users/Peter/Documents/mvn-test.png"), from, comp.map(from.subList(0, 10)));
 
 	}
 	

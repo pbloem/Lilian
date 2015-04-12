@@ -1,5 +1,6 @@
 package org.lilian.util;
 
+import static java.lang.Math.exp;
 import static org.junit.Assert.*;
 import static org.lilian.util.Functions.mod;
 
@@ -40,6 +41,35 @@ public class FunctionsTest
 		List<Double> res = Functions.normalizeLog(vals, Math.E);
 		System.out.println(res);
 		
+		
+		vals = Arrays.asList(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY); 
+		
+		res = Functions.normalizeLog(vals, Math.E);
+		System.out.println(res);
+	}
+	
+	@Test
+	public void testLogSum()
+	{
+		double a = -116326.21243521984;
+		double b = -115293.85118645725 -71.48161875294834;
+		
+		System.out.println(b - a);
+		System.out.println(1 + exp(b - a));
+		
+		System.out.println(Functions.logSum(a, b));
+	}
+	
+	@Test
+	public void testLogSum2()
+	{
+		double a = 1;
+		double b = -812;
+		
+		System.out.println(a - b);
+		System.out.println(1 + exp(a - b));
+		
+		System.out.println(Functions.logSum(a, b));
 	}
 
 }

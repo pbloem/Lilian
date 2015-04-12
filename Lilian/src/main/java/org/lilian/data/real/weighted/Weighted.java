@@ -24,6 +24,8 @@ public interface Weighted<T> extends List<T>
 	 */
 	public double weight(int i);
 	
+	public List<Double> weights();
+	
 	/**
 	 * Returns the probability associated with the element at the given index. 
 	 * The probability is the weight normalized buy the sum total of weights.
@@ -65,6 +67,8 @@ public interface Weighted<T> extends List<T>
 	public boolean addAll(Collection<? extends T> c, double weight);
 	
 	public boolean addAll(int index, Collection<? extends T> c, double weight);
+	
+	public boolean addAll(Weighted<? extends T> other);
 	
 	/**
 	 * @param data

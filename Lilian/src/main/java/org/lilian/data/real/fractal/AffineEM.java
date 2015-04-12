@@ -15,7 +15,7 @@ import org.lilian.data.real.weighted.Weighted;
 import org.lilian.search.Builder;
 import org.lilian.util.Series;
 
-public class AffineEM extends EM<AffineMap>
+public class AffineEM extends EMOld<AffineMap>
 {
 	public static final double PERTURB_VAR = 0.3;
 	
@@ -44,9 +44,10 @@ public class AffineEM extends EM<AffineMap>
 	}
 
 	@Override
-	protected AffineMap findMap(List<Point> from, List<Point> to)
+	protected AffineMap findMap(List<Point> from, List<Point> to, List<Double> weights, int k)
 	{
-		return AffineMap.find(from, to);
+		// TODO Implement weights 
+		return null;
 	}
 
 	@Override

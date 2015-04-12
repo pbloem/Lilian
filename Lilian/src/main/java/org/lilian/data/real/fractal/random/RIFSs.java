@@ -9,7 +9,7 @@ import java.util.*;
 import org.lilian.data.real.Draw;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
-import org.lilian.data.real.fractal.EM;
+import org.lilian.data.real.fractal.EMOld;
 import org.lilian.data.real.fractal.IFS;
 import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.fractal.SimEM;
@@ -649,7 +649,7 @@ public class RIFSs {
 		IFS<Similitude> initial = IFSs.initialSphere(
 				flat.get(0).dimensionality(), compTot, 0.7, 0.1);
 		
-		EM<Similitude> em = new SimEM(initial, flat, 1, spread);
+		EMOld<Similitude> em = new SimEM(initial, flat, 1, spread);
 		for(int i : Series.series(generations))
 			em.iterate(sample, depth);
 		

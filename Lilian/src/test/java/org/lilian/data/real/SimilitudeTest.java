@@ -1,12 +1,27 @@
 package org.lilian.data.real;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
+import static org.lilian.util.Functions.tic;
+import static org.lilian.util.Functions.toc;
+import static org.lilian.util.Series.series;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
+import org.apache.commons.math.linear.Array2DRowFieldMatrix;
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.RealMatrix;
 import org.junit.Test;
+import org.lilian.Global;
+import org.lilian.util.Functions;
+import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
+
+import com.itextpdf.text.log.SysoLogger;
 
 public class SimilitudeTest
 {
@@ -119,5 +134,99 @@ public class SimilitudeTest
 		assertEquals(4, s.dimension());
 		assertEquals(4, sInv.dimension());
 	}
+	
+	@Test
+	public void testFind()
+	{		
+		Similitude map = new Similitude(0.5, asList(1.0, -2.5, 3.0), asList(0.5, 0.1, -0.6));
+		
+		List<Point> x = points(9, 3, 3.0);
+		List<Point> y = map.map(x);
+		
+		x.add(new Point(1.0, 2.0, 3.0));
+		y.add(new Point(3.0, 2.0, 1.0));
+		
+		System.out.println(Similitude.find(x, y));
+		System.out.println(Similitude.find(x, y, asList(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)));
+		
+		List<Point> xNew = new ArrayList<Point>(x);
+		List<Point> yNew = new ArrayList<Point>(y);
+		
+		for(int i : series(14))
+		{
+			xNew.add(x.get(0));
+			yNew.add(y.get(0));
+		}
+		
+		List<Double> weights = asList(15.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+		
+		System.out.println(Similitude.find(xNew, yNew));
+		System.out.println(Similitude.find(x, y, weights));
+	}
 
+	@Test
+	public void testFindCor()
+	{		
+		Global.random = new Random();
+		
+		Similitude map = new Similitude(0.5, asList(0.5, 1.0, 0.5), asList(0.5, 0.1, -0.6));
+		
+		List<Point> x = points(1000, 3, 3.0);
+		List<Point> y = map.map(x);
+	
+		// * Add some noise to y
+		for(int i : series(y.size()))
+		{
+			MVN mvn = new MVN(y.get(i), 0.001);
+			y.set(i, mvn.generate());
+		}
+		
+		// RealMatrix cor = new Array2DRowRealMatrix(new double[][]{new double[]{0.998, 0.001, 0.001}, new double[]{0.001, 0.998, 0.001}, new double[]{0.001, 0.998, 0.001}});
+		RealMatrix cor = MatrixTools.identity(x.size()); 
+		
+		
+		List<Point> xFull = new ArrayList<Point>(x.size() * y.size());
+		List<Point> yFull = new ArrayList<Point>(x.size() * y.size());
+		List<Double> weights = new ArrayList<Double>(x.size() * y.size());
+		
+		for(int xi : series(x.size()))
+			for(int yi : series(y.size()))
+			{
+				weights.add(cor.getEntry(xi, yi));
+				xFull.add(x.get(xi));
+				yFull.add(y.get(yi));
+			}
+		
+		Similitude sim;
+		
+		tic();
+		sim = Similitude.find(x, y);
+		System.out.println(sim + " " + toc());
+		
+		tic();
+		sim = Similitude.find(x, y, cor, new HashMap<String, Double>());
+		System.out.println(sim + " " + toc());
+		
+		tic();
+		sim = Similitude.find(xFull, yFull, weights);
+		System.out.println(sim + " " + toc());
+	}
+	
+	
+	public static List<Point> points(int num, int dim, double var)
+	{
+		Global.random = new Random();
+		List<Point> points = new ArrayList<Point>(num);
+		
+		for(int i : Series.series(num))
+		{
+			Point point = new Point(dim);
+			for(int j : Series.series(dim))
+				point.set(j, Global.random.nextGaussian() * var);
+			
+			points.add(point);
+		}
+		
+		return points;
+	}
 }

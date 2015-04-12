@@ -2,6 +2,7 @@ package org.lilian.data.real.fractal;
 
 import static java.lang.Math.exp;
 import static org.lilian.util.Functions.probRound;
+import static org.lilian.util.MatrixTools.getDeterminant;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -44,10 +45,6 @@ public class IFS<M extends Map & Parametrizable >
 	extends MapModel<M>
 	implements Serializable, Parametrizable
 {
-
-	
-	private static final double KERNEL_SIGMA = 0.9;
-	
 	private static final long serialVersionUID = 8913224252890438800L;
 
 	// * the number of steps to take intially when generating points
@@ -345,7 +342,7 @@ public class IFS<M extends Map & Parametrizable >
 			IFS<M> ifs, Point point, double depth, MVN basis, int bufferLimit)
 	{	
 		SearchResult res = search(
-				ifs, point, depth, new SearchResultImpl(depth, bufferLimit),
+				ifs, point, depth, new SearchResultImpl(depth, kernelSigma(ifs), bufferLimit),
 				new ArrayList<Integer>((int)Math.ceil(depth)), 0.0,
 				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
 				MatrixTools.identity(ifs.dimension()), new ArrayRealVector(ifs.dimension()),
@@ -469,7 +466,6 @@ public class IFS<M extends Map & Parametrizable >
 		 * the highest approximate value probably has highest density).
 		 * @return
 		 */
-		
 		public double approximation();
 		
 		/**
@@ -507,14 +503,14 @@ public class IFS<M extends Map & Parametrizable >
 		private int daTotal = 0;
 		private double mvnSigma;
 		
-		public SearchResultImpl(double depth)
+		public SearchResultImpl(double depth, double kernelSigma)
 		{
-			mvnSigma = Math.pow(KERNEL_SIGMA, depth);
+			mvnSigma = Math.pow(kernelSigma, depth);
 		}
 		
-		public SearchResultImpl(double depth, int bufferLimit)
+		public SearchResultImpl(double depth, double kernelSigma, int bufferLimit)
 		{
-			this(depth);
+			this(depth, kernelSigma);
 			this.bufferLimit = bufferLimit;
 		}
 		
@@ -535,8 +531,9 @@ public class IFS<M extends Map & Parametrizable >
 			
 
 			// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
-			double approx = exp(logPrior) * new MVN(mean, mvnSigma).density(point);
-			densityApprox += approx;
+			double approx = MVN.logDensity(point, mean, mvnSigma);
+			approx = Functions.logSum(logPrior, approx);
+			densityApprox = Functions.logSum(densityApprox, approx);
 			
 			if(approx > 0.0 && bufferLimit >= 1)
 			{
@@ -670,5 +667,28 @@ public class IFS<M extends Map & Parametrizable >
 			points.add(endpoint(ifs, code));
 		
 		return points;
+	}
+	
+	protected static <M extends AffineMap> double logLikelihood(List<Point> sample, IFS<M> model, int depth, MVN basis)
+	{
+		double ll = 0.0;
+		
+		for(Point p : sample)
+		{
+			double density = IFS.density(model, p, depth, basis);
+			ll += Math.log(density);	
+		}
+		
+		return ll;
+	}	
+	
+	public static <M extends AffineMap> double kernelSigma(IFS<M> model)
+	{
+		double sum = 0.0;
+		for(int k : Series.series(model.size()))
+			sum += model.probability(k) * 
+				getDeterminant(model.get(k).getTransformation());
+		
+		return sum / model.size();
 	}
 }

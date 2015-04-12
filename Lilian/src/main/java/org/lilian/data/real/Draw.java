@@ -135,6 +135,10 @@ public class Draw
 			int yres,
 			boolean log, boolean transparent)
 	{
+		List<Double> weights = null;
+		if(data instanceof Weighted<?>)
+			weights = ((Weighted<Point>)data).weights();
+		
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
 		
@@ -159,7 +163,7 @@ public class Draw
 			yp = toPixel(point.get(1), yres, yrange[0], yrange[1]);
 			if(xp >= 0 && xp < xres && yp >= 0 && yp < yres)
 			{
-				matrix[xp][yp] ++;
+				matrix[xp][yp] += weights == null ? 1.0f : (float)(double)(weights.get(i));
 				max = Math.max(matrix[xp][yp], max);
 			}
 		}

@@ -3,20 +3,26 @@ package org.lilian.data.real.fractal;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.ArrayRealVector;
+import org.apache.commons.math.linear.InvalidMatrixException;
+import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
+import org.apache.commons.math.linear.SingularValueDecomposition;
+import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Rotation;
 import org.lilian.data.real.Similitude;
 import org.lilian.data.real.weighted.Weighted;
 import org.lilian.search.Builder;
+import org.lilian.util.MatrixTools;
 
-public class SimEM extends EM<Similitude>
+public class SimEM extends EMOld<Similitude>
 {
 	public static final double PERTURB_VAR = 0.3;
 	
@@ -45,9 +51,13 @@ public class SimEM extends EM<Similitude>
 	}
 
 	@Override
-	protected Similitude findMap(List<Point> from, List<Point> to)
+	protected Similitude findMap(List<Point> from, List<Point> to, List<Double> weights, int k)
 	{
-		Similitude sim = org.lilian.data.real.Maps.findSimilitude(from, to);
+		HashMap<String, Double> map = new HashMap<String, Double>(); 
+		Similitude sim = Similitude.find(from, to, weights, map);
+		
+		System.out.println(map);
+		stds.set(k, map.get("std dev"));
 		
 		return sim;
 	}
@@ -75,18 +85,14 @@ public class SimEM extends EM<Similitude>
 				mat = mat.add(rotation.scalarMultiply(weights.get(i)/wSum));
 				vect = vect.add(maps.get(i).getTranslation().mapMultiply(weights.get(i)/wSum));
 				scalar += maps.get(i).scalar() * (weights.get(i)/wSum);
-				
-				System.out.println(i + ", " + weights.get(i)/wSum + ": " + rotation + " " +maps.get(i).getTranslation() + " " + maps.get(i).scalar());
-				
+								
 				allNull = false;
 			}
 		}
 		
 		if(allNull)
 			return null;
-		
-		System.out.println("fin : " + mat + " " + vect + " " + scalar);
-		
+				
 		List<Double> angles = Rotation.findAngles(mat);
 
 		return new Similitude(scalar, new Point(vect), new Point(angles));

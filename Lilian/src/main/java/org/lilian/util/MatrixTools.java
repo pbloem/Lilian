@@ -219,5 +219,23 @@ public class MatrixTools
 			
 		return result;
 	}
+	
+	public static RealMatrix multiplyByElement(RealMatrix a, RealMatrix b)
+	{
+		assert(a.getRowDimension() == b.getRowDimension());
+		assert(a.getColumnDimension() == b.getColumnDimension());
+		
+		int rows = a.getRowDimension();
+		int columns = a.getColumnDimension();
+		
+		RealMatrix c = new Array2DRowRealMatrix(rows, columns);
+		for(int row : series(rows))
+			for(int column : series(columns))
+			{
+				c.setEntry(row, column, a.getEntry(row, column) * b.getEntry(row, column));
+			}
+		
+		return c;
+	}
 
 }
