@@ -36,7 +36,6 @@ public class Generators
 		}
 	}
 	
-	
 	public static Generator<Double> logisticMap(double r)
 	{
 		return new LogisticMapGenerator(r);
