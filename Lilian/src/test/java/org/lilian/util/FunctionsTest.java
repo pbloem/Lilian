@@ -3,11 +3,16 @@ package org.lilian.util;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
 import static org.lilian.util.Functions.mod;
+import static org.lilian.util.Series.series;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.junit.Test;
+import org.nodes.util.Generators;
 
 public class FunctionsTest
 {
@@ -71,5 +76,29 @@ public class FunctionsTest
 		
 		System.out.println(Functions.logSum(a, b));
 	}
+	
+	@Test
+	public void testSort()
+	{
+		List<Integer> values = l(Arrays.asList(0, 2, 2, 8, 2, 2, 0, 3, 7, 9));
+		List<Integer> l1 =     l(Arrays.asList(1, 2, 3, 4, 5, 5, 6, 7, 7, 9));
+		List<Integer> l2 =     l(Arrays.asList(1, 2, 3, 4, 6, 0, 7, 8, 9, 10));
+		Collections.reverse(l2);
 
+		for(int i : series(values.size()))
+			System.out.println(values.get(i) + "\t" + l1.get(i) + "\t" + l2.get(i));
+		
+		System.out.println();
+		Comparator<Integer> comp = Functions.natural();
+		Functions.sort(values, comp, l1, l2);
+		
+		for(int i : series(values.size()))
+			System.out.println(values.get(i) + "\t" + l1.get(i) + "\t" + l2.get(i));
+
+	}
+
+	private <T> List<T> l(List<T> list)
+	{
+		return new ArrayList<T>(list);
+	}
 }
