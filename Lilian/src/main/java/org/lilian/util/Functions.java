@@ -865,6 +865,10 @@ public class Functions
      */
     public static <V> void sort(final List<V> values, final Comparator<V> comp, final List... lists)
     {   
+    	int n = values.size();
+    	for(int i : series(lists.length))
+    		if(lists[i].size() != n)
+    			throw new IllegalArgumentException("List "+i+" has size "+lists[i].size() +", but values has size "+ values.size()+". All lists should have the same size.");
     	
     	class Tuple
     	{
