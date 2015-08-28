@@ -38,7 +38,7 @@ public class Functions
 	public static NumberFormat nf = NumberFormat.getNumberInstance();
 	
 	/**
-	 * Apprixomation of the machine epsilon.
+	 * Approximation of the machine epsilon.
 	 */
 	public static final double EPS;
 	
