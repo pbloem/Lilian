@@ -30,6 +30,7 @@ import org.nodes.Subgraph;
 import org.nodes.TLink;
 import org.nodes.TNode;
 import org.nodes.algorithms.Nauty;
+import org.nodes.random.SimpleSubgraphGenerator;
 import org.nodes.random.SubgraphGenerator;
 import org.nodes.util.AbstractGenerator;
 import org.nodes.util.FrequencyModel;
