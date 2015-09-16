@@ -1,14 +1,15 @@
 package org.lilian.util;
 
 import static org.junit.Assert.*;
-import static org.lilian.util.Fibonacci.isFibonacci;
 import static org.lilian.util.Functions.tic;
 import static org.lilian.util.Functions.toc;
+import static org.nodes.util.Fibonacci.isFibonacci;
 
 import java.util.Random;
 
 import org.junit.Test;
 import org.lilian.Global;
+import org.nodes.util.Fibonacci;
 
 public class FibonacciTest
 {
