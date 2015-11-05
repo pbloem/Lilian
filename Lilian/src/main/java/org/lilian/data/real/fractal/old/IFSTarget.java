@@ -1,4 +1,4 @@
-package org.lilian.data.real.fractal;
+package org.lilian.data.real.fractal.old;
 
 import java.util.ArrayList;
 import java.util.List;

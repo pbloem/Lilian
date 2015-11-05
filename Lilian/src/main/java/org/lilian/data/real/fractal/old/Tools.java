@@ -1,4 +1,4 @@
-package org.lilian.data.real.fractal;
+package org.lilian.data.real.fractal.old;
 
 import static java.lang.Math.log;
 

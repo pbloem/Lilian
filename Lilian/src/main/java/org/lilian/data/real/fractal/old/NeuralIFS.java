@@ -1,4 +1,4 @@
-package org.lilian.data.real.fractal;
+package org.lilian.data.real.fractal.old;
 
 import static java.lang.Math.pow;
 import static org.lilian.util.Series.series;
@@ -13,7 +13,7 @@ import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.Point;
-import org.lilian.data.real.fractal.IFS.SearchResult;
+import org.lilian.data.real.fractal.old.IFS.SearchResult;
 import org.lilian.data.real.weighted.Weighted;
 import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.models.BasicFrequencyModel;

@@ -9,7 +9,7 @@ import org.apache.commons.math.linear.RealVector;
 import org.lilian.Global;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Rotation;
-import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.old.IFS;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;

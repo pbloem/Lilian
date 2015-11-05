@@ -1,3 +1,4 @@
+package org.lilian.data.real.fractal.old;
 //package org.lilian.data.real.fractal;
 //
 //import java.io.Serializable;

@@ -25,7 +25,7 @@ import org.lilian.data.real.KernelDensity;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
-import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.old.IFS;
 import org.lilian.data.real.weighted.Weighted;
 import org.lilian.data.real.weighted.WeightedLists;
 import org.lilian.models.BasicFrequencyModel;

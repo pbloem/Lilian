@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
+import org.lilian.data.real.fractal.old.IFS;
+import org.lilian.data.real.fractal.old.IFSs;
 import org.lilian.search.Builder;
 import org.lilian.search.evo.Target;
 import org.lilian.util.Series;

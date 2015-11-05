@@ -1,4 +1,4 @@
-package org.lilian.data.real.fractal;
+package org.lilian.data.real.fractal.old;
 
 import static org.lilian.util.Series.series;
 
@@ -11,6 +11,7 @@ import java.util.Map;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
+import org.lilian.data.real.SpatialIndex;
 import org.lilian.data.real.classification.AbstractClassifier;
 import org.lilian.data.real.classification.Classified;
 import org.lilian.data.real.classification.Classifier;
@@ -18,36 +19,27 @@ import org.lilian.models.BasicFrequencyModel;
 import org.lilian.util.Series;
 
 /**
- * This is a classifier that uses only a single IFS model. The classification is 
- * based on the codes assigned to points. 
+ * This classifier works on the basis of spatial indices. It is functionally 
+ * equivalent to an IFS classifier with simple model for the d-dimensional 
+ * bi-unit cube. 
  * 
  * 
  * TODO
  * @author Peter
  *
  */
-public class IFSClassifierSingle extends AbstractClassifier implements Serializable 
+public class SpatialIndexClassifier extends AbstractClassifier implements Serializable 
 {
-	private IFS<Similitude> model;
 	private int depth;
 	private Node root = new Node();
 	private boolean smooth;
 	
 	private AffineMap preMap = null;
-
-	public IFSClassifierSingle(IFS<Similitude> model, int depth, boolean smooth, int numClasses)
-	{
-		super(model.dimension(), numClasses);
-		this.depth = depth;
-		this.model = model;
-		this.smooth = smooth;
-	}
 	
-	public IFSClassifierSingle(IFS<Similitude> model, int depth, boolean smooth, AffineMap preMap, int numClasses)
+	public SpatialIndexClassifier(int depth, boolean smooth, AffineMap preMap, int numClasses)
 	{
-		super(model.dimension(), numClasses);
+		super(preMap.dimension(), numClasses);
 		this.depth = depth;
-		this.model = model;
 		this.smooth = smooth;
 		this.preMap = preMap;
 	}	
@@ -57,8 +49,7 @@ public class IFSClassifierSingle extends AbstractClassifier implements Serializa
 		if(preMap != null)
 			point = preMap.map(point);
 		
-		List<Integer> code = IFS.code(model, point, depth);
-//		System.out.println(code);
+		List<Integer> code = SpatialIndex.code(point, depth);
 		root.observe(code, cls);
 	}
 	
@@ -74,7 +65,7 @@ public class IFSClassifierSingle extends AbstractClassifier implements Serializa
 		if(preMap != null)
 			point = preMap.map(point);
 		
-		List<Integer> code = IFS.code(model, point, depth);
+		List<Integer> code = SpatialIndex.code(point, depth);
 		BasicFrequencyModel<Integer> frq;
 		
 		if(smooth)
@@ -83,8 +74,6 @@ public class IFSClassifierSingle extends AbstractClassifier implements Serializa
 			root.probabilitiesSmoothed(code, frq);
 		} else
 			frq = root.probabilities(code);
-		
-		// System.out.println(code + " " + frq);
 		
 		List<Double> probabilities = new ArrayList<Double>(numClasses);
 		for(int i : series(numClasses))

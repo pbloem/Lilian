@@ -18,9 +18,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lilian.data.real.fractal.IFS;
-import org.lilian.data.real.fractal.IFSs;
-import org.lilian.data.real.fractal.Tools;
+import org.lilian.data.real.fractal.old.IFS;
+import org.lilian.data.real.fractal.old.IFSs;
+import org.lilian.data.real.fractal.old.Tools;
 import org.lilian.data.real.fractal.random.ChoiceTree;
 import org.lilian.data.real.fractal.random.DiscreteRIFS;
 import org.lilian.data.real.weighted.Weighted;

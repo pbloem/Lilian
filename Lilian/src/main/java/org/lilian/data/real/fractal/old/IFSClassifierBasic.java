@@ -1,4 +1,4 @@
-package org.lilian.data.real.fractal;
+package org.lilian.data.real.fractal.old;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.data.real.classification.AbstractClassifier;
 import org.lilian.data.real.classification.DensityClassifier;
-import org.lilian.data.real.fractal.IFS.IFSBuilder;
+import org.lilian.data.real.fractal.old.IFS.IFSBuilder;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.MatrixTools;

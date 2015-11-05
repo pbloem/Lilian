@@ -11,7 +11,7 @@ import org.lilian.Global;
 import org.lilian.data.real.MVN;
 import org.lilian.data.real.Map;
 import org.lilian.data.real.Point;
-import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.old.IFS;
 import org.lilian.search.Parametrizable;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
