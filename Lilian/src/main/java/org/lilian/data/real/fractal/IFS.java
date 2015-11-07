@@ -89,6 +89,11 @@ public class IFS<M extends Map & Parametrizable >
 		return new IFSFixedDepthGenerator(depth, basis);
 	}
 	
+	public Generator<Point> generator(List<Double> depths)
+	{
+		return new IFSMixedDepthGenerator(depths);
+	}
+	
 	private class IFSGenerator extends AbstractGenerator<Point>
 	{
 		Generator<Point> basis;
@@ -146,7 +151,30 @@ public class IFS<M extends Map & Parametrizable >
 		}
 	}
 	
-
+	private class IFSMixedDepthGenerator extends AbstractGenerator<Point>
+	{
+		MVN basis = new MVN(dimension);
+		List<Double> depths;
+	
+		public IFSMixedDepthGenerator(List<Double> depths)
+		{
+			this.basis = basis;
+		}
+		
+		@Override
+		public Point generate()
+		{
+			Point p = basis.generate();
+			
+			int depth = Functions.draw(depths, 1.0);
+			
+			for(int i = 0; i < depth; i++)
+				p = random().map(p);
+			
+			return p;
+		}
+	}
+	
 	/**
 	 * Returns the composition of the maps indicated by the list of integers.
 	 * If the code is (0, 2, 1, 2), the map returned behaves as 
@@ -532,8 +560,8 @@ public class IFS<M extends Map & Parametrizable >
 
 			// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
 			double approx = MVN.logDensity(point, mean, mvnSigma);
-			approx = Functions.logSum(logPrior, approx);
-			densityApprox = Functions.logSum(densityApprox, approx);
+			approx = Functions.logSumOld(logPrior, approx);
+			densityApprox = Functions.logSumOld(densityApprox, approx);
 			
 			if(approx > 0.0 && bufferLimit >= 1)
 			{
@@ -690,5 +718,15 @@ public class IFS<M extends Map & Parametrizable >
 				getDeterminant(model.get(k).getTransformation());
 		
 		return sum / model.size();
+	}
+	
+	public static <M extends Map & Parametrizable> IFS<M> ifs(List<M> maps, List<Double> weights)
+	{
+		IFS<M> res = new IFS<M>(maps.get(0), weights.get(0));
+		
+		for(int i : Series.series(1, maps.size()))
+			res.addMap(maps.get(i), weights.get(i));
+		
+		return res;
 	}
 }

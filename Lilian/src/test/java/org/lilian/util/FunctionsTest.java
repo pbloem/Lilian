@@ -62,7 +62,7 @@ public class FunctionsTest
 		System.out.println(b - a);
 		System.out.println(1 + exp(b - a));
 		
-		System.out.println(Functions.logSum(a, b));
+		System.out.println(Functions.logSumOld(a, b));
 	}
 	
 	@Test
@@ -74,7 +74,7 @@ public class FunctionsTest
 		System.out.println(a - b);
 		System.out.println(1 + exp(a - b));
 		
-		System.out.println(Functions.logSum(a, b));
+		System.out.println(Functions.logSumOld(a, b));
 	}
 	
 	@Test

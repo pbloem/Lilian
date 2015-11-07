@@ -5,6 +5,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.exp;
 import static java.lang.Math.floor;
 import static java.lang.Math.log;
+import static java.lang.Math.pow;
 import static org.apache.commons.math3.util.ArithmeticUtils.binomialCoefficientLog;
 import static org.lilian.util.Functions.logFactorial;
 import static org.lilian.util.Series.series;
@@ -432,14 +433,6 @@ public class Functions
 		return (System.currentTimeMillis() - ticTime.get())/1000.0;
 	}
 
-	/**
-	 *  2 log
-	 */
-	public static double log2(double x)
-	{
-		return Math.log10(x) / Math.log10(2.0);
-	}
-
 	public static double logChoose(double sub, double total, double base)
 	{
 		return logChoose(sub, total) / Math.log(2.0);
@@ -703,7 +696,7 @@ public class Functions
 	 * @param logB
 	 * @return
 	 */
-	public static double logSum(double logA, double logB)
+	public static double logSumOld(double logA, double logB)
 	{
 		double logMin, logMax;
 		
@@ -728,6 +721,76 @@ public class Functions
 		
 		return logMin * Math.log1p(right);
 	}
+	
+	/**
+	 *  2 log
+	 */
+	public static double log2(double x)
+	{
+		return Math.log10(x) / Math.log10(2.0);
+	}
+	
+	public static double log(double x, double base)
+	{
+		return Math.log10(x) / Math.log10(base);
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static double logSum(double base, double... values)
+	{
+		double max = Double.NEGATIVE_INFINITY;
+		for(double v : values)
+			max = Math.max(max, v);
+		
+		double sum = 0.0;
+		for(double v : values)
+			sum += pow(base, v - max);
+		
+		return log(sum, base) + max;
+	}
+	
+	public static double logSum(double base, List<Double> values)
+	{
+		double max = Double.NEGATIVE_INFINITY;
+		for(double v : values)
+			max = Math.max(max, v);
+		
+		double sum = 0.0;
+		for(double v : values)
+			sum += pow(base, v - max);
+		
+		return log(sum, base) + max;
+	}
+
+	public static double logMin(double base, double a, double b)
+	{
+		if(b == Double.NEGATIVE_INFINITY)
+			return a;
+		
+		double max = Math.max(a, b);
+		
+		return log(pow(base, a-max) - pow(base, b-max), base) + max;
+	}
+	
+	public static double log2Sum(List<Double> values)
+	{
+		return logSum(2.0, values);
+	}
+	
+	public static double log2Sum(double...values)
+	{
+		return logSum(2.0, values);
+	}
+	
+	public static double log2Min(double a, double b)
+	{
+		return logMin(2.0, a, b);
+	}
+	
+	
 	
 	public static double exp2(double x)
 	{

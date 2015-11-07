@@ -195,7 +195,7 @@ public class Similitude extends AffineMap
 	{
 		return scalar != 0;
 	}
-
+	
 	@Override
 	public Similitude inverse()
 	{

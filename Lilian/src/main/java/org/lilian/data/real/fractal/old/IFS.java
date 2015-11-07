@@ -532,8 +532,8 @@ public class IFS<M extends Map & Parametrizable >
 
 			// densityApprox += Math.exp(-0.5 * distance * distance) * Math.exp(logPrior);
 			double approx = MVN.logDensity(point, mean, mvnSigma);
-			approx = Functions.logSum(logPrior, approx);
-			densityApprox = Functions.logSum(densityApprox, approx);
+			approx = Functions.logSumOld(logPrior, approx);
+			densityApprox = Functions.logSumOld(densityApprox, approx);
 			
 			if(approx > 0.0 && bufferLimit >= 1)
 			{
