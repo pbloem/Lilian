@@ -6,6 +6,7 @@ import static java.lang.Math.exp;
 import static java.lang.Math.floor;
 import static java.lang.Math.log;
 import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 import static org.apache.commons.math3.util.ArithmeticUtils.binomialCoefficientLog;
 import static org.lilian.util.Functions.logFactorial;
 import static org.lilian.util.Series.series;
@@ -1073,6 +1074,25 @@ public class Functions
 
       return false;
     }
+    
+	/**
+	 * Finds the solutions to a quadratic polynomial.
+	 * @param sa
+	 * @param sb
+	 * @param sc
+	 * @return null if no solutions, a pair of solutions otherwise
+	 */
+	public static Pair<Double, Double> quadratic(double a, double b, double c)
+	{
+		double det = b*b - 4 * a * c;
+		if(det < 0)
+			return null;
+		
+		double x  = (- b + sqrt(det))/(2 * a);
+		double y = (- b - sqrt(det))/(2 * a);
+		
+		return new Pair<Double, Double>(Math.min(x, y), Math.max(x, y));
+	}
 
     private static boolean[] bad255 =
     {

@@ -7,7 +7,6 @@ import static java.lang.Math.pow;
 import static org.lilian.data.real.Point.fromRaw;
 import static org.lilian.util.MatrixTools.diag;
 import static org.lilian.util.Series.series;
-import static org.nodes.util.Functions.logSum;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,10 +24,10 @@ import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Rotation;
 import org.lilian.data.real.Similitude;
+import org.lilian.util.Functions;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Pair;
 import org.lilian.util.Series;
-import org.nodes.util.Functions;
-import org.nodes.util.Pair;
 
 import weka.core.SystemInfo;
 
