@@ -10,11 +10,16 @@ public abstract class AbstractDensity implements Density
 	@Override
 	public abstract double density(Point p);
 
+	public double logDensity(Point p)
+	{
+		return Math.log(density(p));
+	}
+	
 	public double logDensity(Collection<Point> points)
 	{
 		double ld = 0.0;
 		for(Point p : points)
-			ld += Functions.log2(density(p));
+			ld += logDensity(p);
 		
 		return ld;
 	}

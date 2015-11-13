@@ -12,7 +12,6 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
-import org.lilian.data.real.fractal.old.EMOld;
 import org.lilian.data.real.fractal.old.IFS;
 import org.lilian.data.real.fractal.old.IFSs;
 import org.lilian.data.real.weighted.Weighted;
@@ -209,22 +208,22 @@ public class MVNTest
 		assertEquals(MVN.find(points, true).density(p), MVN.find(weighted).density(p), 0.000001);
 	}
 	
-	@Test
-	public void iterationTest() throws IOException
-	{
-		Map mapTo = IFSs.sierpinskiSim().compose(Arrays.asList(0,0,0,2,2));
-		Map mapFrom = IFSs.sierpinskiSim().compose(Arrays.asList(0,0,2,2));
-
-		MVN mvnFrom = new MVN((AffineMap)mapFrom);
-		MVN mvnTo = new MVN((AffineMap)mapTo);
-		
-		List<Point> from = mvnFrom.generate(1000);
-		List<Point> to = mvnTo.generate(100);
-
-		Map comp = mvnTo.map().compose(mvnFrom.map().inverse());
-		
-		EMOld.debug(new File("/Users/Peter/Documents/mvn-test.png"), from, comp.map(from.subList(0, 10)));
-
-	}
+//	@Test
+//	public void iterationTest() throws IOException
+//	{
+//		Map mapTo = IFSs.sierpinskiSim().compose(Arrays.asList(0,0,0,2,2));
+//		Map mapFrom = IFSs.sierpinskiSim().compose(Arrays.asList(0,0,2,2));
+//
+//		MVN mvnFrom = new MVN((AffineMap)mapFrom);
+//		MVN mvnTo = new MVN((AffineMap)mapTo);
+//		
+//		List<Point> from = mvnFrom.generate(1000);
+//		List<Point> to = mvnTo.generate(100);
+//
+//		Map comp = mvnTo.map().compose(mvnFrom.map().inverse());
+//		
+//		EMOld.debug(new File("/Users/Peter/Documents/mvn-test.png"), from, comp.map(from.subList(0, 10)));
+//
+//	}
 	
 }

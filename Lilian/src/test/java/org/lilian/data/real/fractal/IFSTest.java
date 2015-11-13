@@ -155,89 +155,89 @@ public class IFSTest
 		}
 	}
 	
-    // @Test
-	public void testCode2() throws IOException
-	{
-		int depth = 3;
-		double[] xrange = new double[]{-1.0, 1.0};
-		double[] yrange = new double[]{-1.0, 1.0};
-		
-		Functions.tic();		
-		
-		BufferedImage image = null;
-
-		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-again");
-		dir.mkdirs();
-
-		IFS<Similitude> ifs = IFSs.koch2Sim();
-		image = Draw.draw(ifs.generator(depth), 100000, 100, true); 
-		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
-		
-		image = Draw.drawCodes(ifs, xrange, yrange, 100, depth, -1);
-		ImageIO.write(image, "PNG", new File(dir, "codes-again.png") );
-
-		
-		System.out.println("codes-again: " + Functions.toc() + " seconds");
-	}
-    
-    
-    // @Test
-	public void testCodeSmooth() throws IOException
-	{
-		int depth = 1;
-		double[] xrange = new double[]{-1.0, 1.0};
-		double[] yrange = new double[]{-1.0, 1.0};
-		
-		Functions.tic();		
-		
-		BufferedImage image = null;
-
-		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-smooth");
-		dir.mkdirs();
-
-		IFS<Similitude> ifs = IFSs.koch2Sim();
-		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
-		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
-		
-		for(int i : Series.series(1, 2))
-		{
-			image = Draw.drawMultiCodes(ifs, xrange, yrange, 500, depth, i);
-			ImageIO.write(image, "PNG", new File(dir, "codes-smooth-"+i+".png") );
-		}
-
-		
-		System.out.println("codes-again: " + Functions.toc() + " seconds");
-	}
-	
-	// @Test
-	public void testDensities() throws IOException
-	{
-		Global.random = new Random();
-		int depth = 3;
-		double[] xrange = new double[]{-2.0, 2.0};
-		double[] yrange = new double[]{-2.0, 2.0};
-		
-		Functions.tic();		
-		
-		BufferedImage image = null;
-
-		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-densities");
-		dir.mkdirs();
-
-		IFS<Similitude> ifs = IFSs.randomSimilitude(2, 2, 0.5);
-		
-		image = Draw.draw(ifs.generator(depth), 1000000, 100, false); 
-		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );	
-		
-		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, false);
-		ImageIO.write(image, "PNG", new File(dir, "densities.png") );
-		
-		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, true);
-		ImageIO.write(image, "PNG", new File(dir, "approximations.png") );
-
-		
-		System.out.println("codes-again: " + Functions.toc() + " seconds");
-	}	
+//    // @Test
+//	public void testCode2() throws IOException
+//	{
+//		int depth = 3;
+//		double[] xrange = new double[]{-1.0, 1.0};
+//		double[] yrange = new double[]{-1.0, 1.0};
+//		
+//		Functions.tic();		
+//		
+//		BufferedImage image = null;
+//
+//		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-again");
+//		dir.mkdirs();
+//
+//		IFS<Similitude> ifs = IFSs.koch2Sim();
+//		image = Draw.draw(ifs.generator(depth), 100000, 100, true); 
+//		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
+//		
+//		image = Draw.drawCodes(ifs, xrange, yrange, 100, depth, -1);
+//		ImageIO.write(image, "PNG", new File(dir, "codes-again.png") );
+//
+//		
+//		System.out.println("codes-again: " + Functions.toc() + " seconds");
+//	}
+//    
+//    
+//    // @Test
+//	public void testCodeSmooth() throws IOException
+//	{
+//		int depth = 1;
+//		double[] xrange = new double[]{-1.0, 1.0};
+//		double[] yrange = new double[]{-1.0, 1.0};
+//		
+//		Functions.tic();		
+//		
+//		BufferedImage image = null;
+//
+//		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-codes-smooth");
+//		dir.mkdirs();
+//
+//		IFS<Similitude> ifs = IFSs.koch2Sim();
+//		image = Draw.draw(ifs.generator(depth), 100000, 1000, true); 
+//		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );
+//		
+//		for(int i : Series.series(1, 2))
+//		{
+//			image = Draw.drawMultiCodes(ifs, xrange, yrange, 500, depth, i);
+//			ImageIO.write(image, "PNG", new File(dir, "codes-smooth-"+i+".png") );
+//		}
+//
+//		
+//		System.out.println("codes-again: " + Functions.toc() + " seconds");
+//	}
+//	
+//	// @Test
+//	public void testDensities() throws IOException
+//	{
+//		Global.random = new Random();
+//		int depth = 3;
+//		double[] xrange = new double[]{-2.0, 2.0};
+//		double[] yrange = new double[]{-2.0, 2.0};
+//		
+//		Functions.tic();		
+//		
+//		BufferedImage image = null;
+//
+//		File dir = new File("/Users/Peter/Documents/PhD/output/ifs-densities");
+//		dir.mkdirs();
+//
+//		IFS<Similitude> ifs = IFSs.randomSimilitude(2, 2, 0.5);
+//		
+//		image = Draw.draw(ifs.generator(depth), 1000000, 100, false); 
+//		ImageIO.write(image, "PNG", new File(dir, "ifs.png") );	
+//		
+//		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, false);
+//		ImageIO.write(image, "PNG", new File(dir, "densities.png") );
+//		
+//		image = Draw.drawDensities(ifs, xrange, yrange, 100, depth, true);
+//		ImageIO.write(image, "PNG", new File(dir, "approximations.png") );
+//
+//		
+//		System.out.println("codes-again: " + Functions.toc() + " seconds");
+//	}	
 	
 	@Test
 	public void testEndpoint()

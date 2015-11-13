@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lilian.data.real.fractal.old.IFS;
-import org.lilian.data.real.fractal.old.IFSs;
+import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.IFSs;
 import org.lilian.data.real.fractal.old.Tools;
 import org.lilian.data.real.fractal.random.ChoiceTree;
 import org.lilian.data.real.fractal.random.DiscreteRIFS;
@@ -225,6 +225,20 @@ public class Draw
 	}
 	
 	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, int res, boolean log, List<Double> mixture, Map post)
+	{
+		return draw(ifs, samples, new double[]{-1.0, 1.0}, new double[]{-1.0, 1.0}, 
+				res, res, log, -1, null, mixture, post);
+	}
+	
+	public static BufferedImage draw(
+			Generator<Point> gen, int samples, int res, boolean log, Map post)
+	{
+		return draw(gen, samples, new double[]{-1.0, 1.0}, new double[]{-1.0, 1.0}, 
+				res, res, log, post);
+	}
+	
+	public static <M extends Map & Parametrizable> BufferedImage draw(
 			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
 			int xRes, int yRes, boolean log)
 	{
@@ -240,18 +254,28 @@ public class Draw
 	
 	public static <M extends Map & Parametrizable> BufferedImage draw(
 			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
-			int xRes, int yRes, boolean log, double depth, Generator<Point> basis, List<Double> mixture)
+			int xRes, int yRes, boolean log, double depth, 
+			Generator<Point> basis, List<Double> mixture)
+	{
+		return draw(ifs, samples, xrange, yrange, xRes, yRes, log, depth, basis, mixture, null);
+	}
+	
+	public static <M extends Map & Parametrizable> BufferedImage draw(
+			IFS<M> ifs, int samples, double[] xrange, double[] yrange, 
+			int xRes, int yRes, boolean log, double depth, 
+			Generator<Point> basis, List<Double> mixture, 
+			Map post)
 	{
 		Generator<Point> gen = null;
 		
 		if(mixture != null)
-			gen = IFSs.mixtureGenerator(mixture, ifs);
+			gen = ifs.generator(mixture);
 		else if(depth == -1)
 			gen = ifs.generator();
 		else
 			gen = ifs.generator(depth, basis);
 			
-		BufferedImage image = draw(gen, samples, xrange, yrange, xRes, yRes, log);
+		BufferedImage image = draw(gen, samples, xrange, yrange, xRes, yRes, log, post);
 			
 		List<Point> frame = new ArrayList<Point>(6);
 		frame.add(new Point(-1.0, -1.0));
@@ -269,18 +293,37 @@ public class Draw
 		middle.add(new Point( 1.0, .0));
 		middle.add(new Point(-1.0, .0));
 
-		
 		Graphics2D graphics = image.createGraphics();
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		drawFrame(graphics, frame, middle, Color.RED, xrange, yrange, xRes, yRes);
+		List<Point> frameBase = frame, middleBase = middle;
+		if(post != null)
+		{
+			frameBase = post.map(frame);
+			middleBase = post.map(middle);
+		}
+		
+		drawFrame(graphics, frameBase, middleBase, Color.RED, xrange, yrange, xRes, yRes);
+		
 		for(int i : series(ifs.size()))
 		{
+			List<Point> 
+				compFrame = ifs.get(i).map(frame), 
+				compMiddle = ifs.get(i).map(middle), 
+				compBar = ifs.get(i).map(bar); 
+			
+			if(post != null)
+			{
+				compFrame = post.map(compFrame);
+				compMiddle = post.map(compMiddle);
+				compBar = post.map(compBar);
+			}
+			
 			drawFrame(graphics, 
-					ifs.get(i).map(frame), 
-					ifs.get(i).map(middle),
+					compFrame, 
+					compMiddle,
 					Color.BLUE, xrange, yrange, xRes, yRes); 
-			drawBar(graphics, ifs.get(i).map(bar), ifs.probability(i), xrange, yrange, xRes, yRes);
+			drawBar(graphics, compBar, ifs.probability(i), xrange, yrange, xRes, yRes);
 		}
 		
 		graphics.dispose();
@@ -360,12 +403,8 @@ public class Draw
 				int xRes,
 				int yRes,											
 				boolean log,
-				AffineMap preMap)
+				Map post)
 	{
-		
-		AffineMap inverse = (preMap != null) ? preMap.inverse() : null;
-		//System.out.println(inverse);
-		
 		// * size of the image in coordinates
 		double 	xDelta = xrange[1] - xrange[0],
 				yDelta = yrange[1] - yrange[0];
@@ -392,8 +431,8 @@ public class Draw
 		{
 			Point point = generator.generate();
 			
-			if(preMap != null)
-				point = inverse.map(point);
+			if(post != null)
+				point = post.map(point);
 			
 			xp = toPixel(point.get(0), xRes, xrange[0], xrange[1]); 
 			yp = toPixel(point.get(1), yRes, yrange[0], yrange[1]);
@@ -464,81 +503,81 @@ public class Draw
 		
 	}
 
-	/**
-	 * Draws the component distribution in the codes of a three component 
-	 * classifier.
-	 * 
-	 * @param res The resolution of the smallest side of the image.
-	 */
-	public static <M extends AffineMap> 
-		BufferedImage drawCodes(IFS<M> ifs, 
-											double[] xrange, 
-											double[] yrange, 
-											int res, int depth,
-											int beamWidth)
-	{
-		if(ifs.size() > 3)
-			throw new IllegalArgumentException("IFS must have three components or less (had "+ifs.size()+").");
-		
-		double 	xDelta = xrange[1] - xrange[0],
-				yDelta = yrange[1] - yrange[0];
-		
-		double maxDelta = Math.max(xDelta, yDelta); 		
-		double minDelta = Math.min(xDelta, yDelta);
-		
-		double step = minDelta/(double) res;
-		
-		int xRes = (int) (xDelta / step);
-		int yRes = (int) (yDelta / step);
-		
-		BufferedImage image = 
-			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_RGB);		
-		
-		double x, y;
-		int classInt;
-		Point p;
-		
-		for(int i = 0; i < xRes; i++)
-		{
-			x =  xrange[0] + step*0.5 + step * i;
-			for(int j = 0; j < yRes; j++)				
-			{
-				y = yrange[0] + step*0.5 + step * j;
-				
-				
-				p = new Point(x, y);
-				
-				List<Integer> code = null;
-				if(beamWidth == -1)
-				{
-					code = IFS.code(ifs, p, depth);
-				} else
-				{
-					code = Tools.search(p, ifs, depth, beamWidth);
-				}
-				
-				Color color = null;
-				
-				if(code == null)
-				{
-					color = Color.BLACK;
-				} else
-				{
-					FrequencyModel<Integer> mod = 
-							new BasicFrequencyModel<Integer>(code);
-					
-					float red   = (float)mod.probability(0);
-					float green = (float)mod.probability(1);
-					float blue  = (float)mod.probability(2);
-					color = new Color(red, green, blue);
-				}
-				
-				image.setRGB(i, j, color.getRGB());			
-			}
-		}
-
-		return image;
-	}
+//	/**
+//	 * Draws the component distribution in the codes of a three component 
+//	 * classifier.
+//	 * 
+//	 * @param res The resolution of the smallest side of the image.
+//	 */
+//	public static <M extends AffineMap> 
+//		BufferedImage drawCodes(IFS<M> ifs, 
+//											double[] xrange, 
+//											double[] yrange, 
+//											int res, int depth,
+//											int beamWidth)
+//	{
+//		if(ifs.size() > 3)
+//			throw new IllegalArgumentException("IFS must have three components or less (had "+ifs.size()+").");
+//		
+//		double 	xDelta = xrange[1] - xrange[0],
+//				yDelta = yrange[1] - yrange[0];
+//		
+//		double maxDelta = Math.max(xDelta, yDelta); 		
+//		double minDelta = Math.min(xDelta, yDelta);
+//		
+//		double step = minDelta/(double) res;
+//		
+//		int xRes = (int) (xDelta / step);
+//		int yRes = (int) (yDelta / step);
+//		
+//		BufferedImage image = 
+//			new BufferedImage(xRes, yRes, BufferedImage.TYPE_INT_RGB);		
+//		
+//		double x, y;
+//		int classInt;
+//		Point p;
+//		
+//		for(int i = 0; i < xRes; i++)
+//		{
+//			x =  xrange[0] + step*0.5 + step * i;
+//			for(int j = 0; j < yRes; j++)				
+//			{
+//				y = yrange[0] + step*0.5 + step * j;
+//				
+//				
+//				p = new Point(x, y);
+//				
+//				List<Integer> code = null;
+//				if(beamWidth == -1)
+//				{
+//					code = IFS.code(ifs, p, depth);
+//				} else
+//				{
+//					code = Tools.search(p, ifs, depth, beamWidth);
+//				}
+//				
+//				Color color = null;
+//				
+//				if(code == null)
+//				{
+//					color = Color.BLACK;
+//				} else
+//				{
+//					FrequencyModel<Integer> mod = 
+//							new BasicFrequencyModel<Integer>(code);
+//					
+//					float red   = (float)mod.probability(0);
+//					float green = (float)mod.probability(1);
+//					float blue  = (float)mod.probability(2);
+//					color = new Color(red, green, blue);
+//				}
+//				
+//				image.setRGB(i, j, color.getRGB());			
+//			}
+//		}
+//
+//		return image;
+//	}
 	
 	/**
 	 * Draws the component distribution in the codes of a three component 

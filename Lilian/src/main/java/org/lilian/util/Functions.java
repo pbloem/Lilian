@@ -565,7 +565,7 @@ public class Functions
 	}
 	
 	public static int draw(Collection<Double> probabilities, double sum, Random rand)
-	{
+	{		
 		// * select random element
 		double draw = rand.nextDouble();
 		double total = 0.0;
@@ -1093,6 +1093,17 @@ public class Functions
 		
 		return new Pair<Double, Double>(Math.min(x, y), Math.max(x, y));
 	}
+	
+	public static void dot(int i, int total)
+	{
+		if(i == total - 1)
+			System.out.println();
+		
+		int dotPer = (int)Math.ceil(total/100.0);
+		if(i % dotPer == 0)
+			System.out.print('.');
+	}
+		
 
     private static boolean[] bad255 =
     {

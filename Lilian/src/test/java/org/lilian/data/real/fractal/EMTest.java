@@ -15,6 +15,8 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
+import org.lilian.data.real.Generator;
+import org.lilian.data.real.MVN;
 import org.lilian.data.real.Point;
 import org.lilian.data.real.Similitude;
 import org.lilian.util.MatrixTools;
@@ -24,13 +26,29 @@ import java_cup.sym;
 
 public class EMTest
 {
+	
+	
 	@Test
 	public void quick()
 	{
-		RealVector a = EM.ones(2);
-		RealVector b = EM.ones(13);
+		MVN n0 = new MVN(Similitude.identity(2));
 		
-		// System.out.println(a.outerProduct(b));
+		IFS<Similitude> ifs = IFSs.sierpinskiSim();
+		MVN n1 = new MVN(ifs.get(0));
+		MVN n2 = new MVN(ifs.get(1));
+		MVN n3 = new MVN(ifs.get(2));
+		
+		Point p = new Point(-.5, -.5);
+		Generator<Point> gen = ifs.generator();
+		
+		for(int i : series(50))
+		{
+			p = gen.generate();
+			System.out.println(n0.density(p));
+			System.out.println((1.0/3.0) * (n1.density(p) + n2.density(p) + n3.density(p)));
+			System.out.println();
+		}
+		
 	}
 	
 	@Test
@@ -93,32 +111,35 @@ public class EMTest
 	@Test
 	public void testIndexOf()
 	{
-		List<Integer> empty = Collections.emptyList();
-
-		int k;
-		
-		k= 2;
-		assertEquals(0,  EM.indexOf(empty, k));
-		assertEquals(1,  EM.indexOf(Arrays.asList(0), k));
-		assertEquals(2,  EM.indexOf(Arrays.asList(1), k));
-		assertEquals(3,  EM.indexOf(Arrays.asList(0, 0), k));
-		assertEquals(10, EM.indexOf(Arrays.asList(1, 1, 0), k));
-		assertEquals(24, EM.indexOf(Arrays.asList(1, 0, 0, 1), k));		
-		
-		k = 3;
-		assertEquals(0,  EM.indexOf(empty, k));
-		assertEquals(1,  EM.indexOf(Arrays.asList(0), k));
-		assertEquals(2,  EM.indexOf(Arrays.asList(1), k));
-		assertEquals(3,  EM.indexOf(Arrays.asList(2), k));
-		assertEquals(10, EM.indexOf(Arrays.asList(0, 2), k));
-		assertEquals(24, EM.indexOf(Arrays.asList(2, 0, 1), k));
-		
-		k = 16;
-		assertEquals(0,  EM.indexOf(empty, k));
-		assertEquals(1,  EM.indexOf(Arrays.asList(0), k));
-		assertEquals(2,  EM.indexOf(Arrays.asList(1), k));
-		assertEquals(16, EM.indexOf(Arrays.asList(15), k));
-		assertEquals(18, EM.indexOf(Arrays.asList(1, 0), k));
+		for(int i : series(5000000))
+		{
+			List<Integer> empty = Collections.emptyList();
+	
+			int k;
+			
+			k= 2;
+			assertEquals(0,  EM.indexOf(empty, k));
+			assertEquals(1,  EM.indexOf(Arrays.asList(0), k));
+			assertEquals(2,  EM.indexOf(Arrays.asList(1), k));
+			assertEquals(3,  EM.indexOf(Arrays.asList(0, 0), k));
+			assertEquals(10, EM.indexOf(Arrays.asList(1, 1, 0), k));
+			assertEquals(24, EM.indexOf(Arrays.asList(1, 0, 0, 1), k));		
+			
+			k = 3;
+			assertEquals(0,  EM.indexOf(empty, k));
+			assertEquals(1,  EM.indexOf(Arrays.asList(0), k));
+			assertEquals(2,  EM.indexOf(Arrays.asList(1), k));
+			assertEquals(3,  EM.indexOf(Arrays.asList(2), k));
+			assertEquals(10, EM.indexOf(Arrays.asList(0, 2), k));
+			assertEquals(24, EM.indexOf(Arrays.asList(2, 0, 1), k));
+			
+			k = 16;
+			assertEquals(0,  EM.indexOf(empty, k));
+			assertEquals(1,  EM.indexOf(Arrays.asList(0), k));
+			assertEquals(2,  EM.indexOf(Arrays.asList(1), k));
+			assertEquals(16, EM.indexOf(Arrays.asList(15), k));
+			assertEquals(18, EM.indexOf(Arrays.asList(1, 0), k));
+		}
 	}
 	
 	@Test

@@ -3,6 +3,7 @@ package org.lilian.data.real;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
+import static java.lang.Math.log;
 import static java.lang.Math.pow;
 import static org.lilian.util.Series.series;
 
@@ -199,6 +200,7 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 	public double logDensity(Point p)
 	{
 		double det = abs( MatrixTools.getDeterminant(covariance()));
+		
 		if(MatrixTools.isSingular(covariance()))
 			return 0.0;
 		
@@ -216,10 +218,10 @@ public class MVN extends AbstractDensity implements Generator<Point>, Parametriz
 		
 		RealVector diff = p.getVector().subtract(mean().getVector());
 		
-		double scalar = 1.0 / (pow(2.0 * PI, dimension()/2.0) * pow(det, 0.5)) ;
-		double exponent = -0.5 * diff.dotProduct( covInv.operate(diff) ); 
+		double scalar = - (dimension()*0.5) * log (2.0 * PI) - 0.5 * log(det);
+		double exponent = -0.5 * diff.dotProduct( covInv.operate(diff) );
 
-		return Math.log(scalar) + exponent;	
+		return scalar + exponent;	
 	}
 	
 	public AffineMap map()

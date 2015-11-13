@@ -26,7 +26,6 @@ import org.lilian.data.real.classification.Classifiers;
 import org.lilian.data.real.fractal.old.IFS;
 import org.lilian.data.real.fractal.old.IFSClassifierBasic;
 import org.lilian.data.real.fractal.old.IFSs;
-import org.lilian.data.real.fractal.random.RIFSs;
 import org.lilian.grammars.Grammar;
 import org.lilian.grammars.TestGrammars;
 import org.lilian.search.Builder;
@@ -490,54 +489,54 @@ public class Resources
 		return new File(file);
 	}
 	
-	@Resource(name="cantor RIFS")
-	public static List<List<Point>> cantorRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
-	{
-		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+//	@Resource(name="cantor RIFS")
+//	public static List<List<Point>> cantorRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
+//	{
+//		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+//		
+//		for(int i : series(numSets))
+//			data.add(RIFSs.cantor().randomInstance(perSet, depth));
+//	
+//		return data;
+//	}
+	
+//	@Resource(name="koch RIFS")
+//	public static List<List<Point>> kochRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
+//	{
+//		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+//		
+//		for(int i : series(numSets))
+//			data.add(RIFSs.koch2UpDown().randomInstance(perSet, depth));
+//	
+//		return data;
+//	}
+	
+//	@Resource(name="koch RIFS mean")
+//	public static List<Point> kochRIFSMean(@Name("size") int size, @Name("depth") int depth)
+//	{
+//		List<Point> data = RIFSs.koch2UpDown().meanInstance(size, depth);
+//	
+//		return data;
+//	}
+//	
+//	@Resource(name="koch RIFS random")
+//	public static List<Point> kochRIFSRandom(@Name("size") int size, @Name("depth") int depth)
+//	{
+//		List<Point> data = RIFSs.koch2UpDown().randomInstance(size, depth);
+//	
+//		return data;
+//	}
 		
-		for(int i : series(numSets))
-			data.add(RIFSs.cantor().randomInstance(perSet, depth));
-	
-		return data;
-	}
-	
-	@Resource(name="koch RIFS")
-	public static List<List<Point>> kochRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
-	{
-		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
-		
-		for(int i : series(numSets))
-			data.add(RIFSs.koch2UpDown().randomInstance(perSet, depth));
-	
-		return data;
-	}
-	
-	@Resource(name="koch RIFS mean")
-	public static List<Point> kochRIFSMean(@Name("size") int size, @Name("depth") int depth)
-	{
-		List<Point> data = RIFSs.koch2UpDown().meanInstance(size, depth);
-	
-		return data;
-	}
-	
-	@Resource(name="koch RIFS random")
-	public static List<Point> kochRIFSRandom(@Name("size") int size, @Name("depth") int depth)
-	{
-		List<Point> data = RIFSs.koch2UpDown().randomInstance(size, depth);
-	
-		return data;
-	}
-		
-	@Resource(name="sierpinski RIFS")
-	public static List<List<Point>> sierpinskiRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
-	{
-		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
-		
-		for(int i : series(numSets))
-			data.add(RIFSs.sierpinski().randomInstance(perSet, depth));
-	
-		return data;
-	}
+//	@Resource(name="sierpinski RIFS")
+//	public static List<List<Point>> sierpinskiRIFS(@Name("num sets") int numSets, @Name("per set") int perSet, @Name("depth") int depth)
+//	{
+//		List<List<Point>> data = new ArrayList<List<Point>>(numSets);
+//		
+//		for(int i : series(numSets))
+//			data.add(RIFSs.sierpinski().randomInstance(perSet, depth));
+//	
+//		return data;
+//	}
 }
 
 

@@ -1,5 +1,6 @@
 package org.lilian.data.real;
 
+import static java.lang.Math.log;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 import static org.lilian.util.Functions.tic;
@@ -15,8 +16,12 @@ import java.util.Random;
 import org.apache.commons.math.linear.Array2DRowFieldMatrix;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math.linear.RealVector;
 import org.junit.Test;
 import org.lilian.Global;
+import org.lilian.data.real.fractal.EM;
+import org.lilian.data.real.fractal.IFS;
+import org.lilian.data.real.fractal.IFSs;
 import org.lilian.util.Functions;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
@@ -228,5 +233,165 @@ public class SimilitudeTest
 		}
 		
 		return points;
+	}
+	
+	@Test
+	public void testMVN()
+	{
+		int n = 10000;
+		List<Point> data = new ArrayList<Point>(n);
+		List<Point> means = new ArrayList<Point>(n);
+		List<Double> scalars = Arrays.asList(1.0, 1.0);
+		
+		means.add(new Point(0, 5));
+		means.add(new Point(0, -5));
+		
+		MVN mvn = new MVN(2);
+		
+		RealMatrix p = new Array2DRowRealMatrix(n, 2);
+		
+		for(int i : series(n))
+		{
+			Point x;
+			
+			x = mvn.generate();
+					
+			if(i % 2 == 0)
+			{
+				data.add(new Point(x.get(0) , x.get(1) + 5.0));
+				p.setEntry(i, 0, 1.0);
+			} else
+			{
+				data.add(new Point(x.get(0), x.get(1) - 5.0));
+				p.setEntry(i, 1, 1.0);
+			}
+		}
+		
+		Similitude target = new Similitude(0.2, new Point(2.0, 0.0), new Point(0.33));
+		data = target.map(data);
+		
+		Similitude sim = Similitude.find(data, scalars, means, p);
+		
+		System.out.println("target: " + target);
+		System.out.println("sim: " + sim);
+	}
+	
+	@Test
+	public void testMVNSierpinski()
+	{
+		
+		IFS<Similitude> model = IFSs.sierpinskiSim();
+
+		int depth = 4;
+		int k = model.size();
+		int numEndPoints = ((int)Math.pow(k, depth + 1) - 1) / (k - 1);
+
+		// List<Point> data = new ArrayList<Point>();
+		List<Point> data = model.generator(depth).generate(1000); 
+		
+		List<Point> means = new ArrayList<Point>();
+		List<Double> scalars = new ArrayList<Double>();
+		
+		for(int i : series(numEndPoints))
+		{
+			means.add(null);
+			scalars.add(null);
+		}
+		
+		SimilitudeTest.testMVNInner(new ArrayList<Integer>(), model, Similitude.identity(2), 
+				data, means, scalars, depth);
+		
+		RealMatrix p = new Array2DRowRealMatrix(data.size(), numEndPoints);
+		SimilitudeTest.testMVNInner2(new ArrayList<Integer>(), model, Similitude.identity(2), 
+				data, means, scalars, p, depth);
+		
+		// normalize
+		p = EM.logNormRows(Math.E, p);
+		EM.expInPlace(p);
+		System.out.println(p.operate(MatrixTools.ones(p.getColumnDimension())));
+		
+		Similitude result = Similitude.find(data, scalars, means, p);
+
+		System.out.println(result);
+	}
+
+	public static RealMatrix findP(List<Point> data, IFS<Similitude> model, int depth)
+	{
+		int k = model.size();
+		int numEndPoints = ((int)Math.pow(k, depth + 1) - 1) / (k - 1);
+	
+		List<Point> means = new ArrayList<Point>();
+		List<Double> scalars = new ArrayList<Double>();
+		
+		for(int i : series(numEndPoints))
+		{
+			means.add(null);
+			scalars.add(null);
+		}
+		
+		testMVNInner(new ArrayList<Integer>(), model, Similitude.identity(2), 
+				data, means, scalars, depth);
+		
+		RealMatrix p = new Array2DRowRealMatrix(data.size(), numEndPoints);
+		testMVNInner2(new ArrayList<Integer>(), model, Similitude.identity(2), 
+				data, means, scalars, p, depth);
+		
+		System.out.println("log unnormalized p other");
+		System.out.println(MatrixTools.toString(p, 3));
+		
+		// normalize
+		p = EM.logNormRows(Math.E, p);
+		EM.expInPlace(p);
+		
+		return p;
+	}
+
+	public static void testMVNInner(List<Integer> code,
+			IFS<Similitude> model, Similitude sim0, List<Point> data, List<Point> means,
+			List<Double> scalars, int maxDepth)
+	{
+		int j = EM.indexOf(code, model.size());
+	
+		means.set(j, new Point(sim0.translation()));
+		scalars.set(j, sim0.scalar());
+		
+		if(code.size() < maxDepth)
+			for(int k : series(model.size()))
+			{
+				Similitude sim1 = (Similitude) model.get(k).compose(sim0);
+				List<Integer> nextCode = new ArrayList<Integer>(code.size() + 1);
+				nextCode.add(k);
+				nextCode.addAll(code);
+				
+				testMVNInner(nextCode, model, sim1, data, means, scalars, maxDepth);
+			}
+	}
+
+	public static void testMVNInner2(List<Integer> code,
+			IFS<Similitude> model, Similitude sim0, List<Point> data, List<Point> means,
+			List<Double> scalars, RealMatrix p, int maxDepth)
+	{
+		int j = EM.indexOf(code, model.size());
+	
+		for(int i : series(data.size()))
+		{
+			Point x = data.get(i);
+			RealVector xm = x.getVector().subtract(sim0.getTranslation());
+			double s0 = sim0.scalar();
+			
+			double logDensity = - log(s0) - xm.dotProduct(xm)/(2.0 * s0 * s0);
+			p.setEntry(i, j, logDensity);
+		}
+		
+		if(code.size() < maxDepth)
+			for(int k : series(model.size()))
+			{
+				Similitude sim1 = (Similitude) model.get(k).compose(sim0);
+				List<Integer> nextCode = new ArrayList<Integer>(code.size() + 1);
+				nextCode.add(k);
+				nextCode.addAll(code);
+				
+				testMVNInner2(nextCode, model, sim1, data, means, scalars, p, maxDepth);
+			}
 	}
 }

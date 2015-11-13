@@ -18,6 +18,8 @@ import org.lilian.neural.ThreeLayer;
 import org.lilian.util.Functions;
 import org.lilian.util.Series;
 
+import com.mysql.jdbc.log.Log;
+
 /**
  * An (experimental) EM algorithm for the induction of discrete dynamical 
  * systems and other ergodic distributions.

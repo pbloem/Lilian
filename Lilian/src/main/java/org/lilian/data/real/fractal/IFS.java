@@ -3,6 +3,7 @@ package org.lilian.data.real.fractal;
 import static java.lang.Math.exp;
 import static org.lilian.util.Functions.probRound;
 import static org.lilian.util.MatrixTools.getDeterminant;
+import static org.lilian.util.Series.series;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
+import org.lilian.Global;
 import org.lilian.data.real.AbstractGenerator;
 import org.lilian.data.real.AffineMap;
 import org.lilian.data.real.Generator;
@@ -158,7 +160,7 @@ public class IFS<M extends Map & Parametrizable >
 	
 		public IFSMixedDepthGenerator(List<Double> depths)
 		{
-			this.basis = basis;
+			this.depths = depths;
 		}
 		
 		@Override
@@ -720,13 +722,62 @@ public class IFS<M extends Map & Parametrizable >
 		return sum / model.size();
 	}
 	
-	public static <M extends Map & Parametrizable> IFS<M> ifs(List<M> maps, List<Double> weights)
+	/**
+	 * Composes an IFS from the given components. If the list of components 
+	 * contains null elements, a non-null component is split.
+	 * 
+	 * @param maps
+	 * @param weights
+	 * @param var variance used when splitting components
+	 * @return An IFS. Null if all components were null.
+	 */
+	public static IFS<Similitude> ifs(List<Similitude> maps, List<Double> weights, double var)
 	{
-		IFS<M> res = new IFS<M>(maps.get(0), weights.get(0));
+		// * check for null elements
+		List<Integer> nulls = new ArrayList<Integer>(maps.size());
+		List<Integer> others = new ArrayList<Integer>(maps.size());
+		
+		for(int i : series(maps.size()))
+			if(maps.get(i) == null)
+				nulls.add(i);
+			else
+				others.add(i);
+		
+		if(others.isEmpty())
+			return null;
+		
+		if(! nulls.isEmpty())
+			split(maps, weights, Functions.choose(others), nulls, Math.sqrt(var));	
+				
+		IFS<Similitude> res = new IFS<Similitude>(maps.get(0), weights.get(0));
 		
 		for(int i : Series.series(1, maps.size()))
 			res.addMap(maps.get(i), weights.get(i));
 		
 		return res;
 	}
+
+	private static void split(List<Similitude> maps, List<Double> weights,
+			int source, List<Integer> nulls, double std)
+	{
+		Similitude original = maps.get(source);
+		double originalWeight = weights.get(source);
+		
+		double newWeight = originalWeight / (double) (nulls.size()+1);
+		
+		nulls.add(source);
+		
+		for(int i : nulls)
+		{
+			List<Double> trans = new ArrayList<Double>(original.translation());
+			for(int j : series(trans.size()))
+				trans.set(j,  trans.get(j) + Global.random.nextDouble() * std);
+			
+			Similitude nw = new Similitude(original.scalar(),trans, original.angles());
+			
+			maps.set(i, nw);
+			weights.set(i, newWeight);
+		}
+	}
+	
 }

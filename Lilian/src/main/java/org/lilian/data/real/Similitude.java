@@ -1,5 +1,9 @@
 package org.lilian.data.real;
 
+import static java.lang.Math.E;
+import static org.lilian.util.MatrixTools.diag;
+import static org.lilian.util.MatrixTools.ones;
+import static org.lilian.util.MatrixTools.outer;
 import static org.lilian.util.Series.series;
 
 import java.util.ArrayList;
@@ -22,7 +26,9 @@ import org.lilian.data.real.Maps.FindSimilitudeResult;
 import org.lilian.search.Builder;
 import org.lilian.search.Parametrizable;
 import org.lilian.search.evo.Target;
+import org.lilian.util.Functions;
 import org.lilian.util.MatrixTools;
+import org.lilian.util.Pair;
 import org.lilian.util.Series;
 
 /**
@@ -43,6 +49,8 @@ public class Similitude extends AffineMap
 	
 	protected double scalar;
 	protected List<Double> angles; // in radians
+	
+	protected RealMatrix rotation;
 	
 	/**
 	 * NOTE: the angles in this parameter vector are in radians div by 2 pi 
@@ -100,7 +108,7 @@ public class Similitude extends AffineMap
 		
 		this.angles = new ArrayList<Double>(angles);
 		
-		RealMatrix rotation = Rotation.toRotationMatrix(angles);
+		this.rotation = Rotation.toRotationMatrix(angles);
 		this.transformation = rotation.scalarMultiply(scalar);
 	}
 
@@ -147,6 +155,11 @@ public class Similitude extends AffineMap
 	public List<Double> angles() 
 	{
 		return Collections.unmodifiableList(angles);
+	}
+	
+	public RealMatrix rotation()
+	{
+		return rotation;
 	}
 	
 	public List<Double> translation() 
@@ -707,5 +720,138 @@ public class Similitude extends AffineMap
 		
 		return new Similitude(c, new Point(t), angles);
 	}	
+	
+	/**
+	 * Given a set of points, a set of isotropic MVNs and a matrix of 
+	 * correspondences, finds the similitude such that the likelihood of the 
+	 * points under the transformed MVNs is maximal, with respect to the 
+	 * correspondences.
+	 * 
+	 * @param data
+	 * @param scalars
+	 * @param means
+	 * @param row-normalized matrix data on the rows, MVNs on the cols
+	 * @return
+	 */
+	public static Similitude find(List<Point> data, List<Double> scalars, List<Point> means, RealMatrix p)
+	{
+		RealMatrix x = MatrixTools.matrix(data);
+		RealMatrix t = MatrixTools.matrix(means);
+		
+		RealVector z = new ArrayRealVector(means.size());
+		for(int i : Series.series(means.size()))
+		{
+			double s = scalars.get(i);
+			z.setEntry(i, 1.0/(s * s));
+		}
+		
+		System.out.println("z " + z);
+		
+		return find(x, z, t, p);
+	}
+		
+	public static Similitude find(RealMatrix x, RealVector z, RealMatrix t, RealMatrix p)	
+	{
+		RealMatrix pz = p.multiply(MatrixTools.diag(z));
+		
+		double pzSum = pz.operate(ones(pz.getColumnDimension())).dotProduct(ones(pz.getRowDimension()));
+		double pSum  = p.operate(ones(p.getColumnDimension())).dotProduct(ones(p.getRowDimension()));
+		
+		RealVector xWeights = pz.operate(ones(pz.getColumnDimension()));
+		xWeights.mapMultiplyToSelf(1.0/pzSum);
+		RealVector xMean = x.operate(xWeights);
+		
+		System.out.println("x weights" +  xWeights);
+		System.out.println(xWeights.dotProduct(ones(xWeights.getDimension())));
+		
+		RealVector tWeights = pz.preMultiply(ones(pz.getRowDimension()));
+		tWeights.mapMultiplyToSelf(1.0/pzSum);
+		RealVector tMean = t.operate(tWeights);
+		
+		System.out.println("t weights" +  tWeights);
+		System.out.println(tWeights.dotProduct(ones(tWeights.getDimension())));
+		
+		RealMatrix xCentered = 
+				x.subtract(
+					outer(xMean, ones(x.getColumnDimension()))
+					);
+		RealMatrix tCentered = 
+				t.subtract(
+					outer(tMean, ones(t.getColumnDimension()))
+					);
+		
+		// * Find the rotation
+		RealMatrix a = xCentered.multiply(pz).multiply(tCentered.transpose());
+		SingularValueDecomposition svd = new SingularValueDecompositionImpl(a);
+		
+		System.out.println(MatrixTools.toString(a));
+		
+		RealVector c = ones(a.getColumnDimension());
+		double last = MatrixTools.getDeterminant(svd.getU().multiply(svd.getVT()));
+		c.setEntry(c.getDimension()-1, last);
+		
+		RealMatrix rot = svd.getU().multiply(diag(c)).multiply(svd.getVT());
+		List<Double> angles = Rotation.findAngles(rot);
+		
+		System.out.println(MatrixTools.toString(rot));
+				
+		// * Find the scale
+		double sa, sb, sc;
+		sa = inTrace(xCentered, pz.operate(ones(pz.getColumnDimension())), xCentered);
+		sb = - tCentered.multiply(pz.transpose())
+				.multiply(xCentered.transpose()).multiply(rot).getTrace();
+		sc = - pSum * x.getRowDimension();
+				
+		double s = chooseS(Functions.quadratic(sa, sb, sc));
+		RealVector tr = xMean.subtract(rot.operate(tMean).mapMultiply(s));
+		
+		return new Similitude(s, new Point(tr), angles);
+	}
+
+	/**
+	 * Computes the sum over the inner product of column i in left with column 
+	 * i in right, weighted with the i-th weight.
+	 * @param left
+	 * @param weights
+	 * @param right
+	 * @return
+	 */
+	public static double inTrace(RealMatrix left, RealVector weights, RealMatrix right)
+	{
+		double sum = 0.0;
+		for(int i : series(left.getColumnDimension()))
+		{
+			double in = left.getColumnVector(i).dotProduct(right.getColumn(i));
+			sum += weights.getEntry(i) * in;
+		}
+		
+		return sum;
+	}
+
+	/**
+	 * 
+	 * @param pair
+	 * @return The larger of the two solutions, NaN if none are positive. 
+	 */
+	public static double chooseS(Pair<Double, Double> pair)
+	{
+		double x = pair.first(), y = pair. second();
+		x = 1.0/x;
+		y = 1.0/y;
+		
+		if(x > 0.0 && y > 0.0)
+			return Math.max(x, y);
+		
+		if(x > 0.0)
+			return x;
+		
+		if(y > 0.0)
+			return y;
+		
+		return Double.NaN;
+	}
+	
+	
+	
 	
 }

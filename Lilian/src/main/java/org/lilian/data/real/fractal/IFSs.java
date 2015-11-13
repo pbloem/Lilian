@@ -157,9 +157,9 @@ public class IFSs
 		Builder<IFS<Similitude>> builder = 
 				IFS.builder(3, Similitude.similitudeBuilder(2));
 		return builder.build(Arrays.asList(
-				0.1,  0.0, 0.5, 0.0, 1.0, 
-				0.1,  0.5,-0.5, 0.0, 1.0, 
-				0.1, -0.5,-0.5, 0.0, 1.0
+				0.3,  0.0, 0.5, 0.0, 1.0, 
+				0.3,  0.5,-0.5, 0.0, 1.0, 
+				0.3, -0.5,-0.5, 0.0, 1.0
 			));
 	}
 	/**

@@ -9,6 +9,7 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
+import org.lilian.data.real.Point;
 
 import static java.lang.Math.*;
 import static org.lilian.util.Series.series;
@@ -236,6 +237,33 @@ public class MatrixTools
 			}
 		
 		return c;
+	}
+
+	public static RealMatrix matrix(List<Point> data)
+	{
+		int rows = data.get(0).dimensionality();
+		int columns = data.size();
+		
+		RealMatrix result = new Array2DRowRealMatrix(rows, columns);
+		
+		for(int j : series(data.size()))
+			result.setColumn(j, data.get(j).getBackingData());
+		
+		return result;
+	}
+	
+	public static List<Point> fromMatrix(RealMatrix m)
+	{
+		List<Point> out = new ArrayList<Point>(m.getColumnDimension());
+		
+		for(int j : series(m.getColumnDimension()))
+			out.add(new Point(m.getColumn(j)));
+		
+		return out;
+	}
+
+	public static RealVector ones(int d) {
+		return new ArrayRealVector(d, 1.0);
 	}
 
 }
