@@ -167,12 +167,12 @@ public class EM
 		if(Global.random.nextDouble() < postIts)
 			newPost = maximizePost(dataSub, p, z, t);
 		
-		if(newModel == null && ! approx) // Try again, but approximate
+		if((newModel == null || newPost == null) && ! approx) // Try again, but approximate
 		{
 			Global.log().info("All components null, switching to approximate expectation.");
 			iterate(depthIts, modelIts, postIts, true);
 			return;
-		} else if(newModel == null && approx)
+		} else if((newModel == null || newPost == null) && approx)
 		{
 			System.out.println(this.model);
 			System.out.println(MatrixTools.toString(p));
