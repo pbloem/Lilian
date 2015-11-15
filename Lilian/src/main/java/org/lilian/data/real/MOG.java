@@ -38,14 +38,26 @@ public class MOG extends MapModel<AffineMap> implements Generator<Point>, Densit
 		return density;
 	}
 	
+	public double logDensity(Point p)
+	{
+		double density = 0.0; 
+		
+		List<Double> terms = new ArrayList<Double>(this.size());
+		for(int i : series(this.size()))
+			terms.add(Math.log(probability(i)) + mvn(i).logDensity(p));
+		
+		return Functions.logSum(Math.E, terms);
+	}
+	
 	public double logDensity(Collection<Point> points)
 	{
 		double ld = 0.0;
 		for(Point p : points)
-			ld += Functions.log2(density(p));
+			ld += logDensity(p);
 		
 		return ld;
 	}
+	
 	
 	public MVN mvn(int i)
 	{

@@ -64,13 +64,15 @@ public class EM
 		this.model = initial;
 		this.sub = sub;
 		
-		p = p(sub, model.size(), maxDepth);
+		resample();
+		
+		p = p(dataSub.size(), model.size(), maxDepth);
 		
 		t = t(dimension, model.size(), maxDepth);
-		z = z(sub, model.size(), maxDepth);
+		z = z(dataSub.size(), model.size(), maxDepth);
 		
-		pk = pk(sub, model.size(), maxDepth);
-		zk = zk(sub, model.size(), maxDepth);
+		pk = pk(dataSub.size(), model.size(), maxDepth);
+		zk = zk(dataSub.size(), model.size(), maxDepth);
 		
 		depths = new ArrayList<Double>(maxDepth + 1);
 		for(int i : series(maxDepth + 1))
@@ -83,8 +85,6 @@ public class EM
 			post = new Similitude(1.0, mean(data), new Point(numAngles));
 		} else
 			post = Similitude.identity(dimension);
-
-		resample();
 	}
 	
 	private void norm(List<Double> list)
@@ -120,27 +120,32 @@ public class EM
 		iterate(1.0, 1.0, 1.0);
 	}
 	
-	/**
-	 * 
-	 * @param depthIts probability that the depths are updated
-	 * @param modelIts
-	 * @param postIts
-	 */
 	public void iterate(double depthIts, double modelIts, double postIts)
 	{
-		iterate(depthIts, modelIts, postIts, false);
+		resample();
+
+		expectation(false);
+		if(! maximization(depthIts, modelIts, postIts))
+		{
+			Global.log().info("All components null, switching to approximate expectation.");
+			expectation(true);
+		}
+		
+		if(! maximization(depthIts, modelIts, postIts))
+			throw new IllegalStateException("All components null, even with approximate expectation.");
 	}
-	
-	public void iterate(double depthIts, double modelIts, double postIts, boolean approx)
+
+	public void expectation(boolean approx)
+	{
+		expectation(depths, model, post, dataSub, z, zk, p, pk, t, approx);
+	}
+
+	public boolean maximization(double depthIts, double modelIts, double postIts)
 	{
 		List<Double> newDepths = depths;
 		IFS<Similitude> newModel = model;
 		Similitude newPost = post;
 		
-		resample();
-
-		expectation(approx);
-
 		if(Global.random.nextDouble() < depthIts)
 			newDepths = maximizeDepths(model.size(), depths.size() - 1, p);
 		
@@ -160,55 +165,19 @@ public class EM
 			zf = z.getSubVector(0, z.getDimension() - (int)Math.pow(k, maxDepth));
 			
 			newModel = maximizeIFS(this.model.size(), depths.size() - 1, dataSub, post, pk, tf, zf);	
-			
 		} 
-		
 		
 		if(Global.random.nextDouble() < postIts)
 			newPost = maximizePost(dataSub, p, z, t);
 		
-		if((newModel == null || newPost == null) && ! approx) // Try again, but approximate
-		{
-			Global.log().info("All components null, switching to approximate expectation.");
-			iterate(depthIts, modelIts, postIts, true);
-			return;
-		} else if((newModel == null || newPost == null) && approx)
-		{
-			System.out.println(this.model);
-			System.out.println(MatrixTools.toString(p));
-			throw new IllegalStateException("All components null, even with approximate expectation.");
-		} 
+		if((newModel == null || newPost == null)) // Try again, but approximate
+			return false;
 		
 		depths = newDepths;
 		model = newModel;
 		post = newPost;
-	}
-
-	public void expectation(boolean approx)
-	{
-		expectation(depths, model, post, dataSub, z, zk, p, pk, t, approx);
-	}
-
-	public void maximization()
-	{
-		depths = maximizeDepths(model.size(), depths.size() - 1, p);
-	
-		int maxDepth = depths.size() - 1;
 		
-		RealMatrix tf;
-		RealVector zf;
-		
-		int k = model.size();
-
-		tf = t.getSubMatrix(
-				0, t.getRowDimension() - 1, 
-				0, t.getColumnDimension() - (int)Math.pow(k, maxDepth) - 1);
-		
-		zf = z.getSubVector(0, z.getDimension() - (int)Math.pow(k, maxDepth));
-
-		model = maximizeIFS(model.size(), depths.size() - 1, dataSub, post, pk, tf, zf);		
-		
-		post = maximizePost(dataSub, p, z, t);
+		return true;
 	}
 
 	protected static RealMatrix p(int numData, int numComponents, int maxDepth)
@@ -584,19 +553,23 @@ public class EM
 		
 		// * Find the rotation
 		RealMatrix a = xCentered.multiply(pzNorm).multiply(tCentered.transpose());
-		SingularValueDecomposition svd = new SingularValueDecompositionImpl(a);
+		SingularValueDecomposition svd;
+		try {
+			svd = new SingularValueDecompositionImpl(a);
+		} catch(InvalidMatrixException e)
+		{
+			return null;
+		}
 		
 		RealVector c = MatrixTools.ones(a.getColumnDimension());
 		double last = MatrixTools.getDeterminant(svd.getU().multiply(svd.getVT()));
 		c.setEntry(c.getDimension()-1, last);
 		
 		RealMatrix rot = null;
-		try {
-			 rot = svd.getU().multiply(diag(c)).multiply(svd.getVT());
-		} catch (InvalidMatrixException e)
-		{
+		rot = svd.getU().multiply(diag(c)).multiply(svd.getVT());
+
+		if(containsNaN(rot))
 			return null;
-		}
 		
 		if(containsNaN(rot))
 			return null;
