@@ -171,5 +171,39 @@ public class EMTest
 		assertEquals(asList(15), EM.code(16, k));
 		assertEquals(asList(1, 0), EM.code(18, k));
 	}
+	
+	@Test
+	public void likelihood()
+	{
+		List<Point> data = IFSs.koch2Sim().generator().generate(100);
+		
+		int depth = 7;
+		
+		// * random
+		IFS<Similitude> initial = IFSs.initialSphere(2, 3, 1.0, 0.5, true);
+		EM em = new EM(data, 250, initial, depth, false);
+//		System.out.println("random " + em.logLikelihood(data));
+		
+		
+//		for(int i : series(50))
+//			em.iterate();
+			
+		// System.out.println("learned " + em.logLikelihood(data));
+		
+		em = new EM(data, 250, IFSs.koch2Sim(), depth, false);
+		System.out.println("mix " + em.logLikelihood(data));
+		
+		for(int d: series(depth + 1))
+		{
+			List<Double> depths = new ArrayList<Double>(depth + 1);
+			for(int i : series(depth + 1))
+				depths.add(0.01);
+			depths.set(d, 1.0);
+			
+			em.setDepths(depths);
+			
+			System.out.println("d = " + d + ",  " + em.logLikelihood(data));
+		}
+	}
 
 }

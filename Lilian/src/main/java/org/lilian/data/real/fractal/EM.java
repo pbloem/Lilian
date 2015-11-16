@@ -824,26 +824,31 @@ public class EM
 	
 	public double logLikelihood(List<Point> data)
 	{
-		data = post.inverse().map(data);
-		
-		List<Double> terms = new ArrayList<Double>();
-		logLikelihoodInner(data, new ArrayList<Integer>(), Similitude.identity(dimension), terms);
-		
-		return Functions.logSum(E, terms);
+		double sum = 0.0;
+		for(Point x : data)
+		{
+			List<Double> terms = new ArrayList<Double>();
+			logLikelihoodInner(x, new ArrayList<Integer>(), Similitude.identity(dimension), terms);
+			sum += Functions.logSum(E, terms);
+		}
+			
+		return sum;
 	}
 	
-	public void logLikelihoodInner(List<Point> data, List<Integer> code, Similitude sim0, List<Double> terms)
+	public void logLikelihoodInner(Point x, List<Integer> code, Similitude sim0, List<Double> terms)
 	{
 		double logDensity = 0.0;
 		// * p(c) = p(|c|) \prod_i p(c_i)
 		logDensity += depths.get(code.size());
+		
 		for(int codon : code)
 			logDensity += log(model.probability(codon));
+		
 		// * n(x|c)
 		Similitude sim0p = (Similitude) post.compose(sim0); 
 		MVN mvn = new MVN(sim0p);
-		logDensity += mvn.logDensity(data); 
-		
+		logDensity += mvn.logDensity(x); 
+			
 		terms.add(logDensity);
 		
 		if(code.size() < depths.size() - 1)
@@ -853,7 +858,7 @@ public class EM
 				List<Integer> newCode = new ArrayList<Integer>(code.size() + 1);
 				newCode.add(comp);
 				newCode.addAll(code);
-				logLikelihoodInner(data, newCode, sim1, terms);
+				logLikelihoodInner(x, newCode, sim1, terms);
 			}
 	}
 }

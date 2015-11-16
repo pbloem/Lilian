@@ -1,5 +1,6 @@
 package org.lilian.data.real;
 
+import static java.lang.Math.max;
 import static org.lilian.util.Series.series;
 
 import java.awt.Color;
@@ -24,6 +25,8 @@ import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
 
 import org.lilian.Global;
+import org.lilian.data.real.classification.Classification;
+import org.lilian.data.real.classification.Classified;
 import org.lilian.util.Pair;
 import org.lilian.util.Series;
 import org.lilian.util.distance.SquaredEuclideanDistance;
@@ -102,6 +105,26 @@ public class Datasets
 		}
 		
 		return res2;
+	}
+	
+	public static <P> Pair<List<P>, List<P>> split(
+			List<P> dataset, double split)
+	{
+		dataset = new ArrayList<P>(dataset);
+		
+		int nFirst = (int)(dataset.size() * split);
+		nFirst += (int)(0.2 * nFirst);
+		
+		List<P> first = new ArrayList<P>(nFirst);
+		
+		for(int i : Series.series(nFirst))
+		{
+			int draw = Global.random.nextInt(dataset.size());
+			first.add(dataset.get(draw));
+			dataset.remove(draw);
+		}
+
+		return new Pair<List<P>, List<P>>(first, dataset);
 	}
 	
 	/**
