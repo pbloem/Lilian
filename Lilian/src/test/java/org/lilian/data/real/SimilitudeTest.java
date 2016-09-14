@@ -26,8 +26,6 @@ import org.lilian.util.Functions;
 import org.lilian.util.MatrixTools;
 import org.lilian.util.Series;
 
-import com.itextpdf.text.log.SysoLogger;
-
 public class SimilitudeTest
 {
 

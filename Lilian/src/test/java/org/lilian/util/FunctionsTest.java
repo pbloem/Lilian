@@ -12,7 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.junit.Test;
-import org.nodes.util.Generators;
+
+import nl.peterbloem.kit.Generators;
 
 public class FunctionsTest
 {

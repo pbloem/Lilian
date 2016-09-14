@@ -32,11 +32,12 @@ import org.nodes.TNode;
 import org.nodes.algorithms.Nauty;
 import org.nodes.random.SimpleSubgraphGenerator;
 import org.nodes.random.SubgraphGenerator;
-import org.nodes.util.AbstractGenerator;
-import org.nodes.util.FrequencyModel;
-import org.nodes.util.Functions;
-import org.nodes.util.Order;
-import org.nodes.util.Series;
+
+import nl.peterbloem.kit.AbstractGenerator;
+import nl.peterbloem.kit.FrequencyModel;
+import nl.peterbloem.kit.Functions;
+import nl.peterbloem.kit.Order;
+import nl.peterbloem.kit.Series;
 
 /**
  * Clustering by hierarchical motif substitution.
@@ -96,12 +97,12 @@ public class Clustering
 		if(best == null)
 			return false;
 		
-		System.out.println(current.size() + ", " + current.numLinks() + ", " + current.links().size() + ": ");
+		System.out.println(current.size() + ", " + current.numLinks());
 		System.out.println("To extract: " + best);
 		
 		newXRule(best, subStore.occurrences(best));
 		
-		System.out.println(current.size() + ", " + current.numLinks() + ", " + current.links().size() + ": ");
+		System.out.println(current.size() + ", " + current.numLinks());
 				
 		return true;
 	}

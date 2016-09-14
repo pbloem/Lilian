@@ -1,7 +1,7 @@
 package org.lilian.rdf;
 
 import static java.lang.String.format;
-import static org.nodes.util.Series.series;
+import static nl.peterbloem.kit.Series.series;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,8 @@ import org.nodes.Node;
 import org.nodes.clustering.ConnectionClusterer.ConnectionClustering;
 import org.nodes.data.GML;
 import org.nodes.data.RDF;
-import org.nodes.util.MaxObserver;
+
+import nl.peterbloem.kit.MaxObserver;
 
 /**
  * Uses the Slashburn principle
@@ -73,7 +74,7 @@ public class SBSimplifier<L, T>
 		for (int index : cc.largestCluster())
 		{
 			Node<L> node = graph.get(index);
-			if(! org.nodes.util.Functions.matches(node.label().toString(), black))
+			if(! nl.peterbloem.kit.Functions.matches(node.label().toString(), black))
 				total ++;
 		}
 		
@@ -92,7 +93,7 @@ public class SBSimplifier<L, T>
 		for (int index : cc.largestCluster())
 		{
 			Node<L> node = graph.get(index);
-			if(! org.nodes.util.Functions.matches(node.label().toString(), black))
+			if(! nl.peterbloem.kit.Functions.matches(node.label().toString(), black))
 				observer.observe(node);
 		}
 		
